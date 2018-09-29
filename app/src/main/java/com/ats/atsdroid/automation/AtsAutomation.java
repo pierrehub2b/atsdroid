@@ -1,8 +1,28 @@
+/*
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+ */
+
 package com.ats.atsdroid.automation;
 
 import android.app.UiAutomation;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.graphics.Rect;
 import android.os.RemoteException;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.By;
@@ -13,55 +33,99 @@ import android.util.Base64;
 
 import com.ats.atsdroid.DeviceInfo;
 
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.regex.Pattern;
 
 public class AtsAutomation {
 
-    private UiAutomation automation;
-    private UiDevice device;
-    private Matrix matrix = new Matrix();
-    private int width;
-    private int height;
-    private int quality;
+    private final UiAutomation automation = InstrumentationRegistry.getInstrumentation().getUiAutomation();
+    private final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+    private final Matrix matrix = new Matrix();
+    private final DeviceInfo deviceInfo = DeviceInfo.getInstance();
+
+    private int bmpQuality = 40;
+    private Bitmap.CompressFormat bmpCompress = Bitmap.CompressFormat.JPEG;
 
     private String startAppPackageName;
-
     private String activePackageName;
     private Pattern activePackagePattern;
 
-    public AtsAutomation(float scale, int quality){
+    private List<AtsElement> cachedElements = new ArrayList<AtsElement>();
+    private Timer awakeTimer;
 
-        this.automation = InstrumentationRegistry.getInstrumentation().getUiAutomation();
-        this.device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+    public AtsAutomation(){
 
-        this.matrix.postScale(scale, scale);
-        this.quality = quality;
-        this.width = device.getDisplayWidth();
-        this.height = device.getDisplayHeight();
-
-        DeviceInfo.getInstance().initData(width, height);
-
-        try {
-            device.wakeUp();
-        }catch(RemoteException e){}
+        deviceInfo.initData(device.getDisplayWidth(), device.getDisplayHeight());
+        matrix.postScale(deviceInfo.getWidthScale(), deviceInfo.getHeightScale());
 
         executeShell("am start -W com.ats.atsdroid/.AtsActivity");
         reloadActivePackage(null);
+
+        sleep();
+    }
+
+    public UiDevice getDevice(){
+        return device;
+    }
+
+    public String getActivePackageName(){
+        return activePackageName;
+    }
+
+    public void setQuality(int level){
+        if(level == 3){
+            this.bmpQuality = 100;
+            this.bmpCompress = Bitmap.CompressFormat.PNG;
+        }else{
+            this.bmpCompress = Bitmap.CompressFormat.JPEG;
+            if(level == 2){
+                this.bmpQuality = 80;
+            }else if(level == 1){
+                this.bmpQuality = 60;
+            }else{
+                this.bmpQuality = 40;
+            }
+        }
+    }
+
+    public void wakeUp(){
+        awakeTimer = new Timer(true);
+        awakeTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    device.wakeUp();
+                }catch(RemoteException e){}
+            }
+        }, 0, 2000);
+    }
+
+    public void sleep(){
+        if(awakeTimer != null) {
+            awakeTimer.cancel();
+            awakeTimer.purge();
+            awakeTimer = null;
+        }
+
+        try {
+            device.sleep();
+        }catch(RemoteException e){}
     }
 
     private void reloadActivePackage(String name){
         if(name == null){
-            activePackageName = automation.getRootInActiveWindow().getPackageName().toString() + ":id/";
+            activePackageName = automation.getRootInActiveWindow().getPackageName().toString();
         }else{
-            activePackageName = name + ":id/";
+            activePackageName = name;
         }
         activePackagePattern = Pattern.compile("^" + activePackageName + ".*");
-    }
-
-    private BySelector getByRes(){
-        return By.res(activePackagePattern);
     }
 
     private void executeShell(String value){
@@ -73,23 +137,51 @@ public class AtsAutomation {
     //----------------------------------------------------------------------------------------------------
     //----------------------------------------------------------------------------------------------------
 
-    public int getPackageLength(){
-        return activePackageName.length();
+    public void clearCachedElements(){
+        cachedElements.clear();
     }
+
+    public IAtsElement getCachedElement(String id){
+        for(AtsElement elem : cachedElements){
+            if(elem.getId().equals(id)){
+                return elem;
+            }
+        }
+        return new AtsElementNotFound();
+    }
+
+    public JSONObject addCachedElement(UiObject2 element){
+        AtsElement atsElem = new AtsElement(this, element);
+        cachedElements.add(atsElem);
+
+        return atsElem.toJson();
+    }
+
+    //----------------------------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------------------------------
+
+    public void clickAtRect(Rect bounds){
+        device.click(bounds.centerX(), bounds.centerY());
+    }
+
+    //----------------------------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------------------------------
 
     public void terminate(){
         executeShell("am force-stop com.ats.atsdroid");
     }
 
-    public String startActivity(String packageName, String activity){
-        String completeName = packageName + "/" + activity;
+    public String startActivity(int quality, String packageName, String activity){
 
+        setQuality(quality);
         startAppPackageName = packageName;
+
+        String completeName = packageName + "/" + activity;
         executeShell("am start -S -W " + completeName);
 
         reloadActivePackage(packageName);
-
         return completeName;
+
     }
 
     public String stopActivity(){
@@ -104,9 +196,9 @@ public class AtsAutomation {
         try {
             Bitmap screen = automation.takeScreenshot();
             if(screen != null) {
-                Bitmap resizedBitmap = Bitmap.createBitmap(screen, 0, 0, width, height, matrix, true);
+                Bitmap resizedBitmap = Bitmap.createBitmap(screen, 0, 0, deviceInfo.getDisplayWidth(), deviceInfo.getDisplayHeight(), matrix, true);
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                resizedBitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
+                resizedBitmap.compress(bmpCompress, bmpQuality, outputStream);
 
                 byte[] data = outputStream.toByteArray();
                 outputStream.close();
@@ -118,11 +210,11 @@ public class AtsAutomation {
         return null;
     }
 
-    public List<UiObject2> getAllElements(){
-        return device.findObjects(getByRes());
-    }
-
-    public UiObject2 getElementByRes(String resId){
-        return device.findObject(By.res(resId));
+    public BySelector getSelector(String tag){
+        BySelector selector = By.res(activePackagePattern);
+        if(!"*".equals(tag)) {
+            selector = selector.clazz(Pattern.compile("(?i).*\\." + tag + "$"));
+        }
+        return selector;
     }
 }

@@ -1,6 +1,26 @@
+/*
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+ */
+
 package com.ats.atsdroid;
 
 import android.bluetooth.BluetoothAdapter;
+import android.content.res.Resources;
 import android.os.Build;
 
 import java.net.InetAddress;
@@ -25,6 +45,8 @@ public class DeviceInfo {
         btAdapter = btDevice.getName();
         hostName = tryGetHostname();
         systemName = getAndroidVersion();
+        deviceWidth = Resources.getSystem().getConfiguration().screenWidthDp;
+        deviceHeight = Resources.getSystem().getConfiguration().screenHeightDp;
     }
 
     public static DeviceInfo getOurInstance() {
@@ -74,8 +96,14 @@ public class DeviceInfo {
     // Instance access
     //----------------------------------------------------------------------------------
 
+    private int deviceWidth;
+    private int deviceHeight;
     private int displayWidth;
     private int displayHeight;
+
+    private float widthScale;
+    private float heightScale;
+
     private String systemName;
     private String systemRelease = Build.VERSION.RELEASE;
     private String deviceId = Build.ID;
@@ -89,43 +117,47 @@ public class DeviceInfo {
     public void initData(int width, int height){
         this.displayWidth = width;
         this.displayHeight = height;
+
+        this.widthScale = (float)deviceWidth/(float)displayWidth;
+        this.heightScale = (float)deviceHeight/(float)displayHeight;
+    }
+
+    public float getWidthScale(){
+        return widthScale;
+    }
+
+    public float getHeightScale(){
+        return heightScale;
     }
 
     public String getSystemName(){ return systemName; }
     public String getSystemRelease(){ return systemRelease; }
-
+    public int getDeviceWidth() { return deviceWidth; }
+    public int getDeviceHeight() { return deviceHeight; }
     public int getDisplayWidth() {
         return displayWidth;
     }
-
     public int getDisplayHeight() {
         return displayHeight;
     }
-
     public String getDeviceId() {
         return deviceId;
     }
-
     public String getModel() {
         return model;
     }
-
     public String getManufacturer() {
         return manufacturer;
     }
-
     public String getBrand() {
         return brand;
     }
-
     public String getVersion() {
         return version;
     }
-
     public String getHostName() {
         return hostName;
     }
-
     public String getBtAdapter() {
         return btAdapter;
     }

@@ -1,3 +1,22 @@
+/*
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+ */
+
 package com.ats.atsdroid.http;
 
 import com.ats.atsdroid.AtsRunner;
@@ -10,24 +29,20 @@ public class RequestThread extends Thread {
 
     private AtsRunner runner;
     private int serverPort;
-    private float screenPicScale;
-    private int quality;
 
-    public RequestThread(AtsRunner runner, int serverPort, float screenPicScale, int quality){
+    public RequestThread(AtsRunner runner, int serverPort){
         this.runner = runner;
         this.serverPort = serverPort;
-        this.screenPicScale = screenPicScale;
-        this.quality = quality;
     }
 
     @Override
     public void run() {
 
-        AtsAutomation automation = new AtsAutomation(screenPicScale, quality);
+        AtsAutomation automation = new AtsAutomation();
 
         try {
             ServerSocket httpServerSocket = new ServerSocket(serverPort);
-            ResponseThread httpResponseThread;
+            ResponseThread httpResponseThread = null;
 
             while(runner.isRunning()){
                 httpResponseThread =
@@ -38,6 +53,8 @@ public class RequestThread extends Thread {
                                 );
                 httpResponseThread.start();
             }
+
+            httpResponseThread.interrupt();
             httpServerSocket.close();
 
         } catch (IOException e) {
