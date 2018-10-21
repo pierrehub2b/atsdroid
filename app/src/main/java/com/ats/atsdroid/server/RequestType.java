@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
  */
 
-package com.ats.atsdroid.http;
+package com.ats.atsdroid.server;
 
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -25,19 +25,21 @@ import java.util.regex.Pattern;
 
 public class RequestType {
 
-    public static final String STARTCHANNEL = "start_channel";
-    public static final String STOPCHANNEL = "stop_channel";
-    public static final String ELEMENTS = "elements";
-    public static final String PARENTS = "parents";
-    public static final String SCREENSHOT = "screen_shot";
-    public static final String SETTEXT = "set_text";
-    public static final String EXIT = "exit";
-    public static final String MOUSECLICK = "mouse_click";
-    public static final String CAPABILITIES = "capabilities";
+    public static final String CHANNEL = "channel";
+    public static final String DRIVER = "driver";
+    public static final String START = "start";
+    public static final String STOP = "stop";
+    public static final String SWITCH = "switch";
+    public static final String CAPTURE = "capture";
+    public static final String INPUT = "input";
+    public static final String QUIT = "quit";
+    public static final String TAP = "tap";
+    public static final String BUTTON = "button";
+    public static final String APPLICATIONS = "applications";
 
     private static Pattern requestPattern = Pattern.compile("GET /(.*) HTTP/1.1");
 
-    public String type;
+    public String type = "";
     public String[] parameters = new String[0];
 
     public RequestType(String value){

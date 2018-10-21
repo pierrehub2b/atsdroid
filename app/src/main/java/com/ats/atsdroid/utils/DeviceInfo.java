@@ -17,8 +17,9 @@ specific language governing permissions and limitations
 under the License.
  */
 
-package com.ats.atsdroid;
+package com.ats.atsdroid.utils;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.res.Resources;
 import android.os.Build;
@@ -47,10 +48,6 @@ public class DeviceInfo {
         systemName = getAndroidVersion();
         deviceWidth = Resources.getSystem().getConfiguration().screenWidthDp;
         deviceHeight = Resources.getSystem().getConfiguration().screenHeightDp;
-    }
-
-    public static DeviceInfo getOurInstance() {
-        return ourInstance;
     }
 
     //----------------------------------------------------------------------------------
@@ -98,11 +95,8 @@ public class DeviceInfo {
 
     private int deviceWidth;
     private int deviceHeight;
-    private int displayWidth;
-    private int displayHeight;
-
-    private float widthScale;
-    private float heightScale;
+    private int resolutionWidth;
+    private int resolutionHeight;
 
     private String systemName;
     private String systemRelease = Build.VERSION.RELEASE;
@@ -114,31 +108,18 @@ public class DeviceInfo {
     private String hostName;
     private String btAdapter;
 
-    public void initData(int width, int height){
-        this.displayWidth = width;
-        this.displayHeight = height;
-
-        this.widthScale = (float)deviceWidth/(float)displayWidth;
-        this.heightScale = (float)deviceHeight/(float)displayHeight;
-    }
-
-    public float getWidthScale(){
-        return widthScale;
-    }
-
-    public float getHeightScale(){
-        return heightScale;
+    public void initSize(int width, int height){
+        this.resolutionWidth = width;
+        this.resolutionHeight = height;
     }
 
     public String getSystemName(){ return systemName; }
     public String getSystemRelease(){ return systemRelease; }
     public int getDeviceWidth() { return deviceWidth; }
     public int getDeviceHeight() { return deviceHeight; }
-    public int getDisplayWidth() {
-        return displayWidth;
-    }
-    public int getDisplayHeight() {
-        return displayHeight;
+    public int getResolutionWidth() {return resolutionWidth; }
+    public int getResolutionHeight() {
+        return resolutionHeight;
     }
     public String getDeviceId() {
         return deviceId;

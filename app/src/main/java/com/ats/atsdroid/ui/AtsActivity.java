@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
  */
 
-package com.ats.atsdroid;
+package com.ats.atsdroid.ui;
 
 import android.app.Activity;
 import android.app.KeyguardManager;
@@ -26,6 +26,10 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.view.WindowManager;
 import android.widget.TextView;
+
+import com.ats.atsdroid.AtsRunner;
+import com.ats.atsdroid.R;
+import com.ats.atsdroid.utils.DeviceInfo;
 
 public class AtsActivity extends Activity {
 
@@ -45,9 +49,10 @@ public class AtsActivity extends Activity {
         KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock(KEYGUARD_SERVICE);
         lock.disableKeyguard();
 
-        ((TextView) findViewById(R.id.hostLabel)).setText("Host name : " + DeviceInfo.getInstance().getHostName());
+        ((TextView) findViewById(R.id.hostLabel)).setText("ATS driver host : " + DeviceInfo.getInstance().getHostName() + ":" + AtsRunner.SERVER_PORT);
         ((TextView) findViewById(R.id.systemNameLabel)).setText("System name : " + DeviceInfo.getInstance().getSystemName());
-        ((TextView) findViewById(R.id.displaySizeLabel)).setText("Device size : " + DeviceInfo.getInstance().getDisplayWidth() + " x " + DeviceInfo.getInstance().getDisplayHeight());
+        ((TextView) findViewById(R.id.displaySizeLabel)).setText("Resolution : " + DeviceInfo.getInstance().getResolutionWidth() + " x " + DeviceInfo.getInstance().getResolutionHeight());
+        ((TextView) findViewById(R.id.deviceSizeLabel)).setText("Device size : " + DeviceInfo.getInstance().getDeviceWidth() + " x " + DeviceInfo.getInstance().getDeviceHeight());
         ((TextView) findViewById(R.id.modelLabel)).setText("Device name : " + DeviceInfo.getInstance().getManufacturer() + " " + DeviceInfo.getInstance().getModel());
     }
 }
