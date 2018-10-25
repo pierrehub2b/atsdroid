@@ -5,6 +5,9 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.util.Base64;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,5 +69,14 @@ public class ApplicationInfo {
         intent.setClassName(packageName, getActivity(0));
         intent.addFlags(flag);
         return intent;
+    }
+
+    public JSONObject getJson() throws JSONException{
+        JSONObject result = new JSONObject();
+        result.put("packageName", getPackageName());
+        result.put("activity", getActivity(0));
+        result.put("label", getLabel());
+
+        return result;
     }
 }

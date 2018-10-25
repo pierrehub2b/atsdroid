@@ -35,7 +35,7 @@ public class RequestType {
     public static final String QUIT = "quit";
     public static final String TAP = "tap";
     public static final String BUTTON = "button";
-    public static final String APPLICATIONS = "applications";
+    public static final String CAPABILITIES = "capabilities";
 
     private static Pattern requestPattern = Pattern.compile("GET /(.*) HTTP/1.1");
 

@@ -67,13 +67,14 @@ public class AtsAutomation {
     private final Matrix matrix = new Matrix();
     private int bmpQuality = 100;
     private Bitmap.CompressFormat bmpCompress = Bitmap.CompressFormat.PNG;
-    private String imageType = "png";
 
     private List<ApplicationInfo> applications;
 
     private Timer awakeTimer;
 
     private AtsRootElement rootElement;
+
+    private CaptureScreenServer screenCapture;
 
     //-------------------------------------------------------
     //assume here orientation is portrait
@@ -104,6 +105,9 @@ public class AtsAutomation {
         channelHeight = rootElement.getChannelHeight();
 
         matrix.postScale((float)DeviceInfo.getInstance().getDeviceWidth() / (float)channelWidth, (float)DeviceInfo.getInstance().getDeviceHeight() / (float)channelHeight);
+
+        this.screenCapture = new CaptureScreenServer(this);
+        (new Thread(this.screenCapture)).start();
 
         deviceSleep();
     }
@@ -146,10 +150,6 @@ public class AtsAutomation {
 
     public JSONObject getRootObject(){
         return rootElement.getJsonObject();
-    }
-
-    public byte[] getScreenData(){
-        return getScreenData(channelX, channelY, channelWidth, channelHeight);
     }
 
     public int getChannelWidth(){
@@ -271,7 +271,7 @@ public class AtsAutomation {
 
     public void clickAt(int x, int y){
         device.click(x, y);
-        sleep(200);
+        sleep(500);
     }
 
     public void sendNumericKeys(String value){
@@ -294,7 +294,6 @@ public class AtsAutomation {
 
         if(app != null) {
             stopActivity(pkg);
-
             context.startActivity(app.getIntent(Intent.FLAG_ACTIVITY_NEW_TASK));
 
             sleep(2000);
@@ -346,14 +345,17 @@ public class AtsAutomation {
     // Screen capture
     //----------------------------------------------------------------------------------------------------
 
-    private byte[] getScreenData(int x, int y, int width, int height)
+    public int getScreenCapturePort(){
+        return screenCapture.getPort();
+    }
+
+    public byte[] getScreenData()
     {
         Bitmap screen = automation.takeScreenshot();
-
         if(screen == null) {
-            screen = createEmptyBitmap(width + x, height + y, Color.LTGRAY);
+            screen = createEmptyBitmap(channelWidth + channelX, channelHeight + channelY, Color.LTGRAY);
         }
-        screen = Bitmap.createBitmap(screen, x, y, width, height, matrix, true);
+        screen = Bitmap.createBitmap(screen, channelX, channelY, channelWidth, channelHeight, matrix, true);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         screen.compress(bmpCompress, bmpQuality, outputStream);
@@ -372,10 +374,8 @@ public class AtsAutomation {
         if(level == 3){
             bmpQuality = 100;
             bmpCompress = Bitmap.CompressFormat.PNG;
-            imageType = "png";
         }else{
             bmpCompress = Bitmap.CompressFormat.JPEG;
-            imageType = "jpeg";
             if(level == 2){
                 bmpQuality = 80;
             }else if(level == 1){
@@ -384,10 +384,6 @@ public class AtsAutomation {
                 bmpQuality = 40;
             }
         }
-    }
-
-    public String getImageType(){
-        return imageType;
     }
 
     public static Bitmap createEmptyBitmap(int width, int height, int color) {

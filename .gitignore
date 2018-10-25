@@ -8,3 +8,4 @@
 .externalNativeBuild
 app/release/*
 gradle/wrapper
+.idea/misc.xml

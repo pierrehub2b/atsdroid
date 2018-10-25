@@ -4,11 +4,11 @@ import android.util.Base64;
 
 import com.ats.atsdroid.AtsRunner;
 import com.ats.atsdroid.element.AbstractAtsElement;
-import com.ats.atsdroid.element.AtsElement;
-import com.ats.atsdroid.utils.AtsAutomation;
 import com.ats.atsdroid.utils.ApplicationInfo;
+import com.ats.atsdroid.utils.AtsAutomation;
 import com.ats.atsdroid.utils.DeviceInfo;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
-import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
@@ -52,7 +51,7 @@ public class AtsHttpServer implements Runnable{
             JSONObject obj = new JSONObject();
 
             if(input == null){
-                sendResponseData(JSON_RESPONSE_TYPE, getJsonData(obj));
+                sendResponseData(obj);
             }else{
                 RequestType req = new RequestType(input);
 
@@ -85,24 +84,38 @@ public class AtsHttpServer implements Runnable{
                             }
                         }
 
-                        sendResponseData(JSON_RESPONSE_TYPE, getJsonData(obj));
+                        sendResponseData(obj);
                         break;
 
-                    case RequestType.APPLICATIONS :
+                    case RequestType.CAPABILITIES :
 
-                        obj.put("message", "installed applications");
+                        obj.put("status", "0");
+                        obj.put("message", "device capabilities");
+                        obj.put("id", DeviceInfo.getInstance().getDeviceId());
+                        obj.put("model", DeviceInfo.getInstance().getModel());
+                        obj.put("manufacturer", DeviceInfo.getInstance().getManufacturer());
+                        obj.put("brand", DeviceInfo.getInstance().getBrand());
+                        obj.put("version", DeviceInfo.getInstance().getVersion());
+                        obj.put("os", "android");
+                        obj.put("driverVersion", "1.0.0");
+                        obj.put("systemName", DeviceInfo.getInstance().getSystemName());
+                        obj.put("deviceWidth", DeviceInfo.getInstance().getDeviceWidth());
+                        obj.put("deviceHeight", DeviceInfo.getInstance().getDeviceHeight());
+                        obj.put("channelWidth", automation.getChannelWidth());
+                        obj.put("channelHeight", automation.getChannelHeight());
+                        obj.put("channelX", automation.getChannelX());
+                        obj.put("channelY", automation.getChannelY());
+                        obj.put("bluetoothName", DeviceInfo.getInstance().getBtAdapter());
+
                         List<ApplicationInfo> apps = automation.getApplications();
 
-                        JSONObject applications = new JSONObject();
+                        JSONArray applications = new JSONArray();
                         for(ApplicationInfo appInfo : apps){
-                            JSONObject appDetails = new JSONObject();
-                            appDetails.put("activity", appInfo.getActivity(0));
-                            appDetails.put("label", appInfo.getLabel());
-                            applications.put(appInfo.getPackageName(), appDetails);
+                            applications.put(appInfo.getJson());
                         }
                         obj.put("applications", applications);
 
-                        sendResponseData(JSON_RESPONSE_TYPE, getJsonData(obj));
+                        sendResponseData(obj);
                         break;
 
                     case RequestType.DRIVER :
@@ -110,17 +123,9 @@ public class AtsHttpServer implements Runnable{
                         if(req.parameters.length > 0) {
                             if(RequestType.START.equals(req.parameters[0])){
 
-                                int quality = 2;
-                                if(req.parameters.length > 1) {
-                                    try {
-                                        quality = Integer.parseInt(req.parameters[1]);
-                                    } catch (NumberFormatException e) {}
-                                }
-                                automation.setQuality(quality);
                                 automation.deviceWakeUp();
 
                                 obj.put("status", "0");
-                                obj.put("message", "start ats driver with image quality = " + quality);
                                 obj.put("os", "android");
                                 obj.put("driverVersion", "1.0.0");
                                 obj.put("systemName", DeviceInfo.getInstance().getSystemName());
@@ -130,13 +135,7 @@ public class AtsHttpServer implements Runnable{
                                 obj.put("channelHeight", automation.getChannelHeight());
                                 obj.put("channelX", automation.getChannelX());
                                 obj.put("channelY", automation.getChannelY());
-                                obj.put("id", DeviceInfo.getInstance().getDeviceId());
-                                obj.put("model", DeviceInfo.getInstance().getModel());
-                                obj.put("manufacturer", DeviceInfo.getInstance().getManufacturer());
-                                obj.put("brand", DeviceInfo.getInstance().getBrand());
-                                obj.put("version", DeviceInfo.getInstance().getVersion());
-                                obj.put("host", DeviceInfo.getInstance().getHostName());
-                                obj.put("bluetoothName", DeviceInfo.getInstance().getBtAdapter());
+                                obj.put("screenCapturePort", automation.getScreenCapturePort());
 
                             }else if(RequestType.STOP.equals(req.parameters[0])){
 
@@ -150,7 +149,7 @@ public class AtsHttpServer implements Runnable{
                                 obj.put("status", "0");
                                 obj.put("message", "close ats driver");
 
-                                sendResponseData(JSON_RESPONSE_TYPE, getJsonData(obj));
+                                sendResponseData(obj);
 
                                 runner.setRunning(false);
                                 automation.terminate();
@@ -164,7 +163,7 @@ public class AtsHttpServer implements Runnable{
                             obj.put("message", "missing driver action");
                         }
 
-                        sendResponseData(JSON_RESPONSE_TYPE, getJsonData(obj));
+                        sendResponseData(obj);
                         break;
 
                     case RequestType.BUTTON:
@@ -178,23 +177,15 @@ public class AtsHttpServer implements Runnable{
                             obj.put("message", "missing button type");
                         }
 
-                        sendResponseData(JSON_RESPONSE_TYPE, getJsonData(obj));
+                        sendResponseData(obj);
                         break;
 
                     case RequestType.CAPTURE:
 
-                        if(req.parameters.length > 0 && "elements".equals(req.parameters[0])){
-                            if(req.parameters.length > 1 && "reload".equals(req.parameters[1])){
-                                automation.reloadRoot();
-                            }
-                            sendResponseData("application/json", automation.getRootObject().toString().getBytes());
-                        }else{
-                            try {
-                                sendResponseData("image/" + automation.getImageType(), automation.getScreenData());
-                            }catch(Exception e){
-                                sendResponseData("text/html", e.getMessage().getBytes());
-                            }
+                        if(req.parameters.length > 0 && "reload".equals(req.parameters[0])){
+                            automation.reloadRoot();
                         }
+                        sendResponseData(automation.getRootObject());
                         break;
 
                     case RequestType.TAP:
@@ -229,7 +220,7 @@ public class AtsHttpServer implements Runnable{
                             obj.put("message", "missing element ats id");
                         }
 
-                        sendResponseData(JSON_RESPONSE_TYPE, getJsonData(obj));
+                        sendResponseData(obj);
                         break;
 
                     case RequestType.INPUT:
@@ -265,14 +256,14 @@ public class AtsHttpServer implements Runnable{
                             obj.put("message", "missing element ats id");
                         }
 
-                        sendResponseData(JSON_RESPONSE_TYPE, getJsonData(obj));
+                        sendResponseData(obj);
                         break;
 
                     default:
                         obj.put("status", "-99");
                         obj.put("message", "unknown command");
 
-                        sendResponseData(JSON_RESPONSE_TYPE, getJsonData(obj));
+                        sendResponseData(obj);
                         break;
                 }
             }
@@ -288,16 +279,14 @@ public class AtsHttpServer implements Runnable{
         }
     }
 
-    private byte[] getJsonData(JSONObject obj){
-        try{
-            return obj.toString().getBytes("ISO-8859-1");
-        }catch(UnsupportedEncodingException e){
-            return new byte[0];
-        }
-    }
+    private void sendResponseData(JSONObject obj) throws  IOException{
 
-    private void sendResponseData(String type, byte[] data) throws  IOException{
-        byte[] header = ("HTTP/1.1 200 OK\r\nServer: AtsDroid Driver\r\nDate: " + new Date() + "\r\nContent-type: " + type + "\r\nContent-length: " + data.length + "\r\n\r\n").getBytes();
+        byte[] data = new byte[0];
+        try{
+            data = obj.toString().getBytes("ISO-8859-1");
+        }catch(UnsupportedEncodingException e){}
+
+        byte[] header = ("HTTP/1.1 200 OK\r\nServer: AtsDroid Driver\r\nDate: " + new Date() + "\r\nContent-type: " + JSON_RESPONSE_TYPE + "\r\nContent-length: " + data.length + "\r\n\r\n").getBytes();
         BufferedOutputStream bf = new BufferedOutputStream(socket.getOutputStream());
         bf.write(header, 0, header.length);
         bf.write(data, 0, data.length);
