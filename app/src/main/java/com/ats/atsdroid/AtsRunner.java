@@ -19,6 +19,7 @@ under the License.
 
 package com.ats.atsdroid;
 
+import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.ats.atsdroid.utils.AtsAutomation;
@@ -39,7 +40,7 @@ import java.net.ServerSocket;
 @RunWith(AndroidJUnit4.class)
 public class AtsRunner {
 
-    public static final int SERVER_PORT = 8080;
+    public static final int DEFAULT_PORT = 8080;
 
     private boolean running = true;
     public boolean isRunning(){
@@ -52,10 +53,15 @@ public class AtsRunner {
     @Test
     public void testMain() {
 
-        AtsAutomation automation = new AtsAutomation();
+        int port = DEFAULT_PORT;
+        try {
+            port = Integer.parseInt(InstrumentationRegistry.getArguments().getString("atsPort"));
+        }catch(Exception e){};
+
+        AtsAutomation automation = new AtsAutomation(port);
 
         try {
-            ServerSocket serverConnect = new ServerSocket(SERVER_PORT);
+            ServerSocket serverConnect = new ServerSocket(port);
 
             while (running) {
                 AtsHttpServer atsServer = new AtsHttpServer(serverConnect.accept(), this, automation);

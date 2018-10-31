@@ -93,6 +93,8 @@ public class DeviceInfo {
     // Instance access
     //----------------------------------------------------------------------------------
 
+    private int port;
+
     private int deviceWidth;
     private int deviceHeight;
     private int resolutionWidth;
@@ -108,13 +110,14 @@ public class DeviceInfo {
     private String hostName;
     private String btAdapter;
 
-    public void initSize(int width, int height){
+    public void initData(int port, int width, int height){
+        this.port = port;
         this.resolutionWidth = width;
         this.resolutionHeight = height;
     }
 
     public String getSystemName(){ return systemName; }
-    public String getSystemRelease(){ return systemRelease; }
+    public int getPort(){ return port; }
     public int getDeviceWidth() { return deviceWidth; }
     public int getDeviceHeight() { return deviceHeight; }
     public int getResolutionWidth() {return resolutionWidth; }

@@ -23,6 +23,7 @@ import android.app.Instrumentation;
 import android.app.UiAutomation;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
@@ -86,10 +87,10 @@ public class AtsAutomation {
     private int channelHeight;
     //-------------------------------------------------------
 
-    public AtsAutomation(){
+    public AtsAutomation(int port){
 
         Configurator.getInstance().setWaitForIdleTimeout(0);
-        deviceInfo.initSize(device.getDisplayWidth(), device.getDisplayHeight());
+        deviceInfo.initData(port, device.getDisplayWidth(), device.getDisplayHeight());
 
         try {
             device.setOrientationNatural();
@@ -173,6 +174,11 @@ public class AtsAutomation {
         return applications;
     }
 
+    public ApplicationInfo getApplicationInfo(String pkg){
+        loadApplications();
+        return getApplicationByPackage(pkg);
+    }
+
     private void loadApplications(){
 
         applications = new ArrayList<ApplicationInfo>();
@@ -183,29 +189,38 @@ public class AtsAutomation {
 
         for(ResolveInfo info : pkgAppsList){
 
-            String pkg = info.activityInfo.packageName;
-            String act = info.activityInfo.name;
+            ActivityInfo activity = info.activityInfo;
+            String pkg = activity.packageName;
+            String act = activity.name;
 
-            ApplicationInfo app = getApplicationByPackage(pkg);
-            if(app != null){
-                app.addActivity(act);
-            }else{
+            if(pkg != null && act != null){
 
-                CharSequence label = info.activityInfo.nonLocalizedLabel;
-                Drawable icon = null;
+                ApplicationInfo app = getApplicationByPackage(pkg);
+                if(app != null){
+                    app.addActivity(act);
+                }else {
 
-                try{
-                    icon = context.getPackageManager().getApplicationIcon(pkg);
-                }catch (PackageManager.NameNotFoundException e){}
+                    CharSequence label = info.activityInfo.loadLabel(context.getPackageManager());
 
-                applications.add(new ApplicationInfo(pkg, act, label, icon));
+                    Drawable icon = null;
+                    try {
+                        icon = context.getPackageManager().getApplicationIcon(pkg);
+                    } catch (PackageManager.NameNotFoundException e) {}
+
+                    applications.add(new ApplicationInfo(
+                            pkg,
+                            act,
+                            (activity.applicationInfo.flags & android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0,
+                            label,
+                            icon));
+                }
             }
         }
     }
 
     private ApplicationInfo getApplicationByPackage(String pkg){
         for (ApplicationInfo app : applications) {
-            if (app.getPackageName().equals(pkg)) {
+            if (app.samePackage(pkg)) {
                 return app;
             }
         }
@@ -244,8 +259,8 @@ public class AtsAutomation {
 
     public void deviceSleep(){
         if(awakeTimer != null) {
-            awakeTimer.cancel();
             awakeTimer.purge();
+            awakeTimer.cancel();
             awakeTimer = null;
         }
 
@@ -269,15 +284,41 @@ public class AtsAutomation {
     //----------------------------------------------------------------------------------------------------
     //----------------------------------------------------------------------------------------------------
 
-    public void clickAt(int x, int y){
+    public void clickAt(int x, int y, boolean hideKeyboard){
         device.click(x, y);
+
+        if(hideKeyboard){
+            device.pressKeyCode(KeyEvent.KEYCODE_ESCAPE);
+            device.pressKeyCode(KeyEvent.KEYCODE_CLEAR);
+        }
+
         sleep(500);
     }
 
+    public void pressKey(int code){
+        device.pressKeyCode(code);
+    }
+
     public void sendNumericKeys(String value){
-        device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_2);
+
+        device.pressKeyCode(KeyEvent.KEYCODE_P);
+        device.pressKeyCode(KeyEvent.KEYCODE_I);
+        device.pressKeyCode(KeyEvent.KEYCODE_E);
+        device.pressKeyCode(KeyEvent.KEYCODE_R);
+        device.pressKeyCode(KeyEvent.KEYCODE_R);
+        device.pressKeyCode(KeyEvent.KEYCODE_E);
+
+
+
+        /*device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_2);
         device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_1);
-        device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_3);
+        device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_0);
+        device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_6);
+        device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_1);
+        device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_9);
+        device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_6);
+        device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_7);*/
+
     }
 
     //----------------------------------------------------------------------------------------------------
@@ -294,7 +335,8 @@ public class AtsAutomation {
 
         if(app != null) {
             stopActivity(pkg);
-            context.startActivity(app.getIntent(Intent.FLAG_ACTIVITY_NEW_TASK));
+
+            app.start(context);
 
             sleep(2000);
             device.waitForIdle();
@@ -302,7 +344,6 @@ public class AtsAutomation {
 
             reloadRoot();
         }
-
         return app;
     }
 
@@ -321,7 +362,7 @@ public class AtsAutomation {
 
         if(app != null) {
 
-            context.startActivity(app.getIntent(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT));
+            app.toFront(context);
 
             sleep(1000);
             device.waitForIdle();
@@ -355,10 +396,12 @@ public class AtsAutomation {
         if(screen == null) {
             screen = createEmptyBitmap(channelWidth + channelX, channelHeight + channelY, Color.LTGRAY);
         }
-        screen = Bitmap.createBitmap(screen, channelX, channelY, channelWidth, channelHeight, matrix, true);
+        screen = Bitmap.createBitmap(screen, channelX, channelY, channelWidth, channelHeight, matrix, false);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        screen.compress(bmpCompress, bmpQuality, outputStream);
+        screen.compress(Bitmap.CompressFormat.JPEG, 40, outputStream);
+        //screen.compress(bmpCompress, bmpQuality, outputStream);
+
 
         byte[] result = outputStream.toByteArray();
         try{

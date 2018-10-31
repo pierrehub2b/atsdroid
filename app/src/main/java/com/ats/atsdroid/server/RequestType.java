@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 
 public class RequestType {
 
-    public static final String CHANNEL = "channel";
+    public static final String APP = "app";
     public static final String DRIVER = "driver";
     public static final String START = "start";
     public static final String STOP = "stop";
@@ -35,7 +35,7 @@ public class RequestType {
     public static final String QUIT = "quit";
     public static final String TAP = "tap";
     public static final String BUTTON = "button";
-    public static final String CAPABILITIES = "capabilities";
+    public static final String INFO = "info";
 
     private static Pattern requestPattern = Pattern.compile("GET /(.*) HTTP/1.1");
 

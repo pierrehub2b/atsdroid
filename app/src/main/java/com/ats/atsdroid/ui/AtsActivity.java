@@ -49,7 +49,7 @@ public class AtsActivity extends Activity {
         KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock(KEYGUARD_SERVICE);
         lock.disableKeyguard();
 
-        ((TextView) findViewById(R.id.hostLabel)).setText("ATS driver host : " + DeviceInfo.getInstance().getHostName() + ":" + AtsRunner.SERVER_PORT);
+        ((TextView) findViewById(R.id.hostLabel)).setText("ATS driver host : " + DeviceInfo.getInstance().getHostName() + ":" + DeviceInfo.getInstance().getPort());
         ((TextView) findViewById(R.id.systemNameLabel)).setText("System name : " + DeviceInfo.getInstance().getSystemName());
         ((TextView) findViewById(R.id.displaySizeLabel)).setText("Resolution : " + DeviceInfo.getInstance().getResolutionWidth() + " x " + DeviceInfo.getInstance().getResolutionHeight());
         ((TextView) findViewById(R.id.deviceSizeLabel)).setText("Device size : " + DeviceInfo.getInstance().getDeviceWidth() + " x " + DeviceInfo.getInstance().getDeviceHeight());

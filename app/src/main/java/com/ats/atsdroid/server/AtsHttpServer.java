@@ -57,63 +57,82 @@ public class AtsHttpServer implements Runnable{
 
                 switch (req.type){
 
-                    case RequestType.CHANNEL:
+                    case RequestType.APP:
 
                         if(req.parameters.length > 1) {
                             if(RequestType.START.equals(req.parameters[0])){
-                                ApplicationInfo app = automation.startChannel(req.parameters[1]);
+                                try {
+                                    ApplicationInfo app = automation.startChannel(req.parameters[1]);
 
-                                if(app != null){
-                                    obj.put("status", "0");
-                                    obj.put("message", "start channel : " + app.getPackageName());
-                                    obj.put("label", app.getLabel());
-                                    obj.put("icon", app.getIcon());
-                                }else{
-                                    obj.put("status", "-5");
-                                    obj.put("message", "application package not found : " + req.parameters[1]);
+                                    if (app != null) {
+                                        obj.put("status", "0");
+                                        obj.put("message", "start app : " + app.getPackageName());
+                                        obj.put("label", app.getLabel());
+                                        obj.put("icon", app.getIcon());
+                                    } else {
+                                        obj.put("status", "-5");
+                                        obj.put("message", "app package not found : " + req.parameters[1]);
+                                    }
+                                }catch (Exception e){
+                                    System.err.println("Ats error : " + e.getMessage());
                                 }
 
                             }else if(RequestType.STOP.equals(req.parameters[0])){
                                 automation.stopChannel(req.parameters[1]);
                                 obj.put("status", "0");
-                                obj.put("message", "stop channel : " + req.parameters[1]);
+                                obj.put("message", "stop app : " + req.parameters[1]);
                             }else if(RequestType.SWITCH.equals(req.parameters[0])){
                                 automation.switchChannel(req.parameters[1]);
                                 obj.put("status", "0");
-                                obj.put("message", "switch channel : " + req.parameters[1]);
+                                obj.put("message", "switch app : " + req.parameters[1]);
+                            }else if(RequestType.INFO.equals(req.parameters[0])){
+                                ApplicationInfo app = automation.getApplicationInfo(req.parameters[1]);
+                                if(app != null){
+                                    obj.put("status", "0");
+                                    obj.put("info", app.getJson());
+                                }else{
+                                    obj.put("status", "-8");
+                                    obj.put("message", "app not found : " + req.parameters[1]);
+                                }
                             }
                         }
 
                         sendResponseData(obj);
                         break;
 
-                    case RequestType.CAPABILITIES :
+                    case RequestType.INFO :
 
-                        obj.put("status", "0");
-                        obj.put("message", "device capabilities");
-                        obj.put("id", DeviceInfo.getInstance().getDeviceId());
-                        obj.put("model", DeviceInfo.getInstance().getModel());
-                        obj.put("manufacturer", DeviceInfo.getInstance().getManufacturer());
-                        obj.put("brand", DeviceInfo.getInstance().getBrand());
-                        obj.put("version", DeviceInfo.getInstance().getVersion());
-                        obj.put("os", "android");
-                        obj.put("driverVersion", "1.0.0");
-                        obj.put("systemName", DeviceInfo.getInstance().getSystemName());
-                        obj.put("deviceWidth", DeviceInfo.getInstance().getDeviceWidth());
-                        obj.put("deviceHeight", DeviceInfo.getInstance().getDeviceHeight());
-                        obj.put("channelWidth", automation.getChannelWidth());
-                        obj.put("channelHeight", automation.getChannelHeight());
-                        obj.put("channelX", automation.getChannelX());
-                        obj.put("channelY", automation.getChannelY());
-                        obj.put("bluetoothName", DeviceInfo.getInstance().getBtAdapter());
+                        try {
+                            obj.put("status", "0");
+                            obj.put("message", "device capabilities");
+                            obj.put("id", DeviceInfo.getInstance().getDeviceId());
+                            obj.put("model", DeviceInfo.getInstance().getModel());
+                            obj.put("manufacturer", DeviceInfo.getInstance().getManufacturer());
+                            obj.put("brand", DeviceInfo.getInstance().getBrand());
+                            obj.put("version", DeviceInfo.getInstance().getVersion());
+                            obj.put("os", "android");
+                            obj.put("driverVersion", "1.0.0");
+                            obj.put("systemName", DeviceInfo.getInstance().getSystemName());
+                            obj.put("deviceWidth", DeviceInfo.getInstance().getDeviceWidth());
+                            obj.put("deviceHeight", DeviceInfo.getInstance().getDeviceHeight());
+                            obj.put("channelWidth", automation.getChannelWidth());
+                            obj.put("channelHeight", automation.getChannelHeight());
+                            obj.put("channelX", automation.getChannelX());
+                            obj.put("channelY", automation.getChannelY());
+                            obj.put("bluetoothName", DeviceInfo.getInstance().getBtAdapter());
 
-                        List<ApplicationInfo> apps = automation.getApplications();
+                            List<ApplicationInfo> apps = automation.getApplications();
 
-                        JSONArray applications = new JSONArray();
-                        for(ApplicationInfo appInfo : apps){
-                            applications.put(appInfo.getJson());
+                            JSONArray applications = new JSONArray();
+                            for (ApplicationInfo appInfo : apps) {
+                                applications.put(appInfo.getJson());
+                            }
+                            obj.put("applications", applications);
+
+                        }catch (Exception e){
+                            obj.put("status", "-99");
+                            obj.put("message", e.getMessage());
                         }
-                        obj.put("applications", applications);
 
                         sendResponseData(obj);
                         break;
@@ -283,7 +302,7 @@ public class AtsHttpServer implements Runnable{
 
         byte[] data = new byte[0];
         try{
-            data = obj.toString().getBytes("ISO-8859-1");
+            data = obj.toString().getBytes("UTF-8");
         }catch(UnsupportedEncodingException e){}
 
         byte[] header = ("HTTP/1.1 200 OK\r\nServer: AtsDroid Driver\r\nDate: " + new Date() + "\r\nContent-type: " + JSON_RESPONSE_TYPE + "\r\nContent-length: " + data.length + "\r\n\r\n").getBytes();

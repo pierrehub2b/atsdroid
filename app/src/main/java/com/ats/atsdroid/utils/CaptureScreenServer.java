@@ -27,7 +27,7 @@ import java.net.SocketException;
 
 public class CaptureScreenServer implements Runnable  {
 
-    private static final int PACKET_SIZE = 504;
+    private static final int PACKET_SIZE = 500;
 
     private boolean running = true;
     private byte[] receiveData = new byte[1];
@@ -58,7 +58,7 @@ public class CaptureScreenServer implements Runnable  {
                 int dataLength = screen.length;
                 int currentPos = 0;
 
-                sendData(screen, currentPos, getData(dataLength, packetSize), packetSize, receivePacket.getAddress(), receivePacket.getPort());
+                sendData(screen, currentPos, getData(currentPos, dataLength, packetSize), packetSize, receivePacket.getAddress(), receivePacket.getPort());
 
                 while(dataLength > 0) {
                     currentPos += packetSize;
@@ -66,7 +66,7 @@ public class CaptureScreenServer implements Runnable  {
                     if(dataLength < packetSize) {
                         packetSize = dataLength;
                     }
-                    sendData(screen, currentPos, getData(dataLength, packetSize), packetSize, receivePacket.getAddress(), receivePacket.getPort());
+                    sendData(screen, currentPos, getData(currentPos, dataLength, packetSize), packetSize, receivePacket.getAddress(), receivePacket.getPort());
                 }
 
             } catch (Exception e) {}
@@ -75,17 +75,24 @@ public class CaptureScreenServer implements Runnable  {
     }
 
     private void sendData(byte[] screen, int currentPos, byte[] send, int packetSize, InetAddress address, int port) throws IOException{
-        System.arraycopy(screen, currentPos, send, 4, packetSize);
+        System.arraycopy(screen, currentPos, send, 8, packetSize);
         DatagramPacket packet = new DatagramPacket(send, send.length, address, port);
         serverSocket.send(packet);
     }
 
-    private byte[] getData(int dataLength, int packetSize){
-        byte[] data = new byte[packetSize + 4];
-        data[0] = (byte)(dataLength >>> 24);
-        data[1] = (byte)(dataLength >>> 16);
-        data[2] = (byte)(dataLength >>> 8);
-        data[3] = (byte)(dataLength);
+    private byte[] getData(int dataPos, int dataLength, int packetSize){
+        byte[] data = new byte[packetSize + 8];
+
+        data[0] = (byte)(dataPos >>> 24);
+        data[1] = (byte)(dataPos >>> 16);
+        data[2] = (byte)(dataPos >>> 8);
+        data[3] = (byte)(dataPos);
+
+        data[4] = (byte)(dataLength >>> 24);
+        data[5] = (byte)(dataLength >>> 16);
+        data[6] = (byte)(dataLength >>> 8);
+        data[7] = (byte)(dataLength);
+
         return data;
     }
 

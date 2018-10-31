@@ -1,8 +1,8 @@
 package com.ats.atsdroid.element;
 
 import android.graphics.Rect;
+import android.inputmethodservice.Keyboard;
 import android.os.Bundle;
-import android.text.InputType;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.ats.atsdroid.utils.AtsAutomation;
@@ -59,11 +59,9 @@ public abstract class AbstractAtsElement {
     public String getViewId(){return null;}
 
     public void click(AtsAutomation automation, int offsetX, int offsetY){
-
         node.refresh();
         node.getBoundsInScreen(bounds);
-
-        automation.clickAt(bounds.left + offsetX, bounds.top + offsetY);
+        automation.clickAt(bounds.left + offsetX, bounds.top + offsetY, node.isEditable());
     }
 
     public void inputText(AtsAutomation automation, String value){
@@ -71,9 +69,16 @@ public abstract class AbstractAtsElement {
         if(numeric){
             automation.sendNumericKeys(value);
         }else {
-            Bundle arguments = new Bundle();
+            node.performAction(AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS);
+            for(int i=0; i<value.length(); i++){
+                int codePoint = (int)value.charAt(i) - 68;
+                automation.pressKey(codePoint);
+            }
+
+
+            /*Bundle arguments = new Bundle();
             arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, value);
-            node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);
+            node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);*/
         }
     }
 
