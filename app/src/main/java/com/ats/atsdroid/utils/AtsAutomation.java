@@ -24,14 +24,13 @@ import android.app.UiAutomation;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.drawable.Drawable;
 import android.os.RemoteException;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.Configurator;
@@ -47,8 +46,6 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class AtsAutomation {
 
@@ -66,16 +63,14 @@ public class AtsAutomation {
     private final DeviceInfo deviceInfo = DeviceInfo.getInstance();
 
     private final Matrix matrix = new Matrix();
-    private int bmpQuality = 100;
-    private Bitmap.CompressFormat bmpCompress = Bitmap.CompressFormat.PNG;
+    private float scaleX = 0;
+    private float scaleY = 0;
 
     private List<ApplicationInfo> applications;
 
-    private Timer awakeTimer;
-
     private AtsRootElement rootElement;
 
-    private CaptureScreenServer screenCapture;
+    private DriverThread driverThread;
 
     //-------------------------------------------------------
     //assume here orientation is portrait
@@ -86,6 +81,7 @@ public class AtsAutomation {
     private int channelY;
     private int channelHeight;
     //-------------------------------------------------------
+    private AbstractAtsElement found = null;
 
     public AtsAutomation(int port){
 
@@ -100,24 +96,27 @@ public class AtsAutomation {
         device.pressHome();
         executeShell("am start -W com.ats.atsdroid/.ui.AtsActivity");
 
+        loadApplications();
         reloadRoot();
 
         channelY = rootElement.getChannelY();
         channelHeight = rootElement.getChannelHeight();
 
-        matrix.postScale((float)DeviceInfo.getInstance().getDeviceWidth() / (float)channelWidth, (float)DeviceInfo.getInstance().getDeviceHeight() / (float)channelHeight);
+        scaleX = (float)DeviceInfo.getInstance().getDeviceWidth() / (float)channelWidth;
+        scaleY = (float)DeviceInfo.getInstance().getDeviceHeight() / (float)channelHeight;
+        matrix.preScale(scaleX, scaleY);
 
-        this.screenCapture = new CaptureScreenServer(this);
-        (new Thread(this.screenCapture)).start();
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 
-        deviceSleep();
+        sleep();
     }
 
     public void reloadRoot(){
 
         AccessibilityNodeInfo rootNode = automation.getRootInActiveWindow();
         while (rootNode == null){
-            sleep(100);
+            wait(100);
             rootNode = automation.getRootInActiveWindow();
         }
         rootNode.refresh();
@@ -125,12 +124,11 @@ public class AtsAutomation {
         try {
             rootElement = new AtsRootElement(device, rootNode);
         }catch (Exception e){
-            sleep(100);
+            wait(100);
             reloadRoot();
         }
     }
 
-    private AbstractAtsElement found = null;
     public AbstractAtsElement getElement(String id){
         found = null;
         getElement(rootElement, id);
@@ -170,12 +168,10 @@ public class AtsAutomation {
     }
 
     public List<ApplicationInfo> getApplications(){
-        loadApplications();
         return applications;
     }
 
     public ApplicationInfo getApplicationInfo(String pkg){
-        loadApplications();
         return getApplicationByPackage(pkg);
     }
 
@@ -200,19 +196,12 @@ public class AtsAutomation {
                     app.addActivity(act);
                 }else {
 
-                    CharSequence label = info.activityInfo.loadLabel(context.getPackageManager());
-
-                    Drawable icon = null;
-                    try {
-                        icon = context.getPackageManager().getApplicationIcon(pkg);
-                    } catch (PackageManager.NameNotFoundException e) {}
-
                     applications.add(new ApplicationInfo(
                             pkg,
                             act,
                             (activity.applicationInfo.flags & android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0,
-                            label,
-                            icon));
+                            activity.loadLabel(context.getPackageManager()),
+                            activity.loadIcon(context.getPackageManager())));
                 }
             }
         }
@@ -244,38 +233,13 @@ public class AtsAutomation {
         }
     }
 
-    public void deviceWakeUp(){
-        awakeTimer = new Timer(true);
-        awakeTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    device.wakeUp();
-                }catch(RemoteException e){}
-            }
-        }, 0, 2000);
-        executeShell("am start -W com.ats.atsdroid/.ui.AtsActivity");
-    }
-
-    public void deviceSleep(){
-        if(awakeTimer != null) {
-            awakeTimer.purge();
-            awakeTimer.cancel();
-            awakeTimer = null;
-        }
-
-        try {
-            device.sleep();
-        }catch(RemoteException e){}
-    }
-
     private void executeShell(String value){
         try {
             device.executeShellCommand(value);
         }catch(Exception e){}
     }
 
-    public void sleep(int ms){
+    public void wait(int ms){
         try {
             Thread.sleep(ms);
         }catch(InterruptedException e){}
@@ -286,13 +250,11 @@ public class AtsAutomation {
 
     public void clickAt(int x, int y, boolean hideKeyboard){
         device.click(x, y);
-
         if(hideKeyboard){
             device.pressKeyCode(KeyEvent.KEYCODE_ESCAPE);
             device.pressKeyCode(KeyEvent.KEYCODE_CLEAR);
         }
-
-        sleep(500);
+        wait(500);
     }
 
     public void pressKey(int code){
@@ -321,6 +283,48 @@ public class AtsAutomation {
 
     }
 
+    public void swipe(int x, int y, int xTo, int yTo){
+        device.swipe(x, y, x + xTo, y + yTo, 10);
+    }
+
+    //----------------------------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------------------------------
+
+    public int getScreenCapturePort(){
+        if(driverThread != null){
+            return driverThread.getScreenCapturePort();
+        }
+        return -1;
+    }
+
+    public void startDriverThread(){
+        stopDriverThread();
+
+        wakeUp();
+        executeShell("am start -W com.ats.atsdroid/.ui.AtsActivity");
+
+        driverThread = new DriverThread(this);
+        (new Thread(driverThread)).start();
+    }
+
+    public void stopDriverThread(){
+        if(driverThread != null){
+            driverThread.stop();
+        }
+    }
+
+    public void wakeUp(){
+        try {
+            device.wakeUp();
+        }catch(RemoteException e){}
+    }
+
+    public void sleep(){
+        try {
+            device.sleep();
+        }catch(RemoteException e){}
+    }
+
     //----------------------------------------------------------------------------------------------------
     //----------------------------------------------------------------------------------------------------
 
@@ -330,15 +334,14 @@ public class AtsAutomation {
 
     public ApplicationInfo startChannel(String pkg){
 
-        loadApplications();
-        ApplicationInfo app = getApplicationByPackage(pkg);
+        final ApplicationInfo app = getApplicationByPackage(pkg);
 
         if(app != null) {
             stopActivity(pkg);
 
             app.start(context);
 
-            sleep(2000);
+            wait(2000);
             device.waitForIdle();
             device.waitForWindowUpdate(null, 2000);
 
@@ -357,14 +360,13 @@ public class AtsAutomation {
             return;
         }
 
-        loadApplications();
         ApplicationInfo app = getApplicationByPackage(pkg);
 
         if(app != null) {
 
             app.toFront(context);
 
-            sleep(1000);
+            wait(1000);
             device.waitForIdle();
             device.waitForWindowUpdate(null, 2000);
 
@@ -386,60 +388,38 @@ public class AtsAutomation {
     // Screen capture
     //----------------------------------------------------------------------------------------------------
 
-    public int getScreenCapturePort(){
-        return screenCapture.getPort();
-    }
-
     public byte[] getScreenData()
     {
         Bitmap screen = automation.takeScreenshot();
+        Bitmap resizedScreen = null;
         if(screen == null) {
-            screen = createEmptyBitmap(channelWidth + channelX, channelHeight + channelY, Color.LTGRAY);
-        }
-        screen = Bitmap.createBitmap(screen, channelX, channelY, channelWidth, channelHeight, matrix, false);
-
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        screen.compress(Bitmap.CompressFormat.JPEG, 40, outputStream);
-        //screen.compress(bmpCompress, bmpQuality, outputStream);
-
-
-        byte[] result = outputStream.toByteArray();
-        try{
-            outputStream.close();
-        }catch(Exception e){}
-
-        screen.recycle();
-
-        return result;
-    }
-
-    public void setQuality(int level){
-        if(level == 3){
-            bmpQuality = 100;
-            bmpCompress = Bitmap.CompressFormat.PNG;
+            resizedScreen = createEmptyBitmap(channelWidth, channelHeight, Color.LTGRAY);
         }else{
-            bmpCompress = Bitmap.CompressFormat.JPEG;
-            if(level == 2){
-                bmpQuality = 80;
-            }else if(level == 1){
-                bmpQuality = 60;
-            }else{
-                bmpQuality = 40;
-            }
+            resizedScreen = Bitmap.createBitmap(screen, channelX, channelY, channelWidth, channelHeight, matrix, true);
+            screen.recycle();
         }
+
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        resizedScreen.compress(Bitmap.CompressFormat.JPEG, 32, outputStream);
+        resizedScreen.recycle();
+
+        return outputStream.toByteArray();
     }
 
-    public static Bitmap createEmptyBitmap(int width, int height, int color) {
+    private Bitmap createEmptyBitmap(int width, int height, int color) {
 
-        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-
-        Paint paint = new Paint();
-        paint.setColor(color);
-        canvas.drawRect(0F, 0F, (float) width, (float) height, paint);
-
+        final Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         bitmap.setHasAlpha(false);
 
+        final Canvas canvas = new Canvas(bitmap);
+
+        final Paint paint = new Paint();
+        paint.setARGB(255, 220, 220, 220);
+        canvas.drawRect(0, 0, width, height, paint);
+
+        canvas.translate(-channelX, -channelY);
+
+        rootElement.drawElements(canvas, context.getResources());
         return bitmap;
     }
 }

@@ -22,8 +22,8 @@ package com.ats.atsdroid;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
-import com.ats.atsdroid.utils.AtsAutomation;
 import com.ats.atsdroid.server.AtsHttpServer;
+import com.ats.atsdroid.utils.AtsAutomation;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,17 +58,14 @@ public class AtsRunner {
             port = Integer.parseInt(InstrumentationRegistry.getArguments().getString("atsPort"));
         }catch(Exception e){};
 
-        AtsAutomation automation = new AtsAutomation(port);
+        final AtsAutomation automation = new AtsAutomation(port);
 
         try {
-            ServerSocket serverConnect = new ServerSocket(port);
-
+            final ServerSocket serverConnect = new ServerSocket(port);
             while (running) {
-                AtsHttpServer atsServer = new AtsHttpServer(serverConnect.accept(), this, automation);
-                Thread thread = new Thread(atsServer);
-                thread.start();
+                final AtsHttpServer atsServer = new AtsHttpServer(serverConnect.accept(), this, automation);
+                (new Thread(atsServer)).start();
             }
-
         } catch (IOException e) {
             System.err.println("Server Connection error : " + e.getMessage());
         }

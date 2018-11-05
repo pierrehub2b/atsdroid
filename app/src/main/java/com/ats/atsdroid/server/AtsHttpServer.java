@@ -86,14 +86,14 @@ public class AtsHttpServer implements Runnable{
                                 obj.put("status", "0");
                                 obj.put("message", "switch app : " + req.parameters[1]);
                             }else if(RequestType.INFO.equals(req.parameters[0])){
-                                ApplicationInfo app = automation.getApplicationInfo(req.parameters[1]);
-                                if(app != null){
-                                    obj.put("status", "0");
-                                    obj.put("info", app.getJson());
-                                }else{
-                                    obj.put("status", "-8");
-                                    obj.put("message", "app not found : " + req.parameters[1]);
-                                }
+                                    ApplicationInfo app = automation.getApplicationInfo(req.parameters[1]);
+                                    if (app != null) {
+                                        obj.put("status", "0");
+                                        obj.put("info", app.getJson());
+                                    } else {
+                                        obj.put("status", "-8");
+                                        obj.put("message", "app not found : " + req.parameters[1]);
+                                    }
                             }
                         }
 
@@ -142,7 +142,7 @@ public class AtsHttpServer implements Runnable{
                         if(req.parameters.length > 0) {
                             if(RequestType.START.equals(req.parameters[0])){
 
-                                automation.deviceWakeUp();
+                                automation.startDriverThread();
 
                                 obj.put("status", "0");
                                 obj.put("os", "android");
@@ -158,13 +158,13 @@ public class AtsHttpServer implements Runnable{
 
                             }else if(RequestType.STOP.equals(req.parameters[0])){
 
-                                automation.deviceSleep();
+                                automation.stopDriverThread();
                                 obj.put("status", "0");
                                 obj.put("message", "stop ats driver");
 
                             }else if(RequestType.QUIT.equals(req.parameters[0])){
 
-                                automation.deviceSleep();
+                                automation.stopDriverThread();
                                 obj.put("status", "0");
                                 obj.put("message", "close ats driver");
 
@@ -229,6 +229,45 @@ public class AtsHttpServer implements Runnable{
 
                                 obj.put("status", "0");
                                 obj.put("message", "click on element : " + elementId);
+                            }else{
+                                obj.put("status", "-9");
+                                obj.put("message", "element does not exists");
+                            }
+
+                        }else{
+                            obj.put("status", "-1");
+                            obj.put("message", "missing element ats id");
+                        }
+
+                        sendResponseData(obj);
+                        break;
+
+                    case RequestType.SWIPE:
+
+                        if(req.parameters.length > 0) {
+
+                            String elementId = req.parameters[0];
+                            int offsetX = 0;
+                            int offsetY = 0;
+                            int directionX = 0;
+                            int directionY = 0;
+
+                            if (req.parameters.length > 4){
+                                try {
+                                    offsetX = Integer.parseInt(req.parameters[1]);
+                                    offsetY = Integer.parseInt(req.parameters[2]);
+                                    directionX = Integer.parseInt(req.parameters[3]);
+                                    directionY = Integer.parseInt(req.parameters[4]);
+                                } catch (NumberFormatException e) {}
+                            }
+
+                            AbstractAtsElement element = automation.getElement(elementId);
+                            if(element != null){
+
+                                element.swipe(automation, offsetX, offsetY, directionX, directionY);
+
+                                obj.put("status", "0");
+                                obj.put("message", "swipe on element : " + elementId + " -> " + directionX + ":" + directionY);
                             }else{
                                 obj.put("status", "-9");
                                 obj.put("message", "element does not exists");

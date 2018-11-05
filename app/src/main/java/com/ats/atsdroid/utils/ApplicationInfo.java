@@ -139,7 +139,7 @@ public class ApplicationInfo {
 
         if(bitmap != null) {
 
-            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, 24, 24, false);
+            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, 24, 24, true);
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);

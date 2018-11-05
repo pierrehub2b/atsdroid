@@ -19,6 +19,8 @@ under the License.
 
 package com.ats.atsdroid.element;
 
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.text.InputType;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -36,7 +38,7 @@ public class AtsElement extends AbstractAtsElement {
 
         String data = node.getClassName().toString();
         this.tag = data.substring(data.lastIndexOf(".") + 1);
-        this.index = index;
+        this.clickable = node.isClickable();
 
         int type = node.getInputType();
         this.numeric = type == InputType.TYPE_NUMBER_FLAG_DECIMAL || type == InputType.TYPE_CLASS_NUMBER || type == InputType.TYPE_NUMBER_FLAG_DECIMAL + InputType.TYPE_CLASS_NUMBER;
@@ -51,9 +53,15 @@ public class AtsElement extends AbstractAtsElement {
             attributes.put("description", charSeq.toString());
         }
 
+        if (Build.VERSION.SDK_INT >= 28) {
+            charSeq = node.getTooltipText();
+            if (charSeq != null) {
+                attributes.put("tooltip", charSeq.toString());
+            }
+        }
+
         attributes.put("numeric", numeric + "");
         attributes.put("enabled", node.isEnabled() + "");
-        attributes.put("clickable", node.isClickable() + "");
         attributes.put("selected", node.isSelected() + "");
         attributes.put("editable", node.isEditable() + "");
         attributes.put("checkable", node.isCheckable() + "");
