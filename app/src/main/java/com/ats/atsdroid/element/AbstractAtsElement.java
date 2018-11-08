@@ -66,40 +66,62 @@ public abstract class AbstractAtsElement {
         return bounds.height();
     }
 
-    //--------------------------------------------------------------------------------------------
-    //
-    //--------------------------------------------------------------------------------------------
-
     public String getViewId(){return null;}
+
+    //--------------------------------------------------------------------------------------------
+    // Actions
+    //--------------------------------------------------------------------------------------------
 
     public void click(AtsAutomation automation, int offsetX, int offsetY){
         node.refresh();
         node.getBoundsInScreen(bounds);
-        automation.clickAt(bounds.left + offsetX, bounds.top + offsetY, node.isEditable());
-    }
 
-    public void inputText(AtsAutomation automation, String value){
-        node.refresh();
-        if(numeric){
-            automation.sendNumericKeys(value);
-        }else {
-            node.performAction(AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS);
-            for(int i=0; i<value.length(); i++){
-                int codePoint = (int)value.charAt(i) - 68;
-                automation.pressKey(codePoint);
-            }
-
-
-            /*Bundle arguments = new Bundle();
-            arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, value);
-            node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);*/
+        if(node.isEditable()){
+            node.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+        }else{
+            automation.clickAt(bounds.left + offsetX, bounds.top + offsetY);
         }
     }
 
-    public void swipe(AtsAutomation automation, int offsetX, int offsetY, int directionX, int directionY){
+    public void inputText(AtsAutomation automation, String value){
+
+        //node.refresh();
+        int textLength = value.length();
+
+        if(numeric){
+            for(int i=0; i<value.length(); i++){
+                try {
+                    automation.pressNumericKey(Integer.parseInt(value.substring(i, i+1)));
+                }catch (NumberFormatException e){}
+            }
+        }else {
+
+            int[] numericData = new int[textLength];
+            for(int i=0; i<value.length(); i++){
+                try {
+
+                    numericData[i] = Integer.parseInt(value.substring(i, i+1));
+
+                }catch (NumberFormatException e){
+
+                    Bundle arguments = new Bundle();
+                    arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, value);
+
+                    node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);
+
+                    return;
+                }
+            }
+            automation.sendNumericKeys(numericData);
+        }
+    }
+
+    public String swipe(AtsAutomation automation, int offsetX, int offsetY, int directionX, int directionY){
         node.refresh();
         node.getBoundsInScreen(bounds);
         automation.swipe(bounds.left + offsetX, bounds.top + offsetY, directionX, directionY);
+
+        return (bounds.left + offsetX) + ":" + (bounds.top + offsetY);
     }
 
     //--------------------------------------------------------------------------------------------

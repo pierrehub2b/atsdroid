@@ -50,66 +50,90 @@ public class AtsHttpServer implements Runnable{
             String input = in.readLine();
             JSONObject obj = new JSONObject();
 
-            if(input == null){
-                sendResponseData(obj);
-            }else{
+            if(input != null){
+
                 RequestType req = new RequestType(input);
 
-                switch (req.type){
+                if(RequestType.APP.equals(req.type)){
+                    if(req.parameters.length > 1) {
+                        if(RequestType.START.equals(req.parameters[0])){
+                            try {
+                                ApplicationInfo app = automation.startChannel(req.parameters[1]);
 
-                    case RequestType.APP:
-
-                        if(req.parameters.length > 1) {
-                            if(RequestType.START.equals(req.parameters[0])){
-                                try {
-                                    ApplicationInfo app = automation.startChannel(req.parameters[1]);
-
-                                    if (app != null) {
-                                        obj.put("status", "0");
-                                        obj.put("message", "start app : " + app.getPackageName());
-                                        obj.put("label", app.getLabel());
-                                        obj.put("icon", app.getIcon());
-                                    } else {
-                                        obj.put("status", "-5");
-                                        obj.put("message", "app package not found : " + req.parameters[1]);
-                                    }
-                                }catch (Exception e){
-                                    System.err.println("Ats error : " + e.getMessage());
+                                if (app != null) {
+                                    obj.put("status", "0");
+                                    obj.put("message", "start app : " + app.getPackageName());
+                                    obj.put("label", app.getLabel());
+                                    obj.put("icon", app.getIcon());
+                                } else {
+                                    obj.put("status", "-5");
+                                    obj.put("message", "app package not found : " + req.parameters[1]);
                                 }
+                            }catch (Exception e){
+                                System.err.println("Ats error : " + e.getMessage());
+                            }
 
-                            }else if(RequestType.STOP.equals(req.parameters[0])){
-                                automation.stopChannel(req.parameters[1]);
+                        }else if(RequestType.STOP.equals(req.parameters[0])){
+                            automation.stopChannel(req.parameters[1]);
+                            obj.put("status", "0");
+                            obj.put("message", "stop app : " + req.parameters[1]);
+                        }else if(RequestType.SWITCH.equals(req.parameters[0])){
+                            automation.switchChannel(req.parameters[1]);
+                            obj.put("status", "0");
+                            obj.put("message", "switch app : " + req.parameters[1]);
+                        }else if(RequestType.INFO.equals(req.parameters[0])){
+                            ApplicationInfo app = automation.getApplicationInfo(req.parameters[1]);
+                            if (app != null) {
                                 obj.put("status", "0");
-                                obj.put("message", "stop app : " + req.parameters[1]);
-                            }else if(RequestType.SWITCH.equals(req.parameters[0])){
-                                automation.switchChannel(req.parameters[1]);
-                                obj.put("status", "0");
-                                obj.put("message", "switch app : " + req.parameters[1]);
-                            }else if(RequestType.INFO.equals(req.parameters[0])){
-                                    ApplicationInfo app = automation.getApplicationInfo(req.parameters[1]);
-                                    if (app != null) {
-                                        obj.put("status", "0");
-                                        obj.put("info", app.getJson());
-                                    } else {
-                                        obj.put("status", "-8");
-                                        obj.put("message", "app not found : " + req.parameters[1]);
-                                    }
+                                obj.put("info", app.getJson());
+                            } else {
+                                obj.put("status", "-8");
+                                obj.put("message", "app not found : " + req.parameters[1]);
                             }
                         }
+                    }
 
-                        sendResponseData(obj);
-                        break;
+                }else if(RequestType.INFO.equals(req.type)){
 
-                    case RequestType.INFO :
+                    try {
+                        obj.put("status", "0");
+                        obj.put("message", "device capabilities");
+                        obj.put("id", DeviceInfo.getInstance().getDeviceId());
+                        obj.put("model", DeviceInfo.getInstance().getModel());
+                        obj.put("manufacturer", DeviceInfo.getInstance().getManufacturer());
+                        obj.put("brand", DeviceInfo.getInstance().getBrand());
+                        obj.put("version", DeviceInfo.getInstance().getVersion());
+                        obj.put("os", "android");
+                        obj.put("driverVersion", "1.0.0");
+                        obj.put("systemName", DeviceInfo.getInstance().getSystemName());
+                        obj.put("deviceWidth", DeviceInfo.getInstance().getDeviceWidth());
+                        obj.put("deviceHeight", DeviceInfo.getInstance().getDeviceHeight());
+                        obj.put("channelWidth", automation.getChannelWidth());
+                        obj.put("channelHeight", automation.getChannelHeight());
+                        obj.put("channelX", automation.getChannelX());
+                        obj.put("channelY", automation.getChannelY());
+                        obj.put("bluetoothName", DeviceInfo.getInstance().getBtAdapter());
 
-                        try {
+                        List<ApplicationInfo> apps = automation.getApplications();
+
+                        JSONArray applications = new JSONArray();
+                        for (ApplicationInfo appInfo : apps) {
+                            applications.put(appInfo.getJson());
+                        }
+                        obj.put("applications", applications);
+
+                    }catch (Exception e){
+                        obj.put("status", "-99");
+                        obj.put("message", e.getMessage());
+                    }
+
+                }else if(RequestType.DRIVER.equals(req.type)){
+                    if(req.parameters.length > 0) {
+                        if(RequestType.START.equals(req.parameters[0])){
+
+                            automation.startDriverThread();
+
                             obj.put("status", "0");
-                            obj.put("message", "device capabilities");
-                            obj.put("id", DeviceInfo.getInstance().getDeviceId());
-                            obj.put("model", DeviceInfo.getInstance().getModel());
-                            obj.put("manufacturer", DeviceInfo.getInstance().getManufacturer());
-                            obj.put("brand", DeviceInfo.getInstance().getBrand());
-                            obj.put("version", DeviceInfo.getInstance().getVersion());
                             obj.put("os", "android");
                             obj.put("driverVersion", "1.0.0");
                             obj.put("systemName", DeviceInfo.getInstance().getSystemName());
@@ -119,211 +143,123 @@ public class AtsHttpServer implements Runnable{
                             obj.put("channelHeight", automation.getChannelHeight());
                             obj.put("channelX", automation.getChannelX());
                             obj.put("channelY", automation.getChannelY());
-                            obj.put("bluetoothName", DeviceInfo.getInstance().getBtAdapter());
+                            obj.put("screenCapturePort", automation.getScreenCapturePort());
 
-                            List<ApplicationInfo> apps = automation.getApplications();
+                        }else if(RequestType.STOP.equals(req.parameters[0])){
 
-                            JSONArray applications = new JSONArray();
-                            for (ApplicationInfo appInfo : apps) {
-                                applications.put(appInfo.getJson());
-                            }
-                            obj.put("applications", applications);
-
-                        }catch (Exception e){
-                            obj.put("status", "-99");
-                            obj.put("message", e.getMessage());
-                        }
-
-                        sendResponseData(obj);
-                        break;
-
-                    case RequestType.DRIVER :
-
-                        if(req.parameters.length > 0) {
-                            if(RequestType.START.equals(req.parameters[0])){
-
-                                automation.startDriverThread();
-
-                                obj.put("status", "0");
-                                obj.put("os", "android");
-                                obj.put("driverVersion", "1.0.0");
-                                obj.put("systemName", DeviceInfo.getInstance().getSystemName());
-                                obj.put("deviceWidth", DeviceInfo.getInstance().getDeviceWidth());
-                                obj.put("deviceHeight", DeviceInfo.getInstance().getDeviceHeight());
-                                obj.put("channelWidth", automation.getChannelWidth());
-                                obj.put("channelHeight", automation.getChannelHeight());
-                                obj.put("channelX", automation.getChannelX());
-                                obj.put("channelY", automation.getChannelY());
-                                obj.put("screenCapturePort", automation.getScreenCapturePort());
-
-                            }else if(RequestType.STOP.equals(req.parameters[0])){
-
-                                automation.stopDriverThread();
-                                obj.put("status", "0");
-                                obj.put("message", "stop ats driver");
-
-                            }else if(RequestType.QUIT.equals(req.parameters[0])){
-
-                                automation.stopDriverThread();
-                                obj.put("status", "0");
-                                obj.put("message", "close ats driver");
-
-                                sendResponseData(obj);
-
-                                runner.setRunning(false);
-                                automation.terminate();
-
-                            }else{
-                                obj.put("status", "-1");
-                                obj.put("message", "wrong driver action type : " + req.parameters[0]);
-                            }
-                        }else{
-                            obj.put("status", "-1");
-                            obj.put("message", "missing driver action");
-                        }
-
-                        sendResponseData(obj);
-                        break;
-
-                    case RequestType.BUTTON:
-
-                        if(req.parameters.length > 0) {
-                            automation.deviceButton(req.parameters[0]);
+                            automation.stopDriverThread();
                             obj.put("status", "0");
-                            obj.put("message", "button : " + req.parameters[0]);
-                        }else{
-                            obj.put("status", "-1");
-                            obj.put("message", "missing button type");
-                        }
+                            obj.put("message", "stop ats driver");
 
-                        sendResponseData(obj);
-                        break;
+                        }else if(RequestType.QUIT.equals(req.parameters[0])){
 
-                    case RequestType.CAPTURE:
+                            automation.stopDriverThread();
+                            obj.put("status", "0");
+                            obj.put("message", "close ats driver");
 
-                        if(req.parameters.length > 0 && "reload".equals(req.parameters[0])){
-                            automation.reloadRoot();
-                        }
-                        sendResponseData(automation.getRootObject());
-                        break;
+                            sendResponseData(obj);
 
-                    case RequestType.TAP:
+                            runner.setRunning(false);
+                            automation.terminate();
 
-                        if(req.parameters.length > 0) {
-
-                            String elementId = req.parameters[0];
-                            int offsetX = 0;
-                            int offsetY = 0;
-
-                            if (req.parameters.length > 2){
-                                try {
-                                    offsetX = Integer.parseInt(req.parameters[1]);
-                                    offsetY = Integer.parseInt(req.parameters[2]);
-                                } catch (NumberFormatException e) {}
-                            }
-
-                            AbstractAtsElement element = automation.getElement(elementId);
-                            if(element != null){
-
-                                element.click(automation, offsetX, offsetY);
-
-                                obj.put("status", "0");
-                                obj.put("message", "click on element : " + elementId);
-                            }else{
-                                obj.put("status", "-9");
-                                obj.put("message", "element does not exists");
-                            }
+                            return;
 
                         }else{
                             obj.put("status", "-1");
-                            obj.put("message", "missing element ats id");
+                            obj.put("message", "wrong driver action type : " + req.parameters[0]);
                         }
+                    }else{
+                        obj.put("status", "-1");
+                        obj.put("message", "missing driver action");
+                    }
 
-                        sendResponseData(obj);
-                        break;
+                }else if(RequestType.BUTTON.equals(req.type)){
+                    if(req.parameters.length > 0) {
+                        automation.deviceButton(req.parameters[0]);
+                        obj.put("status", "0");
+                        obj.put("message", "button : " + req.parameters[0]);
+                    }else{
+                        obj.put("status", "-1");
+                        obj.put("message", "missing button type");
+                    }
 
-                    case RequestType.SWIPE:
+                }else if(RequestType.CAPTURE.equals(req.type)){
 
-                        if(req.parameters.length > 0) {
+                    if(req.parameters.length > 0 && "reload".equals(req.parameters[0])){
+                        automation.reloadRoot();
+                    }
+                    obj = automation.getRootObject();
 
-                            String elementId = req.parameters[0];
-                            int offsetX = 0;
-                            int offsetY = 0;
-                            int directionX = 0;
-                            int directionY = 0;
+                }else if(RequestType.ELEMENT.equals(req.type)){
 
-                            if (req.parameters.length > 4){
-                                try {
-                                    offsetX = Integer.parseInt(req.parameters[1]);
-                                    offsetY = Integer.parseInt(req.parameters[2]);
-                                    directionX = Integer.parseInt(req.parameters[3]);
-                                    directionY = Integer.parseInt(req.parameters[4]);
-                                } catch (NumberFormatException e) {}
-                            }
+                    if(req.parameters.length > 2) {
+                        AbstractAtsElement element = automation.getElement(req.parameters[0]);
+                        if(element != null){
 
-                            AbstractAtsElement element = automation.getElement(elementId);
-                            if(element != null){
-
-                                element.swipe(automation, offsetX, offsetY, directionX, directionY);
-
-                                obj.put("status", "0");
-                                obj.put("message", "swipe on element : " + elementId + " -> " + directionX + ":" + directionY);
-                            }else{
-                                obj.put("status", "-9");
-                                obj.put("message", "element does not exists");
-                            }
-
-                        }else{
-                            obj.put("status", "-1");
-                            obj.put("message", "missing element ats id");
-                        }
-
-                        sendResponseData(obj);
-                        break;
-
-                    case RequestType.INPUT:
-
-                        if(req.parameters.length > 0){
-
-                            String elementId = req.parameters[0];
-                            AbstractAtsElement element = automation.getElement(elementId);
-
-                            if(element != null){
-
+                            if(RequestType.INPUT.equals(req.parameters[1])){
                                 String text = "";
-                                if(req.parameters.length > 1){
+
                                     try {
-                                        byte[] data = Base64.decode(req.parameters[1], Base64.DEFAULT);
+                                        byte[] data = Base64.decode(req.parameters[2], Base64.DEFAULT);
                                         text = new String(data, StandardCharsets.UTF_8);
                                     }catch (Exception e){
                                         obj.put("error", e.getMessage());
                                     }
-                                }
 
                                 element.inputText(automation, text);
 
                                 obj.put("status", "0");
-                                obj.put("message", "set element : " + element.getId() + " text = " + text);
+                                obj.put("message", "element send keys : " + text);
+
                             }else{
-                                obj.put("status", "-9");
-                                obj.put("message", "element does not exists");
+
+                                int offsetX = 0;
+                                int offsetY = 0;
+
+                                if (req.parameters.length > 3){
+                                    try {
+                                        offsetX = Integer.parseInt(req.parameters[2]);
+                                        offsetY = Integer.parseInt(req.parameters[3]);
+                                    } catch (NumberFormatException e) {}
+                                }
+
+                                if(RequestType.TAP.equals(req.parameters[1])){
+
+                                    element.click(automation, offsetX, offsetY);
+
+                                    obj.put("status", "0");
+                                    obj.put("message", "click on element");
+
+                                }else if(RequestType.SWIPE.equals(req.parameters[1])){
+                                    int directionX = 0;
+                                    int directionY = 0;
+                                    if (req.parameters.length > 5){
+                                        try {
+                                            directionX = Integer.parseInt(req.parameters[4]);
+                                            directionY = Integer.parseInt(req.parameters[5]);
+                                        } catch (NumberFormatException e) {}
+                                    }
+                                    element.swipe(automation, offsetX, offsetY, directionX, directionY);
+                                    obj.put("status", "0");
+                                    obj.put("message", "swipe element to " + directionX + ":" + directionY);
+                                }
                             }
 
                         }else{
                             obj.put("status", "-1");
-                            obj.put("message", "missing element ats id");
+                            obj.put("message", "element not found");
                         }
+                    }else{
+                        obj.put("status", "-1");
+                        obj.put("message", "missing element id");
+                    }
 
-                        sendResponseData(obj);
-                        break;
-
-                    default:
-                        obj.put("status", "-99");
-                        obj.put("message", "unknown command");
-
-                        sendResponseData(obj);
-                        break;
+                }else{
+                    obj.put("status", "-99");
+                    obj.put("message", "unknown command");
                 }
+
+                sendResponseData(obj);
             }
 
         } catch (IOException | JSONException e) {

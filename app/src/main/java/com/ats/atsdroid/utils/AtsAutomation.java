@@ -35,6 +35,7 @@ import android.os.RemoteException;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.Configurator;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiWatcher;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -65,6 +66,8 @@ public class AtsAutomation {
     private final Matrix matrix = new Matrix();
     private float scaleX = 0;
     private float scaleY = 0;
+
+    private final int swipeSteps = 10;
 
     private List<ApplicationInfo> applications;
 
@@ -248,43 +251,24 @@ public class AtsAutomation {
     //----------------------------------------------------------------------------------------------------
     //----------------------------------------------------------------------------------------------------
 
-    public void clickAt(int x, int y, boolean hideKeyboard){
+    public void clickAt(int x, int y){
         device.click(x, y);
-        if(hideKeyboard){
-            device.pressKeyCode(KeyEvent.KEYCODE_ESCAPE);
-            device.pressKeyCode(KeyEvent.KEYCODE_CLEAR);
-        }
         wait(500);
     }
 
-    public void pressKey(int code){
-        device.pressKeyCode(code);
+    public void pressNumericKey(int data){
+        device.pressKeyCode(KeyEvent.KEYCODE_0 + data);
     }
 
-    public void sendNumericKeys(String value){
-
-        device.pressKeyCode(KeyEvent.KEYCODE_P);
-        device.pressKeyCode(KeyEvent.KEYCODE_I);
-        device.pressKeyCode(KeyEvent.KEYCODE_E);
-        device.pressKeyCode(KeyEvent.KEYCODE_R);
-        device.pressKeyCode(KeyEvent.KEYCODE_R);
-        device.pressKeyCode(KeyEvent.KEYCODE_E);
-
-
-
-        /*device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_2);
-        device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_1);
-        device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_0);
-        device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_6);
-        device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_1);
-        device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_9);
-        device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_6);
-        device.pressKeyCode(KeyEvent.KEYCODE_NUMPAD_7);*/
-
+    public void sendNumericKeys(int[] data){
+        for(int i=0; i<data.length; i++){
+            pressNumericKey(data[i]);
+        }
     }
 
     public void swipe(int x, int y, int xTo, int yTo){
-        device.swipe(x, y, x + xTo, y + yTo, 10);
+        device.swipe(x, y, x + xTo, y + yTo, swipeSteps);
+        wait(swipeSteps*6);
     }
 
     //----------------------------------------------------------------------------------------------------

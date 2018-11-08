@@ -27,16 +27,19 @@ public class RequestType {
 
     public static final String APP = "app";
     public static final String DRIVER = "driver";
+    public static final String QUIT = "quit";
     public static final String START = "start";
     public static final String STOP = "stop";
     public static final String SWITCH = "switch";
-    public static final String CAPTURE = "capture";
-    public static final String INPUT = "input";
-    public static final String QUIT = "quit";
-    public static final String TAP = "tap";
-    public static final String SWIPE = "swipe";
     public static final String BUTTON = "button";
     public static final String INFO = "info";
+    public static final String CAPTURE = "capture";
+
+    public static final String ELEMENT = "element";
+    public static final String INPUT = "input";
+    public static final String TAP = "tap";
+    public static final String SWIPE = "swipe";
+
 
     private static Pattern requestPattern = Pattern.compile("GET /(.*) HTTP/1.1");
 
