@@ -50,7 +50,7 @@ public abstract class AbstractAtsElement {
         int count = node.getChildCount();
         children = new AbstractAtsElement[count];
         for(int i=0; i<count; i++){
-            children[i] = new AtsElement(node.getChild(i), i);
+            children[i] = new AtsElement(node.getChild(i));
         }
     }
 

@@ -174,6 +174,7 @@ public class AtsHttpServer implements Runnable{
                     }
 
                 }else if(RequestType.BUTTON.equals(req.type)){
+
                     if(req.parameters.length > 0) {
                         automation.deviceButton(req.parameters[0]);
                         obj.put("status", "0");
@@ -185,9 +186,7 @@ public class AtsHttpServer implements Runnable{
 
                 }else if(RequestType.CAPTURE.equals(req.type)){
 
-                    if(req.parameters.length > 0 && "reload".equals(req.parameters[0])){
-                        automation.reloadRoot();
-                    }
+                    automation.reloadRoot();
                     obj = automation.getRootObject();
 
                 }else if(RequestType.ELEMENT.equals(req.type)){

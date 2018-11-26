@@ -35,7 +35,6 @@ import android.os.RemoteException;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.Configurator;
 import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiWatcher;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -50,24 +49,20 @@ import java.util.List;
 
 public class AtsAutomation {
 
-    public static final String HOME = "home";
-    public static final String BACK = "back";
-    public static final String ENTER = "enter";
-    public static final String MENU = "menu";
-    public static final String SEARCH = "search";
+    private static final String HOME = "home";
+    private static final String BACK = "back";
+    private static final String ENTER = "enter";
+    private static final String MENU = "menu";
+    private static final String SEARCH = "search";
+
+    private static final int swipeSteps = 10;
 
     private final Instrumentation instrument = InstrumentationRegistry.getInstrumentation();
     private final UiAutomation automation = instrument.getUiAutomation();
     private final UiDevice device = UiDevice.getInstance(instrument);
     private final Context context = InstrumentationRegistry.getContext();
 
-    private final DeviceInfo deviceInfo = DeviceInfo.getInstance();
-
     private final Matrix matrix = new Matrix();
-    private float scaleX = 0;
-    private float scaleY = 0;
-
-    private final int swipeSteps = 10;
 
     private List<ApplicationInfo> applications;
 
@@ -89,7 +84,7 @@ public class AtsAutomation {
     public AtsAutomation(int port){
 
         Configurator.getInstance().setWaitForIdleTimeout(0);
-        deviceInfo.initData(port, device.getDisplayWidth(), device.getDisplayHeight());
+        DeviceInfo.getInstance().initData(port, device.getDisplayWidth(), device.getDisplayHeight());
 
         try {
             device.setOrientationNatural();
@@ -105,8 +100,8 @@ public class AtsAutomation {
         channelY = rootElement.getChannelY();
         channelHeight = rootElement.getChannelHeight();
 
-        scaleX = (float)DeviceInfo.getInstance().getDeviceWidth() / (float)channelWidth;
-        scaleY = (float)DeviceInfo.getInstance().getDeviceHeight() / (float)channelHeight;
+        float scaleX = (float)DeviceInfo.getInstance().getDeviceWidth() / (float)channelWidth;
+        float scaleY = (float)DeviceInfo.getInstance().getDeviceHeight() / (float)channelHeight;
         matrix.preScale(scaleX, scaleY);
 
         BitmapFactory.Options options = new BitmapFactory.Options();

@@ -1,6 +1,5 @@
 package com.ats.atsdroid.element;
 
-import android.graphics.Canvas;
 import android.support.test.uiautomator.UiDevice;
 import android.view.accessibility.AccessibilityNodeInfo;
 

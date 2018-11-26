@@ -20,7 +20,6 @@ under the License.
 package com.ats.atsdroid.element;
 
 import android.os.Build;
-import android.support.annotation.RequiresApi;
 import android.text.InputType;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -34,7 +33,7 @@ public class AtsElement extends AbstractAtsElement {
 
     private Map<String, String> attributes = new HashMap<String, String>();
 
-    public AtsElement(AccessibilityNodeInfo node, int index){
+    public AtsElement(AccessibilityNodeInfo node){
 
         String data = node.getClassName().toString();
         this.tag = data.substring(data.lastIndexOf(".") + 1);
