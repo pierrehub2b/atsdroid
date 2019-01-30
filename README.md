@@ -1,7 +1,7 @@
 # atsdroid
 Ats driver for Android system. This driver will execute Ats actions on a connected Android mobile.
 
-##### List of available commands (Supposing the driver is listening to endpoint '192.168.0.1:8080')
+##### List of available commands (Supposing the driver is listening at endpoint '192.168.0.1:8080')
 
 * http://192.168.0.1:8080/info
 ```
