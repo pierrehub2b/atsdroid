@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.ats.atsdroid">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.ats.atsdroid">
+
     <instrumentation
         android:name="android.support.test.runner.AndroidJUnitRunner"
-        android:targetPackage="com.ats.atsdroid"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
-    <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+        android:targetPackage="com.ats.atsdroid" />
 
     <application
         android:allowBackup="true"
@@ -19,11 +16,26 @@
         android:windowSoftInputMode="stateHidden">
         <activity
             android:name=".ui.AtsActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Transparent.NoActionBar">
+                <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+
         </activity>
+
+        <service
+            android:name=".ui.HighlightService"></service>
+
     </application>
+
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
 </manifest>

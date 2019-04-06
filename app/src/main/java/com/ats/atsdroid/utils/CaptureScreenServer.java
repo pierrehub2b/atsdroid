@@ -56,13 +56,16 @@ public class CaptureScreenServer implements Runnable  {
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, 1);
                 serverSocket.receive(receivePacket);
 
+                final int port = receivePacket.getPort();
+                final InetAddress address = receivePacket.getAddress();
+
                 final byte[] screen = automation.getScreenData();
                 int dataLength = screen.length;
 
                 int packetSize = PACKET_SIZE;
                 int currentPos = 0;
 
-                sendData(screen, currentPos, getData(currentPos, dataLength, packetSize), packetSize, receivePacket.getAddress(), receivePacket.getPort());
+                sendData(screen, currentPos, dataLength, packetSize, address, port);
 
                 while (dataLength > 0) {
                     currentPos += packetSize;
@@ -70,7 +73,7 @@ public class CaptureScreenServer implements Runnable  {
                     if (dataLength < packetSize) {
                         packetSize = dataLength;
                     }
-                    sendData(screen, currentPos, getData(currentPos, dataLength, packetSize), packetSize, receivePacket.getAddress(), receivePacket.getPort());
+                    sendData(screen, currentPos, dataLength, packetSize, address, port);
                 }
 
             } catch (Exception e) {}
@@ -78,7 +81,10 @@ public class CaptureScreenServer implements Runnable  {
         serverSocket.close();
     }
 
-    private void sendData(byte[] screen, int currentPos, byte[] send, int packetSize, InetAddress address, int port) throws IOException{
+    private void sendData(byte[] screen, int currentPos, int dataLength, int packetSize, InetAddress address, int port) throws IOException{
+
+        final byte[] send = getData(currentPos, dataLength, packetSize);
+
         System.arraycopy(screen, currentPos, send, 8, packetSize);
         serverSocket.send(new DatagramPacket(send, send.length, address, port));
     }

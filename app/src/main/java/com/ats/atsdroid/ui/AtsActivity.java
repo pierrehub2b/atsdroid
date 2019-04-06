@@ -25,18 +25,13 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.view.WindowManager;
-import android.widget.TextView;
-
-import com.ats.atsdroid.AtsRunner;
-import com.ats.atsdroid.R;
-import com.ats.atsdroid.utils.DeviceInfo;
 
 public class AtsActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(new AtsView(this));
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -48,11 +43,5 @@ public class AtsActivity extends Activity {
         KeyguardManager keyguardManager = (KeyguardManager)getSystemService(Activity.KEYGUARD_SERVICE);
         KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock(KEYGUARD_SERVICE);
         lock.disableKeyguard();
-
-        ((TextView) findViewById(R.id.hostLabel)).setText("ATS driver host : " + DeviceInfo.getInstance().getHostName() + ":" + DeviceInfo.getInstance().getPort());
-        ((TextView) findViewById(R.id.systemNameLabel)).setText("System name : " + DeviceInfo.getInstance().getSystemName());
-        ((TextView) findViewById(R.id.displaySizeLabel)).setText("Resolution : " + DeviceInfo.getInstance().getResolutionWidth() + " x " + DeviceInfo.getInstance().getResolutionHeight());
-        ((TextView) findViewById(R.id.deviceSizeLabel)).setText("Device size : " + DeviceInfo.getInstance().getDeviceWidth() + " x " + DeviceInfo.getInstance().getDeviceHeight());
-        ((TextView) findViewById(R.id.modelLabel)).setText("Device name : " + DeviceInfo.getInstance().getManufacturer() + " " + DeviceInfo.getInstance().getModel());
     }
 }

@@ -24,6 +24,7 @@ import android.app.UiAutomation;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -31,6 +32,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.os.RemoteException;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.Configurator;
@@ -40,6 +42,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.ats.atsdroid.element.AbstractAtsElement;
 import com.ats.atsdroid.element.AtsRootElement;
+import com.ats.atsdroid.ui.AtsActivity;
 
 import org.json.JSONObject;
 
@@ -54,6 +57,8 @@ public class AtsAutomation {
     private static final String ENTER = "enter";
     private static final String MENU = "menu";
     private static final String SEARCH = "search";
+    private static final String APP = "app";
+    private static final String DELETE = "delete";
 
     private static final int swipeSteps = 10;
 
@@ -65,9 +70,7 @@ public class AtsAutomation {
     private final Matrix matrix = new Matrix();
 
     private List<ApplicationInfo> applications;
-
     private AtsRootElement rootElement;
-
     private DriverThread driverThread;
 
     //-------------------------------------------------------
@@ -80,6 +83,7 @@ public class AtsAutomation {
     private int channelHeight;
     //-------------------------------------------------------
     private AbstractAtsElement found = null;
+    private Bitmap compressedScreen;
 
     public AtsAutomation(int port){
 
@@ -92,22 +96,30 @@ public class AtsAutomation {
         }catch (RemoteException e){}
 
         device.pressHome();
-        executeShell("am start -W com.ats.atsdroid/.ui.AtsActivity");
+        launchAtsWidget();
 
         loadApplications();
         reloadRoot();
 
         channelY = rootElement.getChannelY();
         channelHeight = rootElement.getChannelHeight();
-
-        float scaleX = (float)DeviceInfo.getInstance().getDeviceWidth() / (float)channelWidth;
-        float scaleY = (float)DeviceInfo.getInstance().getDeviceHeight() / (float)channelHeight;
-        matrix.preScale(scaleX, scaleY);
+        matrix.preScale((float)DeviceInfo.getInstance().getDeviceWidth() / (float)channelWidth, (float)DeviceInfo.getInstance().getDeviceHeight() / (float)channelHeight);
 
         BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        options.inPreferredConfig = Bitmap.Config.RGB_565;
 
         sleep();
+    }
+
+    private void launchAtsWidget(){
+        //executeShell("am start -W com.ats.atsdroid/.ui.AtsActivity");
+        final Intent atsIntent = new Intent(context, AtsActivity.class);
+        atsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        atsIntent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+        atsIntent.addFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+        atsIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        atsIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        context.startActivity(atsIntent);
     }
 
     public void reloadRoot(){
@@ -177,33 +189,42 @@ public class AtsAutomation {
 
         applications = new ArrayList<ApplicationInfo>();
 
-        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+        final Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-        List<ResolveInfo> pkgAppsList = context.getPackageManager().queryIntentActivities( mainIntent, 0);
 
-        for(ResolveInfo info : pkgAppsList){
+        final PackageManager pkgManager = context.getPackageManager();
+        for(ResolveInfo info : pkgManager.queryIntentActivities(mainIntent, 0)){
 
-            ActivityInfo activity = info.activityInfo;
-            String pkg = activity.packageName;
-            String act = activity.name;
+            final ActivityInfo activity = info.activityInfo;
+            final String pkg = activity.packageName;
+            final String act = activity.name;
 
             if(pkg != null && act != null){
 
-                ApplicationInfo app = getApplicationByPackage(pkg);
+                final ApplicationInfo app = getApplicationByPackage(pkg);
                 if(app != null){
                     app.addActivity(act);
                 }else {
 
+                    String version = "";
+                    try {
+                        version = pkgManager.getPackageInfo(pkg, 0).versionName;
+                    } catch (PackageManager.NameNotFoundException e) {}
+
                     applications.add(new ApplicationInfo(
                             pkg,
                             act,
+                            version,
                             (activity.applicationInfo.flags & android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0,
-                            activity.loadLabel(context.getPackageManager()),
-                            activity.loadIcon(context.getPackageManager())));
+                            activity.loadLabel(pkgManager),
+                            activity.loadIcon(pkgManager)));
                 }
             }
         }
     }
+
+    //----------------------------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------------------------------
 
     private ApplicationInfo getApplicationByPackage(String pkg){
         for (ApplicationInfo app : applications) {
@@ -214,8 +235,13 @@ public class AtsAutomation {
         return null;
     }
 
-    //----------------------------------------------------------------------------------------------------
-    //----------------------------------------------------------------------------------------------------
+    public void deleteBackButton(){
+        device.pressDelete();
+    }
+
+    public void deleteForward(){
+        device.pressKeyCode(KeyEvent.KEYCODE_FORWARD_DEL);
+    }
 
     public void deviceButton(String button){
         if(HOME.equals(button)){
@@ -228,6 +254,12 @@ public class AtsAutomation {
             device.pressMenu();
         }else if(SEARCH.equals(button)){
             device.pressSearch();
+        }else if(APP.equals(button)){
+            try {
+                device.pressRecentApps();
+            }catch(RemoteException e){}
+        }else if(DELETE.equals(button)){
+            deleteBackButton();
         }
     }
 
@@ -251,23 +283,36 @@ public class AtsAutomation {
         wait(500);
     }
 
-    public void pressNumericKey(int data){
-        device.pressKeyCode(KeyEvent.KEYCODE_0 + data);
+    public void pressNumericKey(int key){
+        device.pressKeyCode(key);
+        wait(150);
     }
 
-    public void sendNumericKeys(int[] data){
-        for(int i=0; i<data.length; i++){
-            pressNumericKey(data[i]);
-        }
+    public void highlightElement(Rect bounds){
+
+        //context.startService( new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:com.ats.atsdroid.ui"), context, HighlightService.class));
+
+        //context.startService( new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:com.ats.atsdroid"), context, HighlightService.class));
+        //context.st
+
+        /*final Intent highlightIntent = new Intent();
+        highlightIntent.setClassName(context, "com.ats.atsdroid.ui.HighlightActivityx");
+        highlightIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        highlightIntent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+        highlightIntent.addFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+        highlightIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        highlightIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        highlightIntent.putExtra(HighlightActivityx.ELEMENT_BOUNDS, new int[]{bounds.left, bounds.top, bounds.width(), bounds.height()});
+        context.startActivity(highlightIntent);*/
     }
+
+    //----------------------------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------------------------------
 
     public void swipe(int x, int y, int xTo, int yTo){
         device.swipe(x, y, x + xTo, y + yTo, swipeSteps);
         wait(swipeSteps*6);
     }
-
-    //----------------------------------------------------------------------------------------------------
-    //----------------------------------------------------------------------------------------------------
 
     public int getScreenCapturePort(){
         if(driverThread != null){
@@ -280,13 +325,16 @@ public class AtsAutomation {
         stopDriverThread();
 
         wakeUp();
-        executeShell("am start -W com.ats.atsdroid/.ui.AtsActivity");
+        launchAtsWidget();
 
         driverThread = new DriverThread(this);
         (new Thread(driverThread)).start();
     }
 
     public void stopDriverThread(){
+
+        launchAtsWidget();
+
         if(driverThread != null){
             driverThread.stop();
         }
@@ -298,14 +346,14 @@ public class AtsAutomation {
         }catch(RemoteException e){}
     }
 
+    //----------------------------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------------------------------
+
     public void sleep(){
         try {
             device.sleep();
         }catch(RemoteException e){}
     }
-
-    //----------------------------------------------------------------------------------------------------
-    //----------------------------------------------------------------------------------------------------
 
     public void terminate(){
         executeShell("am force-stop com.ats.atsdroid");
@@ -316,7 +364,7 @@ public class AtsAutomation {
         final ApplicationInfo app = getApplicationByPackage(pkg);
 
         if(app != null) {
-            stopActivity(pkg);
+            stopActivity(app.getPackageName());
 
             app.start(context);
 
@@ -335,12 +383,12 @@ public class AtsAutomation {
         while (rootNode == null){
             rootNode = automation.getRootInActiveWindow();
         }
+
         if(pkg.contentEquals(rootNode.getPackageName())){
             return;
         }
 
-        ApplicationInfo app = getApplicationByPackage(pkg);
-
+        final ApplicationInfo app = getApplicationByPackage(pkg);
         if(app != null) {
 
             app.toFront(context);
@@ -355,7 +403,12 @@ public class AtsAutomation {
 
     public void stopChannel(String pkg){
         stopActivity(pkg);
+        launchAtsWidget();
     }
+
+    //----------------------------------------------------------------------------------------------------
+    // Screen capture
+    //----------------------------------------------------------------------------------------------------
 
     private void stopActivity(String pkg){
         if(pkg != null){
@@ -363,31 +416,26 @@ public class AtsAutomation {
         }
     }
 
-    //----------------------------------------------------------------------------------------------------
-    // Screen capture
-    //----------------------------------------------------------------------------------------------------
-
     public byte[] getScreenData()
     {
-        Bitmap screen = automation.takeScreenshot();
-        Bitmap resizedScreen = null;
+        final Bitmap screen = automation.takeScreenshot();
         if(screen == null) {
-            resizedScreen = createEmptyBitmap(channelWidth, channelHeight, Color.LTGRAY);
+            compressedScreen = createEmptyBitmap(channelWidth, channelHeight, Color.LTGRAY);
         }else{
-            resizedScreen = Bitmap.createBitmap(screen, channelX, channelY, channelWidth, channelHeight, matrix, true);
+            compressedScreen = Bitmap.createBitmap(screen, channelX, channelY, channelWidth, channelHeight, matrix, true);
             screen.recycle();
         }
 
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        resizedScreen.compress(Bitmap.CompressFormat.JPEG, 32, outputStream);
-        resizedScreen.recycle();
+        compressedScreen.compress(Bitmap.CompressFormat.JPEG, 55, outputStream);
+        compressedScreen.recycle();
 
         return outputStream.toByteArray();
     }
 
     private Bitmap createEmptyBitmap(int width, int height, int color) {
 
-        final Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        final Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
         bitmap.setHasAlpha(false);
 
         final Canvas canvas = new Canvas(bitmap);

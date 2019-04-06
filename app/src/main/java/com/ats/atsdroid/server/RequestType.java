@@ -19,7 +19,6 @@ under the License.
 
 package com.ats.atsdroid.server;
 
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,29 +33,21 @@ public class RequestType {
     public static final String BUTTON = "button";
     public static final String INFO = "info";
     public static final String CAPTURE = "capture";
-
     public static final String ELEMENT = "element";
     public static final String INPUT = "input";
     public static final String TAP = "tap";
     public static final String SWIPE = "swipe";
 
-
-    private static Pattern requestPattern = Pattern.compile("GET /(.*) HTTP/1.1");
+    private static Pattern requestPattern = Pattern.compile("POST /(.*) HTTP/1.1");
 
     public String type = "";
     public String[] parameters = new String[0];
 
-    public RequestType(String value){
+    public RequestType(String value, String body){
         Matcher match = requestPattern.matcher(value);
         if(match.find()){
-            String data = match.group(1);
-            String[] params = data.split("/");
-            if(params.length > 0){
-                this.type = params[0];
-                if(params.length > 1){
-                    this.parameters = Arrays.copyOfRange(params, 1, params.length);
-                }
-            }
+            this.type = match.group(1);
+            this.parameters = body.split("\n");
         }
     }
 }

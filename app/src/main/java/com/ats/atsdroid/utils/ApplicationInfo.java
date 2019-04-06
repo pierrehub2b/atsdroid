@@ -4,14 +4,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Matrix;
-import android.graphics.Paint;
 import android.graphics.drawable.AdaptiveIconDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
-import android.os.Bundle;
 import android.support.annotation.RequiresApi;
 import android.util.Base64;
 
@@ -29,10 +26,12 @@ public class ApplicationInfo {
     private String label;
     private String icon;
     private boolean system;
+    private String version;
 
-    public ApplicationInfo(String pkg, String act, Boolean sys, CharSequence label, Drawable icon){
+    public ApplicationInfo(String pkg, String act, String version, Boolean sys, CharSequence label, Drawable icon){
 
         this.packageName = pkg;
+        this.version = version;
         this.activities.add(act);
         this.system = sys;
 
@@ -48,8 +47,7 @@ public class ApplicationInfo {
     }
 
     public void start(Context context){
-        Intent intent = getIntent(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
+        context.startActivity(getIntent(Intent.FLAG_ACTIVITY_NEW_TASK));
     }
 
     public void toFront(Context context){
@@ -57,7 +55,7 @@ public class ApplicationInfo {
     }
 
     public boolean samePackage(String value){
-        return packageName != null && packageName.equals(value);
+        return packageName.equals(value);
     }
 
     public String getIcon() {
@@ -66,6 +64,9 @@ public class ApplicationInfo {
 
     public String getLabel() {
         return label;
+    }
+    public String getVersion() {
+        return version;
     }
 
     public String getPackageName(){
@@ -81,7 +82,7 @@ public class ApplicationInfo {
     }
 
     private Intent getIntent(int flag){
-        Intent intent = new Intent();
+        final Intent intent = new Intent();
         intent.setClassName(packageName, getActivity(0));
         intent.addFlags(flag);
         return intent;
@@ -94,6 +95,8 @@ public class ApplicationInfo {
         result.put("system", system);
         result.put("label", label);
         result.put("icon", icon);
+        result.put("version", version);
+        result.put("os", "android");
         return result;
     }
 
@@ -139,7 +142,7 @@ public class ApplicationInfo {
 
         if(bitmap != null) {
 
-            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, 24, 24, true);
+            Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, 32, 32, true);
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);

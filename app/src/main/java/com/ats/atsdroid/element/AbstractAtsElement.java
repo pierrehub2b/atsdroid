@@ -9,11 +9,9 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.graphics.Typeface;
-import android.inputmethodservice.Keyboard;
 import android.os.Bundle;
-import android.text.TextPaint;
+import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.ats.atsdroid.R;
@@ -24,7 +22,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.nio.charset.Charset;
 import java.util.UUID;
 
 public abstract class AbstractAtsElement {
@@ -47,7 +44,7 @@ public abstract class AbstractAtsElement {
 
         this.node = node;
 
-        int count = node.getChildCount();
+        final int count = node.getChildCount();
         children = new AbstractAtsElement[count];
         for(int i=0; i<count; i++){
             children[i] = new AtsElement(node.getChild(i));
@@ -75,45 +72,58 @@ public abstract class AbstractAtsElement {
     public void click(AtsAutomation automation, int offsetX, int offsetY){
         node.refresh();
         node.getBoundsInScreen(bounds);
+        automation.clickAt(bounds.left + offsetX, bounds.top + offsetY);
 
-        if(node.isEditable()){
-            node.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
-        }else{
-            automation.clickAt(bounds.left + offsetX, bounds.top + offsetY);
+        automation.highlightElement(bounds);
+    }
+
+    public void clearText(AtsAutomation automation){
+        if(node.getText() != null && node.getText().length() > 0) {
+
+            int len = node.getText().length();
+
+            final Bundle bdl = new Bundle();
+            bdl.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 0);
+            bdl.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, len);
+            node.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, bdl);
+            automation.deleteBackButton();
+
+            if(len > 0) { //well the field cannot be cleared this way ... let's try another way ...
+                //node.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+                for (int i = 0; i < len; i++) {
+                    automation.deleteBackButton();
+                }
+
+                len = node.getText().length(); // last chance to clear the field
+                if(len >0) {
+                    for (int i = 0; i < len; i++) {
+                        automation.deleteForward();
+                    }
+                }
+            }
         }
     }
 
     public void inputText(AtsAutomation automation, String value){
-
-        //node.refresh();
-        int textLength = value.length();
-
-        if(numeric){
-            for(int i=0; i<value.length(); i++){
-                try {
-                    automation.pressNumericKey(Integer.parseInt(value.substring(i, i+1)));
-                }catch (NumberFormatException e){}
-            }
-        }else {
-
-            int[] numericData = new int[textLength];
-            for(int i=0; i<value.length(); i++){
-                try {
-
-                    numericData[i] = Integer.parseInt(value.substring(i, i+1));
-
-                }catch (NumberFormatException e){
-
-                    Bundle arguments = new Bundle();
-                    arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, value);
-
-                    node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);
-
-                    return;
+        if (numeric || isNumeric(value)) {
+            for (String s : value.split("")) {
+                if(".".equals(s) || ",".equals(s)){
+                    automation.pressNumericKey(KeyEvent.KEYCODE_NUMPAD_DOT);
+                }else{
+                    try {
+                        automation.pressNumericKey(KeyEvent.KEYCODE_0 + Integer.parseInt(s));
+                    } catch (NumberFormatException e) {}
                 }
             }
-            automation.sendNumericKeys(numericData);
+        } else {
+            sendKeyString(value);
         }
+    }
+
+    private boolean sendKeyString(String value){
+        final Bundle arguments = new Bundle();
+        arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, value);
+        return node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);
     }
 
     public String swipe(AtsAutomation automation, int offsetX, int offsetY, int directionX, int directionY){
@@ -129,7 +139,7 @@ public abstract class AbstractAtsElement {
     //--------------------------------------------------------------------------------------------
 
     public JSONObject getJsonObject(){
-        JSONObject props = new JSONObject();
+        final JSONObject props = new JSONObject();
         try{
             props.put("id", id);
             props.put("tag", tag);
@@ -139,7 +149,7 @@ public abstract class AbstractAtsElement {
             props.put("width", bounds.width());
             props.put("height", bounds.height());
 
-            JSONArray childrenArray = new JSONArray();
+            final JSONArray childrenArray = new JSONArray();
             for (AbstractAtsElement child : children){
                 childrenArray.put(child.getJsonObject());
             }
@@ -227,7 +237,6 @@ public abstract class AbstractAtsElement {
 
             canvas.drawText(text.toString(), bounds.left + 8, bounds.top + offsetY, fontPaint);
         }
-
     }
 
     private void drawText(Canvas canvas, CharSequence text, int offsetY) {
@@ -266,5 +275,11 @@ public abstract class AbstractAtsElement {
         paint.setXfermode( new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER));
 
         canvas.drawBitmap(icon, bounds.exactCenterX()-32, bounds.exactCenterY()-32, paint);
+    }
+
+    //------------------------------------------------------------------------------------------------
+
+    private static boolean isNumeric(String strNum) {
+        return strNum.matches("-?\\d+(\\.\\d+)?");
     }
 }
