@@ -33,29 +33,39 @@ public class AtsElement extends AbstractAtsElement {
 
     private Map<String, String> attributes = new HashMap<String, String>();
 
-    public AtsElement(AccessibilityNodeInfo node){
+    public AtsElement(final AccessibilityNodeInfo node){
 
         String data = node.getClassName().toString();
         this.tag = data.substring(data.lastIndexOf(".") + 1);
         this.clickable = node.isClickable();
 
-        int type = node.getInputType();
+        final int type = node.getInputType();
         this.numeric = type == InputType.TYPE_NUMBER_FLAG_DECIMAL || type == InputType.TYPE_CLASS_NUMBER || type == InputType.TYPE_NUMBER_FLAG_DECIMAL + InputType.TYPE_CLASS_NUMBER;
 
         CharSequence charSeq = node.getText();
         if(charSeq != null){
-            attributes.put("text", charSeq.toString());
+            attributes.put("text", String.valueOf(charSeq));
         }
 
         charSeq = node.getContentDescription();
         if(charSeq != null){
-            attributes.put("description", charSeq.toString());
+            attributes.put("description", String.valueOf(charSeq));
         }
 
         if (Build.VERSION.SDK_INT >= 28) {
             charSeq = node.getTooltipText();
             if (charSeq != null) {
-                attributes.put("tooltip", charSeq.toString());
+                attributes.put("tooltip", String.valueOf(charSeq));
+            }
+
+            charSeq = node.getHintText();
+            if(charSeq != null){
+                attributes.put("hintText", String.valueOf(charSeq));
+            }
+
+            charSeq = node.getPaneTitle();
+            if(charSeq != null){
+                attributes.put("panelTitle", String.valueOf(charSeq));
             }
         }
 
@@ -70,7 +80,7 @@ public class AtsElement extends AbstractAtsElement {
 
         data = node.getViewIdResourceName();
         if(data != null){
-            int idx = data.indexOf(":id/");
+            final int idx = data.indexOf(":id/");
             if(idx > -1){
                 data = data.substring(idx + 4);
             }

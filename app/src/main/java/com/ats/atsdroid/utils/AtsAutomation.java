@@ -65,7 +65,8 @@ public class AtsAutomation {
     private final Instrumentation instrument = InstrumentationRegistry.getInstrumentation();
     private final UiAutomation automation = instrument.getUiAutomation();
     private final UiDevice device = UiDevice.getInstance(instrument);
-    private final Context context = InstrumentationRegistry.getContext();
+    //private final Context context = InstrumentationRegistry.getContext();
+    private final Context context = InstrumentationRegistry.getTargetContext();
 
     private final Matrix matrix = new Matrix();
 
@@ -126,7 +127,7 @@ public class AtsAutomation {
 
         AccessibilityNodeInfo rootNode = automation.getRootInActiveWindow();
         while (rootNode == null){
-            wait(100);
+            wait(200);
             rootNode = automation.getRootInActiveWindow();
         }
         rootNode.refresh();
@@ -134,7 +135,7 @@ public class AtsAutomation {
         try {
             rootElement = new AtsRootElement(device, rootNode);
         }catch (Exception e){
-            wait(100);
+            wait(200);
             reloadRoot();
         }
     }
@@ -200,12 +201,8 @@ public class AtsAutomation {
             final String act = activity.name;
 
             if(pkg != null && act != null){
-
                 final ApplicationInfo app = getApplicationByPackage(pkg);
-                if(app != null){
-                    app.addActivity(act);
-                }else {
-
+                if(app == null){
                     String version = "";
                     try {
                         version = pkgManager.getPackageInfo(pkg, 0).versionName;
@@ -360,18 +357,9 @@ public class AtsAutomation {
     }
 
     public ApplicationInfo startChannel(String pkg){
-
         final ApplicationInfo app = getApplicationByPackage(pkg);
-
         if(app != null) {
-            stopActivity(app.getPackageName());
-
-            app.start(context);
-
-            wait(2000);
-            device.waitForIdle();
-            device.waitForWindowUpdate(null, 2000);
-
+            executeShell("am start -W -S --activity-brought-to-front --activity-multiple-task --activity-no-animation --activity-no-history -n " + app.getPackageActivityName());
             reloadRoot();
         }
         return app;

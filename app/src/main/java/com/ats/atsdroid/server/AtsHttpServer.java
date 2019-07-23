@@ -39,6 +39,7 @@ public class AtsHttpServer implements Runnable{
     @Override
     public void run() {
 
+        JSONObject obj = new JSONObject();
         BufferedReader in = null;
         try {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
@@ -61,8 +62,6 @@ public class AtsHttpServer implements Runnable{
                 in.read(charArray, 0, contentLength);
                 postData = new String(charArray);
             }
-
-            JSONObject obj = new JSONObject();
 
             if(input != null){
 

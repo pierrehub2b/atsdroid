@@ -16,27 +16,25 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 public class ApplicationInfo {
 
     private String packageName;
-    private List<String> activities = new ArrayList<String>();
+    private String activity;
     private String label;
     private String icon;
     private boolean system;
     private String version;
 
-    public ApplicationInfo(String pkg, String act, String version, Boolean sys, CharSequence label, Drawable icon){
+    public ApplicationInfo(String pkg, String act, String ver, Boolean sys, CharSequence lbl, Drawable icon){
 
         this.packageName = pkg;
-        this.version = version;
-        this.activities.add(act);
+        this.version = ver;
+        this.activity = act;
         this.system = sys;
 
-        if(label != null){
-            this.label = label.toString();
+        if(lbl != null){
+            this.label = lbl.toString();
         }else{
             this.label = pkg;
         }
@@ -46,8 +44,13 @@ public class ApplicationInfo {
         }
     }
 
-    public void start(Context context){
-        context.startActivity(getIntent(Intent.FLAG_ACTIVITY_NEW_TASK));
+    public boolean start(Context context){
+        try {
+            context.startActivity(getIntent(Intent.FLAG_ACTIVITY_NEW_TASK));
+            return true;
+        }catch (Exception e){
+            return false;
+        }
     }
 
     public void toFront(Context context){
@@ -72,18 +75,13 @@ public class ApplicationInfo {
     public String getPackageName(){
         return packageName;
     }
-
-    public String getActivity(int index) {
-        return activities.get(index);
-    }
-
-    public void addActivity(String act){
-        activities.add(act);
+    public String getPackageActivityName(){
+        return packageName + "/" + activity;
     }
 
     private Intent getIntent(int flag){
         final Intent intent = new Intent();
-        intent.setClassName(packageName, getActivity(0));
+        intent.setClassName(packageName, activity);
         intent.addFlags(flag);
         return intent;
     }
@@ -91,7 +89,7 @@ public class ApplicationInfo {
     public JSONObject getJson() throws JSONException{
         JSONObject result = new JSONObject();
         result.put("packageName", packageName);
-        result.put("activity", getActivity(0));
+        result.put("activity", activity);
         result.put("system", system);
         result.put("label", label);
         result.put("icon", icon);
