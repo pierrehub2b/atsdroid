@@ -111,7 +111,6 @@ public class AtsHttpServer implements Runnable{
 
                         obj.put("status", "0");
                         obj.put("message", "device capabilities");
-                        obj.put("system", "android");
                         obj.put("id", DeviceInfo.getInstance().getDeviceId());
                         obj.put("model", DeviceInfo.getInstance().getModel());
                         obj.put("manufacturer", DeviceInfo.getInstance().getManufacturer());
