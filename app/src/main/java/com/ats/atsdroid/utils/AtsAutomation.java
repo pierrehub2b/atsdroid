@@ -109,6 +109,7 @@ public class AtsAutomation {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.RGB_565;
 
+        AtsActivity.setAutomation(this);
         sleep();
     }
 

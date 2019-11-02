@@ -26,7 +26,17 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.view.WindowManager;
 
+import com.ats.atsdroid.utils.AtsAutomation;
+
+import java.io.FileDescriptor;
+import java.io.PrintWriter;
+
 public class AtsActivity extends Activity {
+
+    private static AtsAutomation automation;
+    public static void setAutomation(AtsAutomation auto){
+        automation = auto;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,5 +53,15 @@ public class AtsActivity extends Activity {
         KeyguardManager keyguardManager = (KeyguardManager)getSystemService(Activity.KEYGUARD_SERVICE);
         KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock(KEYGUARD_SERVICE);
         lock.disableKeyguard();
+    }
+
+    @Override
+    public void dump (String prefix, FileDescriptor fd, PrintWriter writer, String[] args){
+        if(args.length > 0){
+            writer.print("root -> " + args[0] + " -- " + automation.getRootObject().toString());
+        }else{
+            writer.print("nope");
+        }
+        writer.flush();
     }
 }
