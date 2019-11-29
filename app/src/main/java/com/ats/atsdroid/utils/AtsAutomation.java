@@ -33,13 +33,14 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.RemoteException;
+import android.support.annotation.RequiresApi;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.Configurator;
 import android.support.test.uiautomator.UiDevice;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
-
 import com.ats.atsdroid.element.AbstractAtsElement;
 import com.ats.atsdroid.element.AtsRootElement;
 import com.ats.atsdroid.ui.AtsActivity;
@@ -405,21 +406,20 @@ public class AtsAutomation {
         }
     }
 
-    public byte[] getScreenData()
-    {
+    public byte[] getScreenData() {
         final Bitmap screen = automation.takeScreenshot();
-        if(screen == null) {
+        if (screen == null) {
             compressedScreen = createEmptyBitmap(channelWidth, channelHeight, Color.LTGRAY);
-        }else{
+        } else {
             compressedScreen = Bitmap.createBitmap(screen, channelX, channelY, channelWidth, channelHeight, matrix, true);
             screen.recycle();
         }
 
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        compressedScreen.compress(Bitmap.CompressFormat.JPEG, 55, outputStream);
+        compressedScreen.compress(Bitmap.CompressFormat.PNG, 55, outputStream);
         compressedScreen.recycle();
-
-        return outputStream.toByteArray();
+        byte[] bytes = outputStream.toByteArray();
+        return bytes;
     }
 
     private Bitmap createEmptyBitmap(int width, int height, int color) {

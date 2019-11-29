@@ -1,5 +1,9 @@
 package com.ats.atsdroid.server;
 
+import android.graphics.Bitmap;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
+
 import com.ats.atsdroid.AtsRunner;
 import com.ats.atsdroid.BuildConfig;
 import com.ats.atsdroid.element.AbstractAtsElement;
@@ -10,7 +14,7 @@ import com.ats.atsdroid.utils.DeviceInfo;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
+import android.util.Base64;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -36,6 +40,7 @@ public class AtsHttpServer implements Runnable{
         this.automation = automation;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void run() {
 
@@ -185,7 +190,7 @@ public class AtsHttpServer implements Runnable{
                     automation.reloadRoot();
                     obj = automation.getRootObject();
 
-                }else if(RequestType.ELEMENT.equals(req.type)){
+                } else if(RequestType.ELEMENT.equals(req.type)){
 
                     if(req.parameters.length > 2) {
                         AbstractAtsElement element = automation.getElement(req.parameters[0]);
@@ -243,7 +248,12 @@ public class AtsHttpServer implements Runnable{
                         obj.put("status", "-21");
                         obj.put("message", "missing element id");
                     }
-                }else{
+                } else if(RequestType.SCREENSHOT.equals(req.type)){
+                    byte[] bytes = automation.getScreenData();
+                    obj.put("imgdata", Base64.encodeToString(bytes,0));
+                    obj.put("status", "0");
+                    obj.put("message", "Screenshot data sent");
+                } else{
                     obj.put("status", "-12");
                     obj.put("message", "unknown command : " + req.type);
                 }
@@ -278,7 +288,7 @@ public class AtsHttpServer implements Runnable{
         obj.put("channelY", automation.getChannelY());
     }
 
-    private void sendResponseData(JSONObject obj) throws  IOException{
+    private void sendResponseData(JSONObject obj) throws IOException, JSONException {
         byte[] data = obj.toString().getBytes(StandardCharsets.UTF_8);
         byte[] header = ("HTTP/1.1 200 OK\r\nServer: AtsDroid Driver\r\nDate: " + new Date() + "\r\nContent-type: " + JSON_RESPONSE_TYPE + "\r\nContent-length: " + data.length + "\r\n\r\n").getBytes();
         try {

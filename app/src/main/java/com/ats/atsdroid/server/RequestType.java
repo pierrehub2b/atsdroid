@@ -37,6 +37,7 @@ public class RequestType {
     public static final String INPUT = "input";
     public static final String TAP = "tap";
     public static final String SWIPE = "swipe";
+    public static final String SCREENSHOT = "screenshot";
 
     private static Pattern requestPattern = Pattern.compile("POST /(.*) HTTP/1.1");
 
