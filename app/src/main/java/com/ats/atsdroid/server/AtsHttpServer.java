@@ -249,10 +249,9 @@ public class AtsHttpServer implements Runnable{
                         obj.put("message", "missing element id");
                     }
                 } else if(RequestType.SCREENSHOT.equals(req.type)){
-                    byte[] bytes = automation.getScreenData();
-                    obj.put("imgdata", Base64.encodeToString(bytes,0));
-                    obj.put("status", "0");
-                    obj.put("message", "Screenshot data sent");
+                    byte[] bytes = automation.getScreenDataHires();
+                    sendBinaryResponseData(bytes);
+                    return;
                 } else{
                     obj.put("status", "-12");
                     obj.put("message", "unknown command : " + req.type);
@@ -291,6 +290,17 @@ public class AtsHttpServer implements Runnable{
     private void sendResponseData(JSONObject obj) throws IOException, JSONException {
         byte[] data = obj.toString().getBytes(StandardCharsets.UTF_8);
         byte[] header = ("HTTP/1.1 200 OK\r\nServer: AtsDroid Driver\r\nDate: " + new Date() + "\r\nContent-type: " + JSON_RESPONSE_TYPE + "\r\nContent-length: " + data.length + "\r\n\r\n").getBytes();
+        try {
+            final BufferedOutputStream bf = new BufferedOutputStream(socket.getOutputStream());
+            bf.write(header, 0, header.length);
+            bf.write(data, 0, data.length);
+            bf.flush();
+            bf.close();
+        }catch(IOException e){}
+    }
+
+    private void sendBinaryResponseData(byte[] data) throws IOException, JSONException {
+        byte[] header = ("HTTP/1.1 200 OK\r\nServer: AtsDroid Driver\r\nDate: " + new Date() + "\r\nContent-type: application/octet-stream\r\nContent-length: " + data.length + "\r\n\r\n").getBytes();
         try {
             final BufferedOutputStream bf = new BufferedOutputStream(socket.getOutputStream());
             bf.write(header, 0, header.length);
