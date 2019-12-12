@@ -118,6 +118,7 @@ public abstract class AbstractAtsElement {
         } else {
             sendKeyString(value);
         }
+        automation.pressNumericKey(KeyEvent.KEYCODE_BACK);
     }
 
     private boolean sendKeyString(String value){
