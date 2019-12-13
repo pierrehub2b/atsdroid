@@ -34,14 +34,19 @@ import java.io.PrintWriter;
 public class AtsActivity extends Activity {
 
     private static AtsAutomation automation;
-    public static void setAutomation(AtsAutomation auto){
+    public static AtsView rootView;
+    public static float mScreenDensity;
+
+
+    public static void setAutomation(AtsAutomation auto) {
         automation = auto;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(new AtsView(this));
+        rootView = new AtsView(this);
+        setContentView(rootView);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -53,7 +58,10 @@ public class AtsActivity extends Activity {
         KeyguardManager keyguardManager = (KeyguardManager)getSystemService(Activity.KEYGUARD_SERVICE);
         KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock(KEYGUARD_SERVICE);
         lock.disableKeyguard();
+        mScreenDensity = this.getResources().getDisplayMetrics().density;
     }
+
+
 
     @Override
     public void dump (String prefix, FileDescriptor fd, PrintWriter writer, String[] args){
@@ -63,5 +71,9 @@ public class AtsActivity extends Activity {
             writer.print("nope");
         }
         writer.flush();
+    }
+
+    public static AtsView getAtsView() {
+        return rootView;
     }
 }

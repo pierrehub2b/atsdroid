@@ -12,9 +12,12 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.View;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.ats.atsdroid.R;
+import com.ats.atsdroid.ui.AtsActivity;
+import com.ats.atsdroid.ui.AtsView;
 import com.ats.atsdroid.utils.AtsAutomation;
 import com.ats.atsdroid.utils.TextRect;
 
@@ -31,6 +34,7 @@ public abstract class AbstractAtsElement {
     protected boolean clickable;
     protected Rect bounds = new Rect(0,0,0,0);
 
+    protected Boolean isKeyboardVisible = false;
     protected boolean numeric;
 
     protected AccessibilityNodeInfo node;
@@ -72,6 +76,12 @@ public abstract class AbstractAtsElement {
     public void click(AtsAutomation automation, int offsetX, int offsetY){
         node.refresh();
         node.getBoundsInScreen(bounds);
+        AtsView rootView = AtsActivity.getAtsView();
+        if(bounds.top + offsetY > rootView.getMeasuredHeight()/2) {
+            int diff = (bounds.top + offsetY) - (rootView.getMeasuredHeight()/2);
+            automation.swipe(bounds.left, rootView.getMeasuredHeight()/2, 0, -diff);
+        }
+
         automation.clickAt(bounds.left + offsetX, bounds.top + offsetY);
 
         automation.highlightElement(bounds);
@@ -118,7 +128,6 @@ public abstract class AbstractAtsElement {
         } else {
             sendKeyString(value);
         }
-        automation.pressNumericKey(KeyEvent.KEYCODE_BACK);
     }
 
     private boolean sendKeyString(String value){
