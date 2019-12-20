@@ -424,16 +424,9 @@ public class AtsAutomation {
 
     public byte[] getScreenDataHires() {
         final Bitmap screen = automation.takeScreenshot();
-        if (screen == null) {
-            compressedScreen = createEmptyBitmap(channelWidth, channelHeight, Color.LTGRAY);
-        } else {
-            compressedScreen = Bitmap.createBitmap(screen, channelX, channelY, channelWidth, channelHeight, matrix, true);
-            screen.recycle();
-        }
-
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        compressedScreen.compress(Bitmap.CompressFormat.PNG, 55, outputStream);
-        compressedScreen.recycle();
+        screen.compress(Bitmap.CompressFormat.JPEG, 55, outputStream);
+        screen.recycle();
         byte[] bytes = outputStream.toByteArray();
         return bytes;
     }
