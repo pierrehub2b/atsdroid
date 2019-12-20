@@ -249,7 +249,8 @@ public class AtsHttpServer implements Runnable{
                         obj.put("message", "missing element id");
                     }
                 } else if(RequestType.SCREENSHOT.equals(req.type)){
-                    byte[] bytes = automation.getScreenDataHires();
+                    boolean lostLess = req.parameters[1].indexOf("True") > -1;
+                    byte[] bytes = automation.getScreenDataHires(lostLess);
                     sendBinaryResponseData(bytes);
                     return;
                 } else{
