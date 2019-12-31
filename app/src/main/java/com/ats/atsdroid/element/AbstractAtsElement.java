@@ -76,11 +76,11 @@ public abstract class AbstractAtsElement {
     public void click(AtsAutomation automation, int offsetX, int offsetY){
         node.refresh();
         node.getBoundsInScreen(bounds);
-        AtsView rootView = AtsActivity.getAtsView();
+        /*AtsView rootView = AtsActivity.getAtsView();
         if(bounds.top + offsetY > rootView.getMeasuredHeight()/2) {
             int diff = (bounds.top + offsetY) - (rootView.getMeasuredHeight()/2);
             automation.swipe(bounds.left, rootView.getMeasuredHeight()/2, 0, -diff);
-        }
+        }*/
 
         automation.clickAt(bounds.left + offsetX, bounds.top + offsetY);
 
