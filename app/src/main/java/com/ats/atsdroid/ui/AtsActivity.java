@@ -63,6 +63,7 @@ public class AtsActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         rootView = new AtsView(this);
         setContentView(rootView);
 
@@ -77,6 +78,11 @@ public class AtsActivity extends Activity {
         KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock(KEYGUARD_SERVICE);
         lock.disableKeyguard();
         mScreenDensity = this.getResources().getDisplayMetrics().density;
+
+        /*int resourceId = this.getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            statusBarHeight = this.getResources().getDimensionPixelSize(resourceId);
+        }*/
     }
 
     @Override
