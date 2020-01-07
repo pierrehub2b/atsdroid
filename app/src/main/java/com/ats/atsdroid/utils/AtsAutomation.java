@@ -33,14 +33,13 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.os.Build;
 import android.os.RemoteException;
-import android.support.annotation.RequiresApi;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.Configurator;
 import android.support.test.uiautomator.UiDevice;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+
 import com.ats.atsdroid.element.AbstractAtsElement;
 import com.ats.atsdroid.element.AtsRootElement;
 import com.ats.atsdroid.ui.AtsActivity;
@@ -69,7 +68,7 @@ public class AtsAutomation {
     //private final Context context = InstrumentationRegistry.getContext();
     private final Context context = InstrumentationRegistry.getTargetContext();
 
-    private final Matrix matrix = new Matrix();
+    private Matrix matrix;
 
     private List<ApplicationInfo> applications;
     private AtsRootElement rootElement;
@@ -78,39 +77,49 @@ public class AtsAutomation {
     //-------------------------------------------------------
     //assume here orientation is portrait
     //-------------------------------------------------------
-    private int channelX = 0;
-    private int channelWidth = device.getDisplayWidth();
 
-    private int channelY;
+    private int channelWidth;
     private int channelHeight;
+
     //-------------------------------------------------------
     private AbstractAtsElement found = null;
     private Bitmap compressedScreen;
 
     public AtsAutomation(int port){
 
-        Configurator.getInstance().setWaitForIdleTimeout(0);
-        DeviceInfo.getInstance().initData(port, device.getDisplayWidth(), device.getDisplayHeight());
+        AtsActivity.setAutomation(this);
 
         try {
             device.setOrientationNatural();
             device.freezeRotation();
         }catch (RemoteException e){}
 
-        device.pressHome();
-        launchAtsWidget();
+        Configurator.getInstance().setWaitForIdleTimeout(0);
 
-        loadApplications();
-        reloadRoot();
+        /*int barHeight = 0;
+        int resourceId = context.getResources().getIdentifier("navigation_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            barHeight = context.getResources().getDimensionPixelSize(resourceId);
+        }*/
 
-        channelY = rootElement.getChannelY();
-        channelHeight = rootElement.getChannelHeight();
-        matrix.preScale((float)DeviceInfo.getInstance().getDeviceWidth() / (float)channelWidth, (float)DeviceInfo.getInstance().getDeviceHeight() / (float)channelHeight);
+        DeviceInfo.getInstance().initData(port, device.getDisplayWidth(), device.getDisplayHeight());
 
+        channelWidth = DeviceInfo.getInstance().getResolutionWidth();
+        channelHeight = DeviceInfo.getInstance().getResolutionHeight();
+        matrix = DeviceInfo.getInstance().getMatrixScale();
+
+        //-------------------------------------------------------------
+        // Bitmap factory default
+        // -------------------------------------------------------------
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.RGB_565;
+        //-------------------------------------------------------------
 
-        AtsActivity.setAutomation(this);
+        device.pressHome();
+        launchAtsWidget();
+        reloadRoot();
+        loadApplications();
+
         sleep();
     }
 
@@ -135,7 +144,7 @@ public class AtsAutomation {
         rootNode.refresh();
 
         try {
-            rootElement = new AtsRootElement(device, rootNode);
+            rootElement = new AtsRootElement(rootNode);
         }catch (Exception e){
             wait(200);
             reloadRoot();
@@ -172,13 +181,13 @@ public class AtsAutomation {
         return channelHeight;
     }
 
-    public int getChannelX(){
+   /* public int getChannelX(){
         return channelX;
     }
 
     public int getChannelY(){
         return channelY;
-    }
+    }*/
 
     public List<ApplicationInfo> getApplications(){
         return applications;
@@ -411,7 +420,7 @@ public class AtsAutomation {
         if (screen == null) {
             compressedScreen = createEmptyBitmap(channelWidth, channelHeight, Color.LTGRAY);
         } else {
-            compressedScreen = Bitmap.createBitmap(screen, channelX, channelY, channelWidth, channelHeight, matrix, true);
+            compressedScreen = Bitmap.createBitmap(screen, 0, 0, channelWidth, channelHeight, matrix, true);
             screen.recycle();
         }
 
@@ -434,7 +443,7 @@ public class AtsAutomation {
             if (screen == null) {
                 compressedScreen = createEmptyBitmap(channelWidth, channelHeight, Color.LTGRAY);
             } else {
-                compressedScreen = Bitmap.createBitmap(screen, channelX, channelY, channelWidth, channelHeight, matrix, true);
+                compressedScreen = Bitmap.createBitmap(screen, 0, 0, channelWidth, channelHeight, null, true);
                 screen.recycle();
             }
             compressedScreen.compress(Bitmap.CompressFormat.PNG, 55, outputStream);
@@ -455,7 +464,7 @@ public class AtsAutomation {
         paint.setARGB(255, 220, 220, 220);
         canvas.drawRect(0, 0, width, height, paint);
 
-        canvas.translate(-channelX, -channelY);
+        //canvas.translate(0, -statusBarHeight);
 
         rootElement.drawElements(canvas, context.getResources());
         return bitmap;

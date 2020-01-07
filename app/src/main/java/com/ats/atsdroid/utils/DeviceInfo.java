@@ -19,9 +19,8 @@ under the License.
 
 package com.ats.atsdroid.utils;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.content.res.Resources;
+import android.graphics.Matrix;
 import android.os.Build;
 
 import java.net.InetAddress;
@@ -35,10 +34,13 @@ public class DeviceInfo {
     // Singleton declaration
     //----------------------------------------------------------------------------------
 
-    private static final DeviceInfo ourInstance = new DeviceInfo();
+    private static DeviceInfo instance;
 
     public static DeviceInfo getInstance() {
-        return ourInstance;
+        if(instance == null){
+            instance  = new DeviceInfo();
+        }
+        return instance;
     }
 
     private DeviceInfo() {
@@ -46,8 +48,6 @@ public class DeviceInfo {
         btAdapter = btDevice.getName();
         hostName = tryGetHostname();
         systemName = getAndroidVersion();
-        deviceWidth = Resources.getSystem().getConfiguration().screenWidthDp;
-        deviceHeight = Resources.getSystem().getConfiguration().screenHeightDp;
     }
 
     //----------------------------------------------------------------------------------
@@ -114,6 +114,17 @@ public class DeviceInfo {
         this.port = port;
         this.resolutionWidth = width;
         this.resolutionHeight = height;
+
+        //this.deviceWidth = Resources.getSystem().getConfiguration().screenWidthDp;
+        //this.deviceHeight= Resources.getSystem().getConfiguration().screenHeightDp;
+        this.deviceWidth = this.resolutionWidth/3;
+        this.deviceHeight= this.resolutionHeight/3;
+    }
+
+    public Matrix getMatrixScale(){
+        Matrix m = new Matrix();
+        m.preScale((float)deviceWidth / (float)resolutionWidth, (float)deviceHeight / (float)resolutionHeight);
+        return m;
     }
 
     public String getSystemName(){ return systemName; }

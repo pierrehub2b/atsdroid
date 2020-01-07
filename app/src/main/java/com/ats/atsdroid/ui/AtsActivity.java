@@ -67,8 +67,6 @@ public class AtsActivity extends Activity {
         }*/
     }
 
-
-
     @Override
     public void dump (String prefix, FileDescriptor fd, PrintWriter writer, String[] args){
         if(args.length > 0){

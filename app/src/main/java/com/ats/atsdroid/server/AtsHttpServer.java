@@ -284,8 +284,8 @@ public class AtsHttpServer implements Runnable{
         obj.put("deviceHeight", DeviceInfo.getInstance().getDeviceHeight());
         obj.put("channelWidth", automation.getChannelWidth());
         obj.put("channelHeight", automation.getChannelHeight());
-        obj.put("channelX", automation.getChannelX());
-        obj.put("channelY", automation.getChannelY());
+        //obj.put("channelX", automation.getChannelX());
+        //obj.put("channelY", automation.getChannelY());
     }
 
     private void sendResponseData(JSONObject obj) throws IOException, JSONException {
