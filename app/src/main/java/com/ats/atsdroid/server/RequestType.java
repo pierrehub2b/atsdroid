@@ -19,6 +19,7 @@ under the License.
 
 package com.ats.atsdroid.server;
 
+import java.lang.reflect.Array;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,5 +51,10 @@ public class RequestType {
             this.type = match.group(1);
             this.parameters = body.split("\n");
         }
+    }
+
+    public RequestType(String value, String[] args){
+        this.type = value;
+        this.parameters = args;
     }
 }
