@@ -20,8 +20,15 @@ under the License.
 package com.ats.atsdroid.utils;
 
 import android.bluetooth.BluetoothAdapter;
+import android.content.res.Resources;
 import android.graphics.Matrix;
 import android.os.Build;
+import android.support.test.uiautomator.UiDevice;
+
+import com.ats.atsdroid.BuildConfig;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -55,7 +62,7 @@ public class DeviceInfo {
     //----------------------------------------------------------------------------------
 
     private String getAndroidVersion(){
-        double release=Double.parseDouble(Build.VERSION.RELEASE.replaceAll("(\\d+[.]\\d+)(.*)","$1"));
+        double release = Double.parseDouble(Build.VERSION.RELEASE.replaceAll("(\\d+[.]\\d+)(.*)","$1"));
         String codeName="undefined";//below Jelly bean OR above Oreo
         if(release>=4.1 && release<4.4)codeName="Jelly Bean";
         else if(release<5)codeName="Kit Kat";
@@ -97,11 +104,12 @@ public class DeviceInfo {
 
     private int deviceWidth;
     private int deviceHeight;
-    private int resolutionWidth;
-    private int resolutionHeight;
+    private int channelWidth;
+    private int channelHeight;
+
+    private Matrix matrix;
 
     private String systemName;
-    private String systemRelease = Build.VERSION.RELEASE;
     private String deviceId = Build.ID;
     private String model = Build.MODEL;
     private String manufacturer = Build.MANUFACTURER;
@@ -110,30 +118,52 @@ public class DeviceInfo {
     private String hostName;
     private String btAdapter;
 
-    public void initData(int port, int width, int height){
-        this.port = port;
-        this.resolutionWidth = width;
-        this.resolutionHeight = height;
+    public void initDevice(int p, UiDevice d){
 
-        //this.deviceWidth = Resources.getSystem().getConfiguration().screenWidthDp;
-        //this.deviceHeight= Resources.getSystem().getConfiguration().screenHeightDp;
-        this.deviceWidth = this.resolutionWidth/3;
-        this.deviceHeight= this.resolutionHeight/3;
+        port = p;
+        channelWidth = d.getDisplayWidth();
+        channelHeight = d.getDisplayHeight();
+
+        /*int barHeight = 0;
+        int resourceId = context.getResources().getIdentifier("navigation_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            barHeight = context.getResources().getDimensionPixelSize(resourceId);
+        }*/
+
+        int dh = Resources.getSystem().getConfiguration().screenHeightDp;
+        if(dh > 640){
+            dh = 640;
+        }
+        float ratio = channelHeight / dh;
+
+        deviceWidth = Math.round((float)channelWidth / ratio);
+        deviceHeight = Math.round((float)channelHeight / ratio);
+
+        matrix = new Matrix();
+        matrix.preScale((float)deviceWidth / (float)channelWidth, (float)deviceHeight / (float)channelHeight);
     }
 
-    public Matrix getMatrixScale(){
-        Matrix m = new Matrix();
-        m.preScale((float)deviceWidth / (float)resolutionWidth, (float)deviceHeight / (float)resolutionHeight);
-        return m;
+    public Matrix getMatrix(){
+        return matrix;
+    }
+
+    public void driverInfoBase(JSONObject obj) throws JSONException {
+        obj.put("os", "android");
+        obj.put("driverVersion", BuildConfig.VERSION_NAME);
+        obj.put("systemName", systemName);
+        obj.put("deviceWidth", deviceWidth);
+        obj.put("deviceHeight", deviceHeight);
+        obj.put("channelWidth", channelWidth);
+        obj.put("channelHeight", channelHeight);
     }
 
     public String getSystemName(){ return systemName; }
     public int getPort(){ return port; }
     public int getDeviceWidth() { return deviceWidth; }
     public int getDeviceHeight() { return deviceHeight; }
-    public int getResolutionWidth() {return resolutionWidth; }
-    public int getResolutionHeight() {
-        return resolutionHeight;
+    public int getChannelWidth() {return channelWidth; }
+    public int getChannelHeight() {
+        return channelHeight;
     }
     public String getDeviceId() {
         return deviceId;

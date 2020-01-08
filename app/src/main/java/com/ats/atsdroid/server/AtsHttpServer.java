@@ -1,11 +1,9 @@
 package com.ats.atsdroid.server;
 
-import android.graphics.Bitmap;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 
 import com.ats.atsdroid.AtsRunner;
-import com.ats.atsdroid.BuildConfig;
 import com.ats.atsdroid.element.AbstractAtsElement;
 import com.ats.atsdroid.utils.ApplicationInfo;
 import com.ats.atsdroid.utils.AtsAutomation;
@@ -14,7 +12,7 @@ import com.ats.atsdroid.utils.DeviceInfo;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import android.util.Base64;
+
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -112,7 +110,8 @@ public class AtsHttpServer implements Runnable{
                     }
                 }else if(RequestType.INFO.equals(req.type)){
                     try {
-                        driverInfoBase(obj);
+
+                        DeviceInfo.getInstance().driverInfoBase(obj);
 
                         obj.put("status", "0");
                         obj.put("message", "device capabilities");
@@ -142,7 +141,8 @@ public class AtsHttpServer implements Runnable{
 
                             automation.startDriverThread();
 
-                            driverInfoBase(obj);
+                            DeviceInfo.getInstance().driverInfoBase(obj);
+
                             obj.put("status", "0");
                             obj.put("screenCapturePort", automation.getScreenCapturePort());
 
@@ -249,9 +249,11 @@ public class AtsHttpServer implements Runnable{
                         obj.put("message", "missing element id");
                     }
                 } else if(RequestType.SCREENSHOT.equals(req.type)){
-                    boolean lostLess = req.parameters[1].indexOf("True") > -1;
-                    byte[] bytes = automation.getScreenDataHires(lostLess);
-                    sendBinaryResponseData(bytes);
+                    if(req.parameters[1].indexOf(RequestType.SCREENSHOT_HIRES) > -1){
+                        sendBinaryResponseData(automation.getScreenDataHires());
+                    }else{
+                        sendBinaryResponseData(automation.getScreenData());
+                    }
                     return;
                 } else{
                     obj.put("status", "-12");
@@ -274,18 +276,6 @@ public class AtsHttpServer implements Runnable{
                 socket.close(); // we close socket connection
             } catch (Exception e) {}
         }
-    }
-
-    private void driverInfoBase(JSONObject obj) throws JSONException {
-        obj.put("os", "android");
-        obj.put("driverVersion", BuildConfig.VERSION_NAME);
-        obj.put("systemName", DeviceInfo.getInstance().getSystemName());
-        obj.put("deviceWidth", DeviceInfo.getInstance().getDeviceWidth());
-        obj.put("deviceHeight", DeviceInfo.getInstance().getDeviceHeight());
-        obj.put("channelWidth", automation.getChannelWidth());
-        obj.put("channelHeight", automation.getChannelHeight());
-        //obj.put("channelX", automation.getChannelX());
-        //obj.put("channelY", automation.getChannelY());
     }
 
     private void sendResponseData(JSONObject obj) throws IOException, JSONException {
