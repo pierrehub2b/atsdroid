@@ -303,8 +303,8 @@ public class AtsActivity extends Activity {
         obj.put("deviceHeight", DeviceInfo.getInstance().getDeviceHeight());
         obj.put("channelWidth", automation.getChannelWidth());
         obj.put("channelHeight", automation.getChannelHeight());
-        obj.put("channelX", automation.getChannelX());
-        obj.put("channelY", automation.getChannelY());
+        //obj.put("channelX", automation.getChannelX());
+        //obj.put("channelY", automation.getChannelY());
     }
 
 }
