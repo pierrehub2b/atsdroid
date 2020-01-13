@@ -30,7 +30,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.RemoteException;
@@ -48,6 +47,7 @@ import com.ats.atsdroid.ui.AtsActivity;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,26 +65,19 @@ public class AtsAutomation {
 
     private final Instrumentation instrument = InstrumentationRegistry.getInstrumentation();
     private final UiAutomation automation = instrument.getUiAutomation();
+
     private final UiDevice device = UiDevice.getInstance(instrument);
+    private final DeviceInfo deviceInfo = DeviceInfo.getInstance();
+
     //private final Context context = InstrumentationRegistry.getContext();
     private final Context context = InstrumentationRegistry.getTargetContext();
-
-    private Matrix matrix;
 
     private List<ApplicationInfo> applications;
     private AtsRootElement rootElement;
     private DriverThread driverThread;
 
     //-------------------------------------------------------
-    //assume here orientation is portrait
-    //-------------------------------------------------------
-
-    private int channelWidth;
-    private int channelHeight;
-
-    //-------------------------------------------------------
     private AbstractAtsElement found = null;
-    private Bitmap compressedScreen;
 
     public AtsRunner runner;
     public int port;
@@ -93,25 +86,14 @@ public class AtsAutomation {
         this.runner = runner;
         this.port = port;
         AtsActivity.setAutomation(this);
+        Configurator.getInstance().setWaitForIdleTimeout(0);
 
         try {
             device.setOrientationNatural();
             device.freezeRotation();
         }catch (RemoteException e){}
 
-        Configurator.getInstance().setWaitForIdleTimeout(0);
-
-        /*int barHeight = 0;
-        int resourceId = context.getResources().getIdentifier("navigation_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            barHeight = context.getResources().getDimensionPixelSize(resourceId);
-        }*/
-
-        DeviceInfo.getInstance().initData(port, device.getDisplayWidth(), device.getDisplayHeight());
-
-        channelWidth = DeviceInfo.getInstance().getResolutionWidth();
-        channelHeight = DeviceInfo.getInstance().getResolutionHeight();
-        matrix = DeviceInfo.getInstance().getMatrixScale();
+        deviceInfo.initDevice(port, device);
 
         //-------------------------------------------------------------
         // Bitmap factory default
@@ -177,22 +159,6 @@ public class AtsAutomation {
     public JSONObject getRootObject(){
         return rootElement.getJsonObject();
     }
-
-    public int getChannelWidth(){
-        return channelWidth;
-    }
-
-    public int getChannelHeight(){
-        return channelHeight;
-    }
-
-   /* public int getChannelX(){
-        return channelX;
-    }
-
-    public int getChannelY(){
-        return channelY;
-    }*/
 
     public List<ApplicationInfo> getApplications(){
         return applications;
@@ -421,44 +387,36 @@ public class AtsAutomation {
     }
 
     public byte[] getScreenData() {
-        final Bitmap screen = automation.takeScreenshot();
+        return getScreenByteArray(Bitmap.CompressFormat.JPEG, 50, true);
+    }
+
+    public byte[] getScreenDataHires() {
+        return getScreenByteArray(Bitmap.CompressFormat.PNG, 100, false);
+    }
+
+    private byte[] getScreenByteArray(Bitmap.CompressFormat cf, int level, boolean resize){
+        Bitmap screen = automation.takeScreenshot();
         if (screen == null) {
-            compressedScreen = createEmptyBitmap(channelWidth, channelHeight, Color.LTGRAY);
-        } else {
-            compressedScreen = Bitmap.createBitmap(screen, 0, 0, channelWidth, channelHeight, matrix, true);
-            screen.recycle();
+            screen = createEmptyBitmap(deviceInfo.getChannelWidth(), deviceInfo.getChannelHeight());
+        }
+
+        if(resize){
+            screen = Bitmap.createBitmap(screen, 0, 0, deviceInfo.getChannelWidth(), deviceInfo.getChannelHeight(), deviceInfo.getMatrix(), true);
         }
 
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        compressedScreen.compress(Bitmap.CompressFormat.JPEG, 55, outputStream);
-        compressedScreen.recycle();
-        byte[] bytes = outputStream.toByteArray();
+        screen.compress(cf, level, outputStream);
+        screen.recycle();
+
+        final byte[] bytes = outputStream.toByteArray();
+        try {
+            outputStream.close();
+        }catch (IOException e){}
+
         return bytes;
     }
 
-    public byte[] getScreenDataHires(boolean lostLess) {
-        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        final Bitmap screen = automation.takeScreenshot();
-        byte[] bytes;
-
-        if(lostLess) {
-            screen.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
-            screen.recycle();
-        } else {
-            if (screen == null) {
-                compressedScreen = createEmptyBitmap(channelWidth, channelHeight, Color.LTGRAY);
-            } else {
-                compressedScreen = Bitmap.createBitmap(screen, 0, 0, channelWidth, channelHeight, null, true);
-                screen.recycle();
-            }
-            compressedScreen.compress(Bitmap.CompressFormat.PNG, 55, outputStream);
-            compressedScreen.recycle();
-        }
-        bytes = outputStream.toByteArray();
-        return bytes;
-    }
-
-    private Bitmap createEmptyBitmap(int width, int height, int color) {
+    private Bitmap createEmptyBitmap(int width, int height) {
 
         final Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
         bitmap.setHasAlpha(false);

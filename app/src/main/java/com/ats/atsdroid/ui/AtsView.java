@@ -70,7 +70,7 @@ public class AtsView extends View {
         yPos += scaledSize*1.8;
         canvas.drawText("System name : " + DeviceInfo.getInstance().getSystemName(), 30, yPos, textPaint);
         yPos += scaledSize*1.4;
-        canvas.drawText("Resolution : " + DeviceInfo.getInstance().getResolutionWidth() + " x " + DeviceInfo.getInstance().getResolutionHeight(), 30, yPos, textPaint);
+        canvas.drawText("Channel size : " + DeviceInfo.getInstance().getChannelWidth() + " x " + DeviceInfo.getInstance().getChannelHeight(), 30, yPos, textPaint);
         yPos += scaledSize*1.8;
         canvas.drawText("Device size : " + DeviceInfo.getInstance().getDeviceWidth() + " x " + DeviceInfo.getInstance().getDeviceHeight(), 30, yPos, textPaint);
         yPos += scaledSize*1.4;
