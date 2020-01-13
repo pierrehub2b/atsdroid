@@ -40,6 +40,7 @@ import android.support.test.uiautomator.UiDevice;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import com.ats.atsdroid.AtsRunner;
 import com.ats.atsdroid.element.AbstractAtsElement;
 import com.ats.atsdroid.element.AtsRootElement;
 import com.ats.atsdroid.ui.AtsActivity;
@@ -85,8 +86,12 @@ public class AtsAutomation {
     private AbstractAtsElement found = null;
     private Bitmap compressedScreen;
 
-    public AtsAutomation(int port){
+    public AtsRunner runner;
+    public int port;
 
+    public AtsAutomation(int port, AtsRunner runner){
+        this.runner = runner;
+        this.port = port;
         AtsActivity.setAutomation(this);
 
         try {

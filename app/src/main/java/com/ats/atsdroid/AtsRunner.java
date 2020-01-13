@@ -58,12 +58,12 @@ public class AtsRunner {
             port = Integer.parseInt(InstrumentationRegistry.getArguments().getString("atsPort"));
         }catch(Exception e){};
 
-        final AtsAutomation automation = new AtsAutomation(port);
+        final AtsAutomation automation = new AtsAutomation(port, this);
 
         try {
             final ServerSocket serverConnect = new ServerSocket(port);
             while (running) {
-                final AtsHttpServer atsServer = new AtsHttpServer(serverConnect.accept(), this, automation);
+                final AtsHttpServer atsServer = new AtsHttpServer(serverConnect.accept(), automation);
                 (new Thread(atsServer)).start();
             }
         } catch (IOException e) {

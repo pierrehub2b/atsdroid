@@ -1,4 +1,7 @@
 package com.ats.atsdroid.element;
+import org.json.JSONObject;
+import org.json.JSONException;
+
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.io.BufferedOutputStream;
@@ -24,6 +27,6 @@ public class AtsResponseBinary extends AtsResponse {
     }
 
     public void sendDataToUsbPort(PrintWriter writer) {
-        writer.print(this.binaryData);
+        writer.print(new String(this.binaryData));
     }
 }

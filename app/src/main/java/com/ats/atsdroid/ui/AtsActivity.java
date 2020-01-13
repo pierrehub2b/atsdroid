@@ -96,7 +96,7 @@ public class AtsActivity extends Activity {
             }
 
             RequestType req = new RequestType(type, parameters);
-            AtsResponse resp = executeRequest(req, null);
+            AtsResponse resp = executeRequest(req, true);
             resp.sendDataToUsbPort(writer);
         }else{
             writer.print("nope");
@@ -104,7 +104,7 @@ public class AtsActivity extends Activity {
         writer.flush();
     }
 
-    public static AtsResponse executeRequest(RequestType req, AtsRunner runner) {
+    public static AtsResponse executeRequest(RequestType req, Boolean usb) {
         try {
             obj.put("type", req.type);
             if (RequestType.APP.equals(req.type)) {
@@ -178,8 +178,11 @@ public class AtsActivity extends Activity {
 
                         driverInfoBase(obj);
                         obj.put("status", "0");
-                        obj.put("screenCapturePort", automation.getScreenCapturePort());
-
+                        if(req.parameters.length > 0) {
+                            obj.put("screenCapturePort", req.parameters[1]);
+                        } else {
+                            obj.put("screenCapturePort", automation.getScreenCapturePort());
+                        }
                     } else if (RequestType.STOP.equals(req.parameters[0])) {
 
                         automation.stopDriverThread();
@@ -192,8 +195,7 @@ public class AtsActivity extends Activity {
                         obj.put("status", "0");
                         obj.put("message", "close ats driver");
 
-                        if(runner != null) runner.setRunning(false);
-
+                        automation.runner.setRunning(false);
                         automation.terminate();
                         return new AtsResponseJSON(obj);
                     } else {
@@ -282,7 +284,7 @@ public class AtsActivity extends Activity {
                     obj.put("message", "missing element id");
                 }
             } else if (RequestType.SCREENSHOT.equals(req.type)) {
-                boolean lostLess = req.parameters[1].indexOf("True") > -1;
+                boolean lostLess = req.parameters[req.parameters.length-1].indexOf("True") > -1;
                 return new AtsResponseBinary(automation.getScreenDataHires(lostLess));
             } else {
                 obj.put("status", "-12");
@@ -303,8 +305,6 @@ public class AtsActivity extends Activity {
         obj.put("deviceHeight", DeviceInfo.getInstance().getDeviceHeight());
         obj.put("channelWidth", automation.getChannelWidth());
         obj.put("channelHeight", automation.getChannelHeight());
-        //obj.put("channelX", automation.getChannelX());
-        //obj.put("channelY", automation.getChannelY());
     }
 
 }

@@ -22,12 +22,10 @@ public class AtsHttpServer implements Runnable{
     private final static String CONTENT_LENGTH = "Content-Length: ";
 
     private Socket socket;
-    private AtsRunner runner;
     private AtsAutomation automation;
 
-    public AtsHttpServer(Socket socket, AtsRunner runner, AtsAutomation automation) {
+    public AtsHttpServer(Socket socket, AtsAutomation automation) {
         this.socket = socket;
-        this.runner = runner;
         this.automation = automation;
     }
 
@@ -59,7 +57,7 @@ public class AtsHttpServer implements Runnable{
 
             if(input != null) {
                 final RequestType req = new RequestType(input, postData);
-                AtsResponse response = AtsActivity.executeRequest(req, this.runner);
+                AtsResponse response = AtsActivity.executeRequest(req, false);
                 response.sendDataHttpServer(socket);
             } else{
                 new AtsResponseJSON(new JSONObject("{\"status\":\"-11\",\"message\":\"unknown command\"}")).sendDataHttpServer(socket);
