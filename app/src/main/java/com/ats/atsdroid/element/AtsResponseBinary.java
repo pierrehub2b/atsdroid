@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.Date;
 
 public class AtsResponseBinary extends AtsResponse {
-    private byte[] binaryData = new byte[0];
+    private byte[] binaryData;
 
     public AtsResponseBinary(byte[] bytes) {
         this.binaryData = bytes;

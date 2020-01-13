@@ -146,7 +146,7 @@ public class AtsActivity extends Activity {
                 }
             } else if (RequestType.INFO.equals(req.type)) {
                 try {
-                    driverInfoBase(obj);
+                    DeviceInfo.getInstance().driverInfoBase(obj);
 
                     obj.put("status", "0");
                     obj.put("message", "device capabilities");
@@ -176,7 +176,7 @@ public class AtsActivity extends Activity {
 
                         automation.startDriverThread();
 
-                        driverInfoBase(obj);
+                        DeviceInfo.getInstance().driverInfoBase(obj);
                         obj.put("status", "0");
                         if(req.parameters.length > 0) {
                             obj.put("screenCapturePort", req.parameters[1]);
@@ -284,8 +284,11 @@ public class AtsActivity extends Activity {
                     obj.put("message", "missing element id");
                 }
             } else if (RequestType.SCREENSHOT.equals(req.type)) {
-                boolean lostLess = req.parameters[req.parameters.length-1].indexOf("True") > -1;
-                return new AtsResponseBinary(automation.getScreenDataHires(lostLess));
+                if(req.parameters[1].indexOf(RequestType.SCREENSHOT_HIRES) > -1){
+                    return new AtsResponseBinary(automation.getScreenDataHires());
+                }else{
+                    return new AtsResponseBinary(automation.getScreenData());
+                }
             } else {
                 obj.put("status", "-12");
                 obj.put("message", "unknown command : " + req.type);
@@ -296,15 +299,4 @@ public class AtsActivity extends Activity {
         }
         return new AtsResponseJSON(obj);
     }
-
-    private static void driverInfoBase(JSONObject obj) throws JSONException {
-        obj.put("os", "android");
-        obj.put("driverVersion", BuildConfig.VERSION_NAME);
-        obj.put("systemName", DeviceInfo.getInstance().getSystemName());
-        obj.put("deviceWidth", DeviceInfo.getInstance().getDeviceWidth());
-        obj.put("deviceHeight", DeviceInfo.getInstance().getDeviceHeight());
-        obj.put("channelWidth", automation.getChannelWidth());
-        obj.put("channelHeight", automation.getChannelHeight());
-    }
-
 }
