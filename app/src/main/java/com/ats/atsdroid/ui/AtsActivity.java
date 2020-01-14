@@ -178,11 +178,10 @@ public class AtsActivity extends Activity {
 
                         DeviceInfo.getInstance().driverInfoBase(obj);
                         obj.put("status", "0");
-                        if(req.parameters.length > 0) {
-                            obj.put("screenCapturePort", req.parameters[1]);
-                        } else {
-                            obj.put("screenCapturePort", automation.getScreenCapturePort());
+                        if(req.parameters.length > 0 && req.parameters[1].indexOf("true") > -1) {
+                            obj.put("udpEndPoint", req.parameters[2]);
                         }
+                        obj.put("screenCapturePort", automation.getScreenCapturePort());
                     } else if (RequestType.STOP.equals(req.parameters[0])) {
 
                         automation.stopDriverThread();
