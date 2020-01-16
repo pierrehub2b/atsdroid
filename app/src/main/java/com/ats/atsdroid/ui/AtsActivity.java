@@ -99,7 +99,7 @@ public class AtsActivity extends Activity {
             AtsResponse resp = executeRequest(req, true);
             resp.sendDataToUsbPort(writer);
         }else{
-            writer.print("nope");
+            writer.print("no enough args");
         }
         writer.flush();
     }
@@ -180,8 +180,11 @@ public class AtsActivity extends Activity {
                         obj.put("status", "0");
                         if(req.parameters.length > 0 && req.parameters[1].indexOf("true") > -1) {
                             obj.put("udpEndPoint", req.parameters[2]);
+                        } else if(req.parameters.length > 0) {
+                            obj.put("screenCapturePort", req.parameters[2]);
+                        } else {
+                            obj.put("screenCapturePort", automation.getScreenCapturePort());
                         }
-                        obj.put("screenCapturePort", automation.getScreenCapturePort());
                     } else if (RequestType.STOP.equals(req.parameters[0])) {
 
                         automation.stopDriverThread();

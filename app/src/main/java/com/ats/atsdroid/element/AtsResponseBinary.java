@@ -27,6 +27,7 @@ public class AtsResponseBinary extends AtsResponse {
     }
 
     public void sendDataToUsbPort(PrintWriter writer) {
-        writer.print(new String(this.binaryData));
+        String strOutput = new String(this.binaryData);
+        writer.println(strOutput);
     }
 }
