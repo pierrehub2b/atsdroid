@@ -53,7 +53,9 @@ public class DeviceInfo {
     private DeviceInfo() {
         BluetoothAdapter btDevice = BluetoothAdapter.getDefaultAdapter();
         btAdapter = btDevice.getName();
-        hostName = tryGetHostname();
+        if(!this.usbMode) {
+            hostName = tryGetHostname();
+        }
         systemName = getAndroidVersion();
     }
 
@@ -117,12 +119,14 @@ public class DeviceInfo {
     private String version = Build.VERSION.RELEASE;
     private String hostName;
     private String btAdapter;
+    private boolean usbMode;
 
-    public void initDevice(int p, UiDevice d){
-
+    public void initDevice(int p, UiDevice d, String ipAddress, Boolean usbMode){
+        hostName = ipAddress;
         port = p;
         channelWidth = d.getDisplayWidth();
         channelHeight = d.getDisplayHeight();
+        this.usbMode = usbMode;
 
         /*int barHeight = 0;
         int resourceId = context.getResources().getIdentifier("navigation_bar_height", "dimen", "android");
@@ -185,5 +189,13 @@ public class DeviceInfo {
     }
     public String getBtAdapter() {
         return btAdapter;
+    }
+
+    public void setHostName(String hostName) {
+        this.hostName = hostName;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
     }
 }

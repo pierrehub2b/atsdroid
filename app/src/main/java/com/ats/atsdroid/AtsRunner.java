@@ -52,22 +52,41 @@ public class AtsRunner {
 
     @Test
     public void testMain() {
-
+        Boolean usbMode = false;
         int port = DEFAULT_PORT;
+        String ipAddress = "";
+
         try {
             port = Integer.parseInt(InstrumentationRegistry.getArguments().getString("atsPort"));
         }catch(Exception e){};
 
-        final AtsAutomation automation = new AtsAutomation(port, this);
+        try {
+            usbMode = Boolean.parseBoolean(InstrumentationRegistry.getArguments().getString("usbMode"));
+        }catch(Exception e){};
 
         try {
-            final ServerSocket serverConnect = new ServerSocket(port);
+            ipAddress = InstrumentationRegistry.getArguments().getString("ipAddress");
+        }catch(Exception e){};
+
+        final AtsAutomation automation = new AtsAutomation(port, this, ipAddress, usbMode);
+
+        ServerSocket serverConnect;
+        if(usbMode) {
             while (running) {
-                final AtsHttpServer atsServer = new AtsHttpServer(serverConnect.accept(), automation);
-                (new Thread(atsServer)).start();
+                (new Thread()).start();
             }
-        } catch (IOException e) {
-            System.err.println("Server Connection error : " + e.getMessage());
+        } else {
+            try {
+                serverConnect = new ServerSocket(port);
+                while (running) {
+                    final AtsHttpServer atsServer = new AtsHttpServer(serverConnect.accept(), automation);
+                    (new Thread(atsServer)).start();
+                }
+            } catch (IOException e) {
+                System.err.println("Server Connection error : " + e.getMessage());
+            }
         }
+
+
     }
 }

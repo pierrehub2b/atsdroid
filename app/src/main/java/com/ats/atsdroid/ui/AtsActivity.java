@@ -173,17 +173,21 @@ public class AtsActivity extends Activity {
             } else if (RequestType.DRIVER.equals(req.type)) {
                 if (req.parameters.length > 0) {
                     if (RequestType.START.equals(req.parameters[0])) {
-
                         automation.startDriverThread();
 
                         DeviceInfo.getInstance().driverInfoBase(obj);
                         obj.put("status", "0");
-                        if(req.parameters.length > 0 && req.parameters[1].indexOf("true") > -1) {
-                            obj.put("udpEndPoint", req.parameters[2]);
-                        } else if(req.parameters.length > 0) {
-                            obj.put("screenCapturePort", req.parameters[2]);
+
+                        int screenCapturePort = automation.getScreenCapturePort();
+                        if(automation.getUsbMode() && req.parameters.length > 2) {
+                            if(req.parameters[1].indexOf("true") > -1) {
+                                obj.put("udpEndPoint", req.parameters[2]);
+                                obj.put("screenCapturePort", screenCapturePort);
+                            } else {
+                                obj.put("screenCapturePort", req.parameters[2]);
+                            }
                         } else {
-                            obj.put("screenCapturePort", automation.getScreenCapturePort());
+                            obj.put("screenCapturePort", screenCapturePort);
                         }
                     } else if (RequestType.STOP.equals(req.parameters[0])) {
 
@@ -197,7 +201,10 @@ public class AtsActivity extends Activity {
                         obj.put("status", "0");
                         obj.put("message", "close ats driver");
 
-                        automation.runner.setRunning(false);
+                        if(automation.runner.isRunning()) {
+                            automation.runner.setRunning(false);
+                        }
+
                         automation.terminate();
                         return new AtsResponseJSON(obj);
                     } else {

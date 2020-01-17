@@ -76,13 +76,16 @@ public class AtsAutomation {
     private AtsRootElement rootElement;
     private DriverThread driverThread;
 
+    private Boolean usbMode;
+
     //-------------------------------------------------------
     private AbstractAtsElement found = null;
 
     public AtsRunner runner;
     public int port;
 
-    public AtsAutomation(int port, AtsRunner runner){
+    public AtsAutomation(int port, AtsRunner runner, String ipAddress, Boolean usbMode){
+        this.usbMode = usbMode;
         this.runner = runner;
         this.port = port;
         AtsActivity.setAutomation(this);
@@ -93,7 +96,7 @@ public class AtsAutomation {
             device.freezeRotation();
         }catch (RemoteException e){}
 
-        deviceInfo.initDevice(port, device);
+        deviceInfo.initDevice(port, device, ipAddress, usbMode);
 
         //-------------------------------------------------------------
         // Bitmap factory default
@@ -119,6 +122,11 @@ public class AtsAutomation {
         atsIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         atsIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         context.startActivity(atsIntent);
+    }
+
+    public Boolean getUsbMode()
+    {
+        return this.usbMode;
     }
 
     public void reloadRoot(){
