@@ -70,14 +70,11 @@ public class AtsRunner {
 
         final AtsAutomation automation = new AtsAutomation(port, this, ipAddress, usbMode);
 
-        ServerSocket serverConnect;
-        if(usbMode) {
-            while (running) {
-                (new Thread()).start();
-            }
+        if(!usbMode) {
+            while (running) {}
         } else {
             try {
-                serverConnect = new ServerSocket(port);
+                ServerSocket serverConnect = new ServerSocket(port);
                 while (running) {
                     final AtsHttpServer atsServer = new AtsHttpServer(serverConnect.accept(), automation);
                     (new Thread(atsServer)).start();
@@ -86,7 +83,5 @@ public class AtsRunner {
                 System.err.println("Server Connection error : " + e.getMessage());
             }
         }
-
-
     }
 }

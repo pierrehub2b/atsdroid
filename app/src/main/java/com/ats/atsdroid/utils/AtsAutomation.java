@@ -29,7 +29,6 @@ import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.RemoteException;
@@ -43,6 +42,7 @@ import com.ats.atsdroid.AtsRunner;
 import com.ats.atsdroid.element.AbstractAtsElement;
 import com.ats.atsdroid.element.AtsRootElement;
 import com.ats.atsdroid.ui.AtsActivity;
+import com.ats.atsdroid.ui.AtsView;
 
 import org.json.JSONObject;
 
@@ -144,6 +144,12 @@ public class AtsAutomation {
             wait(200);
             reloadRoot();
         }
+    }
+
+    public void hideKeyboard(AtsView rootView) {
+        // use application level context to avoid unnecessary leaks.
+        deviceButton(BACK);
+        wait(500);
     }
 
     public AbstractAtsElement getElement(String id){

@@ -51,7 +51,8 @@ public abstract class AbstractAtsElement {
         final int count = node.getChildCount();
         children = new AbstractAtsElement[count];
         for(int i=0; i<count; i++){
-            children[i] = new AtsElement(node.getChild(i));
+            AccessibilityNodeInfo info = node.getChild(i);
+            children[i] = new AtsElement(info);
         }
     }
 
@@ -85,6 +86,12 @@ public abstract class AbstractAtsElement {
         automation.clickAt(bounds.left + offsetX, bounds.top + offsetY);
 
         automation.highlightElement(bounds);
+    }
+
+    public void click(AtsAutomation automation){
+        node.refresh();
+        node.getBoundsInScreen(bounds);
+        automation.clickAt(0, bounds.top-10);
     }
 
     public void clearText(AtsAutomation automation){

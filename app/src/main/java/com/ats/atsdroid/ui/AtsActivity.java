@@ -24,8 +24,10 @@ import android.app.KeyguardManager;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.view.View;
 import android.view.WindowManager;
-
+import android.view.inputmethod.InputMethodManager;
+import java.util.concurrent.TimeUnit;
 import com.ats.atsdroid.AtsRunner;
 import com.ats.atsdroid.BuildConfig;
 import com.ats.atsdroid.element.AbstractAtsElement;
@@ -43,7 +45,6 @@ import org.json.JSONObject;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
 
@@ -87,26 +88,33 @@ public class AtsActivity extends Activity {
 
     @Override
     public void dump (String prefix, FileDescriptor fd, PrintWriter writer, String[] args){
-        if(args.length > 0){
-            String type = args[0];
-            String[] parameters = new String[0];
+        try {
+            if(args.length > 0){
+                String type = args[0];
+                String[] parameters = new String[0];
 
-            if(args.length > 1) {
-                parameters = Arrays.copyOfRange(args, 1, args.length);
+                if(args.length > 1) {
+                    parameters = Arrays.copyOfRange(args, 1, args.length);
+                }
+
+                RequestType req = new RequestType(type, parameters);
+                AtsResponse resp = executeRequest(req, true);
+                resp.sendDataToUsbPort(writer);
+            }else{
+                writer.print("no enough args");
             }
-
-            RequestType req = new RequestType(type, parameters);
-            AtsResponse resp = executeRequest(req, true);
-            resp.sendDataToUsbPort(writer);
-        }else{
-            writer.print("no enough args");
+        } catch(Exception ex) {
+            String error = ex.getMessage();
+        } finally {
+            writer.flush();
         }
-        writer.flush();
+
     }
 
     public static AtsResponse executeRequest(RequestType req, Boolean usb) {
         try {
             obj.put("type", req.type);
+
             if (RequestType.APP.equals(req.type)) {
                 if (req.parameters.length > 1) {
                     if (RequestType.START.equals(req.parameters[0])) {
@@ -233,10 +241,11 @@ public class AtsActivity extends Activity {
                 obj = automation.getRootObject();
 
             } else if (RequestType.ELEMENT.equals(req.type)) {
-
                 if (req.parameters.length > 2) {
                     AbstractAtsElement element = automation.getElement(req.parameters[0]);
+
                     if (element != null) {
+
                         if (RequestType.INPUT.equals(req.parameters[1])) {
 
                             obj.put("status", "0");
@@ -248,6 +257,8 @@ public class AtsActivity extends Activity {
                             } else {
                                 element.inputText(automation, text);
                                 obj.put("message", "element send keys : " + text);
+                                automation.hideKeyboard(rootView);
+                                element.click(automation);
                             }
                         } else {
 
