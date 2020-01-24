@@ -309,6 +309,9 @@ public class AtsActivity extends Activity {
                 }else{
                     return new AtsResponseBinary(automation.getScreenData());
                 }
+            }else if(RequestType.PACKAGE.equals(req.type)) {
+                String activityName = automation.getActivityName(req.parameters[0]);
+                obj.put("activityName", activityName + "");
             } else {
                 obj.put("status", "-12");
                 obj.put("message", "unknown command : " + req.type);

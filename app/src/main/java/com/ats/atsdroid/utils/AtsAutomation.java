@@ -349,16 +349,28 @@ public class AtsAutomation {
     }
 
     public void terminate(){
-        executeShell("am force-stop com.ats.atsdroid");
+        if(!this.usbMode) {
+            executeShell("am force-stop com.ats.atsdroid");
+        }
     }
 
     public ApplicationInfo startChannel(String pkg){
         final ApplicationInfo app = getApplicationByPackage(pkg);
         if(app != null) {
-            executeShell("am start -W -S --activity-brought-to-front --activity-multiple-task --activity-no-animation --activity-no-history -n " + app.getPackageActivityName());
+            if(!this.usbMode) {
+                executeShell("am start -W -S --activity-brought-to-front --activity-multiple-task --activity-no-animation --activity-no-history -n " + app.getPackageActivityName());
+            }
             reloadRoot();
         }
         return app;
+    }
+
+    public String getActivityName(String pkg){
+        final ApplicationInfo app = getApplicationByPackage(pkg);
+        if(app != null) {
+            return app.getPackageActivityName();
+        }
+        return "";
     }
 
     public void switchChannel(String pkg){

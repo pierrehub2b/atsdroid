@@ -33,6 +33,7 @@ public class RequestType {
     public static final String SWITCH = "switch";
     public static final String BUTTON = "button";
     public static final String INFO = "info";
+    public static final String PACKAGE = "package";
     public static final String CAPTURE = "capture";
     public static final String ELEMENT = "element";
     public static final String INPUT = "input";
