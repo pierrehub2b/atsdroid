@@ -76,7 +76,7 @@ public class AtsAutomation {
     private AtsRootElement rootElement;
     private DriverThread driverThread;
 
-    private Boolean usbMode;
+    private Boolean usbMode = false;
 
     //-------------------------------------------------------
     private AbstractAtsElement found = null;
@@ -349,6 +349,7 @@ public class AtsAutomation {
     }
 
     public void terminate(){
+        //executeShell("am force-stop com.ats.atsdroid");
         if(!this.usbMode) {
             executeShell("am force-stop com.ats.atsdroid");
         }
@@ -357,6 +358,7 @@ public class AtsAutomation {
     public ApplicationInfo startChannel(String pkg){
         final ApplicationInfo app = getApplicationByPackage(pkg);
         if(app != null) {
+            //executeShell("am start -W -S --activity-brought-to-front --activity-multiple-task --activity-no-animation --activity-no-history -n " + app.getPackageActivityName());
             if(!this.usbMode) {
                 executeShell("am start -W -S --activity-brought-to-front --activity-multiple-task --activity-no-animation --activity-no-history -n " + app.getPackageActivityName());
             }

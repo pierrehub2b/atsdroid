@@ -24,6 +24,7 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.ats.atsdroid.server.AtsHttpServer;
 import com.ats.atsdroid.utils.AtsAutomation;
+import com.ats.atsdroid.utils.DeviceInfo;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,28 +59,31 @@ public class AtsRunner {
 
         try {
             port = Integer.parseInt(InstrumentationRegistry.getArguments().getString("atsPort"));
-        }catch(Exception e){};
+        }catch(Exception e){}
 
         try {
             usbMode = Boolean.parseBoolean(InstrumentationRegistry.getArguments().getString("usbMode"));
-        }catch(Exception e){};
+        }catch(Exception e){}
 
         try {
             ipAddress = InstrumentationRegistry.getArguments().getString("ipAddress");
-        }catch(Exception e){};
+        }catch(Exception e){}
 
         final AtsAutomation automation = new AtsAutomation(port, this, ipAddress, usbMode);
 
-        if(!usbMode) {
-            while (running) {}
+        ServerSocket serverConnect;
+        if(usbMode) {
+            while (running) {
+                (new Thread()).start();
+            }
         } else {
             try {
-                ServerSocket serverConnect = new ServerSocket(port);
+                serverConnect = new ServerSocket(port);
                 while (running) {
                     final AtsHttpServer atsServer = new AtsHttpServer(serverConnect.accept(), automation);
                     (new Thread(atsServer)).start();
                 }
-            } catch (IOException e) {
+            } catch(IOException e){
                 System.err.println("Server Connection error : " + e.getMessage());
             }
         }

@@ -75,7 +75,7 @@ public class DeviceInfo {
         return codeName+" v"+release+", API Level: "+Build.VERSION.SDK_INT;
     }
 
-    private String tryGetHostname() {
+    public static String tryGetHostname() {
         try {
             Enumeration<NetworkInterface> enumNetworkInterfaces = NetworkInterface
                     .getNetworkInterfaces();

@@ -192,7 +192,7 @@ public class AtsActivity extends Activity {
                                 obj.put("udpEndPoint", req.parameters[2]);
                                 obj.put("screenCapturePort", screenCapturePort);
                             } else {
-                                obj.put("screenCapturePort", req.parameters[2]);
+                                obj.put("screenCapturePort", req.parameters[3]);
                             }
                         } else {
                             obj.put("screenCapturePort", screenCapturePort);
@@ -258,7 +258,6 @@ public class AtsActivity extends Activity {
                                 element.inputText(automation, text);
                                 obj.put("message", "element send keys : " + text);
                                 automation.hideKeyboard(rootView);
-                                element.click(automation);
                             }
                         } else {
 
@@ -304,7 +303,7 @@ public class AtsActivity extends Activity {
                     obj.put("message", "missing element id");
                 }
             } else if (RequestType.SCREENSHOT.equals(req.type)) {
-                if(req.parameters[1].indexOf(RequestType.SCREENSHOT_HIRES) > -1){
+                if(req.parameters[0].indexOf(RequestType.SCREENSHOT_HIRES) > -1){
                     return new AtsResponseBinary(automation.getScreenDataHires());
                 }else{
                     return new AtsResponseBinary(automation.getScreenData());

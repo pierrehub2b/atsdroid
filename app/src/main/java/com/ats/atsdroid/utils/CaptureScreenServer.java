@@ -84,7 +84,6 @@ public class CaptureScreenServer implements Runnable  {
     private void sendData(byte[] screen, int currentPos, int dataLength, int packetSize, InetAddress address, int port) throws IOException{
 
         final byte[] send = getData(currentPos, dataLength, packetSize);
-
         System.arraycopy(screen, currentPos, send, 8, packetSize);
         serverSocket.send(new DatagramPacket(send, send.length, address, port));
     }
