@@ -422,6 +422,10 @@ public class AtsAutomation {
         return getScreenByteArray(Bitmap.CompressFormat.PNG, 100, false);
     }
 
+    public Bitmap getScreenCapture() {
+        return automation.takeScreenshot();
+    }
+
     private byte[] getScreenByteArray(Bitmap.CompressFormat cf, int level, boolean resize){
         Bitmap screen = automation.takeScreenshot();
         if (screen == null) {

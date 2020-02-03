@@ -22,6 +22,7 @@ package com.ats.atsdroid.ui;
 import android.app.Activity;
 import android.app.KeyguardManager;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.view.View;
@@ -304,9 +305,11 @@ public class AtsActivity extends Activity {
                 }
             } else if (RequestType.SCREENSHOT.equals(req.type)) {
                 if(req.parameters[0].indexOf(RequestType.SCREENSHOT_HIRES) > -1){
-                    return new AtsResponseBinary(automation.getScreenDataHires());
+                    byte[] b = automation.getScreenDataHires();
+                    Bitmap screen = automation.getScreenCapture();
+                    return new AtsResponseBinary(b, screen);
                 }else{
-                    return new AtsResponseBinary(automation.getScreenData());
+                    return new AtsResponseBinary(automation.getScreenData(), null);
                 }
             }else if(RequestType.PACKAGE.equals(req.type)) {
                 String activityName = automation.getActivityName(req.parameters[0]);
