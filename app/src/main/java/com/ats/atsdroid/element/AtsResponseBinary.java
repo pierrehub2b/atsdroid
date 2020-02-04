@@ -1,23 +1,26 @@
 package com.ats.atsdroid.element;
 import android.graphics.Bitmap;
+import android.os.Environment;
+import android.provider.MediaStore;
 
-import org.json.JSONObject;
-import org.json.JSONException;
+import com.ats.atsdroid.utils.AtsAutomation;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 public class AtsResponseBinary extends AtsResponse {
     private byte[] binaryData;
-    private Bitmap screenCapture;
+    private Bitmap screenData;
 
-    public AtsResponseBinary(byte[] bytes, Bitmap screenCapture) {
+    public AtsResponseBinary(byte[] bytes, Bitmap screenData) {
         this.binaryData = bytes;
-        this.screenCapture = screenCapture;
+        this.screenData = screenData;
     }
 
     public void sendDataHttpServer(Socket socket) {
@@ -31,24 +34,33 @@ public class AtsResponseBinary extends AtsResponse {
         }catch(IOException e){}
     }
 
-     /*public void sendDataToUsbPort(PrintWriter writer) {
-        String strOutput = new String(this.binaryData);
-        writer.println(strOutput);
+    public void sendDataToUsbPort(PrintWriter writer) {
+        String path = SaveImage(this.screenData);
+        if(path != "") {
+            writer.print(path);
+        } else {
+            writer.print("error on save");
+        }
     }
 
-    public void sendDataToUsbPort(PrintWriter writer) {
-        writer.println(new String(this.binaryData));
-        writer.flush();
-        writer.close();
-    }*/
-
-    public void sendDataToUsbPort(PrintWriter writer) {
+    private String SaveImage(Bitmap finalBitmap) {
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root);
+        if (!myDir.exists()) {
+            myDir.mkdirs();
+        }
+        String frame = "Image-capture.png";
+        File file = new File (myDir, frame);
+        if (file.exists ())
+            file.delete ();
         try {
-            JSONObject obj = new JSONObject();
-            obj.put("data", new String(this.binaryData, StandardCharsets.UTF_8));
-            obj.put("width", screenCapture.getWidth());
-            obj.put("height", screenCapture.getHeight());
-            writer.print(obj.toString());
-        } catch (Exception ex) {}
+            FileOutputStream out = new FileOutputStream(file);
+            finalBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            out.close();
+            return root + "/" + frame;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 }

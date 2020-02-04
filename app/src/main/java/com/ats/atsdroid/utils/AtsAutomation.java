@@ -152,6 +152,11 @@ public class AtsAutomation {
         wait(500);
     }
 
+    public void enterKeyboard(AtsView rootView) {
+        // use application level context to avoid unnecessary leaks.
+        deviceButton(ENTER);
+    }
+
     public AbstractAtsElement getElement(String id){
         found = null;
         getElement(rootElement, id);

@@ -52,6 +52,8 @@ import java.util.List;
 public class AtsActivity extends Activity {
 
     private final static String EMPTY_DATA = "&empty;";
+    private final static String ENTERKEY = "$KEY-ENTER";
+    private final static String TABKEY = "$KEY-TAB";
 
     private static AtsAutomation automation;
     public static AtsView rootView;
@@ -255,10 +257,15 @@ public class AtsActivity extends Activity {
                             if (EMPTY_DATA.equals(text)) {
                                 obj.put("message", "element clear text");
                                 element.clearText(automation);
+                            } else if(ENTERKEY.equals(text)) {
+                                obj.put("message", "press enter on keyboard");
+                                automation.enterKeyboard(rootView);
+                            } else if(TABKEY.equals(text)) {
+                                obj.put("message", "hide keyboard");
+                                automation.hideKeyboard(rootView);
                             } else {
                                 element.inputText(automation, text);
                                 obj.put("message", "element send keys : " + text);
-                                automation.hideKeyboard(rootView);
                             }
                         } else {
 
@@ -305,11 +312,9 @@ public class AtsActivity extends Activity {
                 }
             } else if (RequestType.SCREENSHOT.equals(req.type)) {
                 if(req.parameters[0].indexOf(RequestType.SCREENSHOT_HIRES) > -1){
-                    byte[] b = automation.getScreenDataHires();
-                    Bitmap screen = automation.getScreenCapture();
-                    return new AtsResponseBinary(b, screen);
+                    return new AtsResponseBinary(automation.getScreenDataHires(), automation.getScreenCapture());
                 }else{
-                    return new AtsResponseBinary(automation.getScreenData(), null);
+                    return new AtsResponseBinary(automation.getScreenData(), automation.getScreenCapture());
                 }
             }else if(RequestType.PACKAGE.equals(req.type)) {
                 String activityName = automation.getActivityName(req.parameters[0]);
