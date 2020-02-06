@@ -2,6 +2,7 @@ package com.ats.atsdroid.element;
 import android.graphics.Bitmap;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Base64;
 
 import com.ats.atsdroid.utils.AtsAutomation;
 
@@ -15,12 +16,11 @@ import java.io.IOException;
 import java.util.Date;
 
 public class AtsResponseBinary extends AtsResponse {
-    private byte[] binaryData;
-    private Bitmap screenData;
 
-    public AtsResponseBinary(byte[] bytes, Bitmap screenData) {
+    private byte[] binaryData;
+
+    public AtsResponseBinary(byte[] bytes) {
         this.binaryData = bytes;
-        this.screenData = screenData;
     }
 
     public void sendDataHttpServer(Socket socket) {
@@ -35,12 +35,18 @@ public class AtsResponseBinary extends AtsResponse {
     }
 
     public void sendDataToUsbPort(PrintWriter writer) {
-        String path = SaveImage(this.screenData);
+        /*String path = SaveImage(this.screenData);
         if(path != "") {
             writer.print(path);
         } else {
             writer.print("error on save");
-        }
+        }*/
+
+        //byte[] ba = stream.toByteArray();
+        //bmp.recycle();
+
+        writer.print(Base64.encodeToString(binaryData, Base64.DEFAULT));
+        writer.flush();
     }
 
     private String SaveImage(Bitmap finalBitmap) {

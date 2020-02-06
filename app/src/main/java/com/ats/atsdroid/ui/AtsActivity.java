@@ -103,6 +103,7 @@ public class AtsActivity extends Activity {
                 RequestType req = new RequestType(type, parameters);
                 AtsResponse resp = executeRequest(req, true);
                 resp.sendDataToUsbPort(writer);
+
             }else{
                 writer.print("no enough args");
             }
@@ -111,7 +112,6 @@ public class AtsActivity extends Activity {
         } finally {
             writer.flush();
         }
-
     }
 
     public static AtsResponse executeRequest(RequestType req, Boolean usb) {
@@ -312,9 +312,9 @@ public class AtsActivity extends Activity {
                 }
             } else if (RequestType.SCREENSHOT.equals(req.type)) {
                 if(req.parameters[0].indexOf(RequestType.SCREENSHOT_HIRES) > -1){
-                    return new AtsResponseBinary(automation.getScreenDataHires(), automation.getScreenCapture());
+                    return new AtsResponseBinary(automation.getScreenDataHires());
                 }else{
-                    return new AtsResponseBinary(automation.getScreenData(), automation.getScreenCapture());
+                    return new AtsResponseBinary(automation.getScreenData());
                 }
             }else if(RequestType.PACKAGE.equals(req.type)) {
                 String activityName = automation.getActivityName(req.parameters[0]);
