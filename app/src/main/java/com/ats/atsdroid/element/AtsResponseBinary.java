@@ -1,11 +1,11 @@
 package com.ats.atsdroid.element;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Environment;
-import android.provider.MediaStore;
+import android.support.test.InstrumentationRegistry;
+import android.util.Log;
+import android.view.View;
 
-import com.ats.atsdroid.utils.AtsAutomation;
-
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
@@ -35,32 +35,31 @@ public class AtsResponseBinary extends AtsResponse {
     }
 
     public void sendDataToUsbPort(PrintWriter writer) {
-        String path = SaveImage(this.screenData);
-        if(path != "") {
-            writer.print(path);
+        File path = createImageFile(this.screenData);
+        if(path != null) {
+            writer.print(path.getAbsolutePath());
         } else {
             writer.print("error on save");
         }
     }
 
-    private String SaveImage(Bitmap finalBitmap) {
-        String root = Environment.getExternalStorageDirectory().toString();
-        File myDir = new File(root);
-        if (!myDir.exists()) {
-            myDir.mkdirs();
+    public static File createImageFile(Bitmap finalBitmap) {
+        Context context = InstrumentationRegistry.getTargetContext();
+        File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if (!storageDir.exists()) {
+            storageDir.mkdir();
         }
-        String frame = "Image-capture.png";
-        File file = new File (myDir, frame);
-        if (file.exists ())
-            file.delete ();
+        File frame = new File(storageDir, "thumbnail.png");
+        FileOutputStream fos;
         try {
-            FileOutputStream out = new FileOutputStream(file);
-            finalBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-            out.close();
-            return root + "/" + frame;
+            fos = new FileOutputStream(frame);
+            finalBitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.flush();
+            fos.close();
+            return frame;
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e("SAVE_IMAGE", e.getMessage(), e);
         }
-        return "";
+        return null;
     }
 }
