@@ -5,6 +5,8 @@ import android.os.Environment;
 import android.support.test.InstrumentationRegistry;
 import android.util.Log;
 import android.view.View;
+import android.provider.MediaStore;
+import android.util.Base64;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,12 +17,11 @@ import java.io.IOException;
 import java.util.Date;
 
 public class AtsResponseBinary extends AtsResponse {
-    private byte[] binaryData;
-    private Bitmap screenData;
 
-    public AtsResponseBinary(byte[] bytes, Bitmap screenData) {
+    private byte[] binaryData;
+
+    public AtsResponseBinary(byte[] bytes) {
         this.binaryData = bytes;
-        this.screenData = screenData;
     }
 
     public void sendDataHttpServer(Socket socket) {
@@ -35,12 +36,20 @@ public class AtsResponseBinary extends AtsResponse {
     }
 
     public void sendDataToUsbPort(PrintWriter writer) {
-        File path = createImageFile(this.screenData);
+        /*File path = createImageFile(this.screenData);
         if(path != null) {
             writer.print(path.getAbsolutePath());
+        String path = SaveImage(this.screenData);
+        if(path != "") {
+            writer.print(path);
         } else {
             writer.print("error on save");
-        }
+        }*/
+
+        //byte[] ba = stream.toByteArray();
+        //bmp.recycle();
+
+        writer.print(Base64.encodeToString(binaryData, Base64.DEFAULT));
     }
 
     public static File createImageFile(Bitmap finalBitmap) {
