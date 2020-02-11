@@ -76,7 +76,7 @@ public class AtsAutomation {
     private AtsRootElement rootElement;
     private DriverThread driverThread;
 
-    private Boolean usbMode = false;
+    public Boolean usbMode;
 
     //-------------------------------------------------------
     private AbstractAtsElement found = null;
@@ -84,8 +84,8 @@ public class AtsAutomation {
     public AtsRunner runner;
     public int port;
 
-    public AtsAutomation(int port, AtsRunner runner, String ipAddress, Boolean usbMode){
-        this.usbMode = usbMode;
+    public AtsAutomation(int port, AtsRunner runner, String ipAddress, Boolean usb){
+        this.usbMode = usb;
         this.runner = runner;
         this.port = port;
         AtsActivity.setAutomation(this);
@@ -96,7 +96,7 @@ public class AtsAutomation {
             device.freezeRotation();
         }catch (RemoteException e){}
 
-        deviceInfo.initDevice(port, device, ipAddress, usbMode);
+        deviceInfo.initDevice(port, device, ipAddress);
 
         //-------------------------------------------------------------
         // Bitmap factory default
@@ -122,11 +122,6 @@ public class AtsAutomation {
         atsIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         atsIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         context.startActivity(atsIntent);
-    }
-
-    public Boolean getUsbMode()
-    {
-        return this.usbMode;
     }
 
     public void reloadRoot(){
@@ -354,19 +349,19 @@ public class AtsAutomation {
     }
 
     public void terminate(){
-        //executeShell("am force-stop com.ats.atsdroid");
-        if(!this.usbMode) {
+        executeShell("am force-stop com.ats.atsdroid");
+        /*if(!this.usbMode) {
             executeShell("am force-stop com.ats.atsdroid");
-        }
+        }*/
     }
 
     public ApplicationInfo startChannel(String pkg){
         final ApplicationInfo app = getApplicationByPackage(pkg);
         if(app != null) {
-            //executeShell("am start -W -S --activity-brought-to-front --activity-multiple-task --activity-no-animation --activity-no-history -n " + app.getPackageActivityName());
-            if(!this.usbMode) {
+            executeShell("am start -W -S --activity-brought-to-front --activity-multiple-task --activity-no-animation --activity-no-history -n " + app.getPackageActivityName());
+            /*if(!this.usbMode) {
                 executeShell("am start -W -S --activity-brought-to-front --activity-multiple-task --activity-no-animation --activity-no-history -n " + app.getPackageActivityName());
-            }
+            }*/
             reloadRoot();
         }
         return app;

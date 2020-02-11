@@ -72,20 +72,16 @@ public class AtsRunner {
         final AtsAutomation automation = new AtsAutomation(port, this, ipAddress, usbMode);
 
         ServerSocket serverConnect;
-        if(usbMode) {
+        try {
+            serverConnect = new ServerSocket(port);
             while (running) {
-                (new Thread()).start();
-            }
-        } else {
-            try {
-                serverConnect = new ServerSocket(port);
-                while (running) {
+                if(!usbMode) {
                     final AtsHttpServer atsServer = new AtsHttpServer(serverConnect.accept(), automation);
                     (new Thread(atsServer)).start();
                 }
-            } catch(IOException e){
-                System.err.println("Server Connection error : " + e.getMessage());
             }
+        } catch(IOException e){
+            System.err.println("Server Connection error : " + e.getMessage());
         }
     }
 }

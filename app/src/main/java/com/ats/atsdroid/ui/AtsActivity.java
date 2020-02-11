@@ -190,7 +190,7 @@ public class AtsActivity extends Activity {
                         obj.put("status", "0");
 
                         int screenCapturePort = automation.getScreenCapturePort();
-                        if(automation.getUsbMode() && req.parameters.length > 2) {
+                        if(automation.usbMode && req.parameters.length > 2) {
                             if(req.parameters[1].indexOf("true") > -1) {
                                 obj.put("udpEndPoint", req.parameters[2]);
                                 obj.put("screenCapturePort", screenCapturePort);
