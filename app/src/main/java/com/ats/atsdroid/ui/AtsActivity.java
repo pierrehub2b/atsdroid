@@ -28,6 +28,8 @@ import android.os.PowerManager;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+
+import java.io.Console;
 import java.util.concurrent.TimeUnit;
 import com.ats.atsdroid.AtsRunner;
 import com.ats.atsdroid.BuildConfig;
@@ -311,7 +313,7 @@ public class AtsActivity extends Activity {
                     obj.put("message", "missing element id");
                 }
             } else if (RequestType.SCREENSHOT.equals(req.type)) {
-                if(req.parameters[0].indexOf(RequestType.SCREENSHOT_HIRES) > -1){
+                if(req.parameters.length > 0 && req.parameters[0].indexOf(RequestType.SCREENSHOT_HIRES) == 0){
                     return new AtsResponseBinary(automation.getScreenDataHires());
                 }else{
                     return new AtsResponseBinary(automation.getScreenData());
