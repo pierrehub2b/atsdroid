@@ -31,10 +31,12 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.Configurator;
 import android.support.test.uiautomator.UiDevice;
+import android.util.Base64;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -111,6 +113,14 @@ public class AtsAutomation {
         loadApplications();
 
         sleep();
+
+        sendLogs("ATS_DRIVER_STARTED");
+    }
+
+    public void sendLogs(String message){
+        Bundle b = new Bundle();
+        b.putString("atsLogs",  message);
+        instrument.sendStatus(1, b);
     }
 
     private void launchAtsWidget(){
