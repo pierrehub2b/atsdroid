@@ -36,7 +36,6 @@ import android.os.RemoteException;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.Configurator;
 import android.support.test.uiautomator.UiDevice;
-import android.util.Base64;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -83,13 +82,14 @@ public class AtsAutomation {
     //-------------------------------------------------------
     private AbstractAtsElement found = null;
 
-    public AtsRunner runner;
+    private AtsRunner runner;
     public int port;
 
     public AtsAutomation(int port, AtsRunner runner, String ipAddress, Boolean usb){
         this.usbMode = usb;
-        this.runner = runner;
         this.port = port;
+        this.runner = runner;
+
         AtsActivity.setAutomation(this);
         Configurator.getInstance().setWaitForIdleTimeout(0);
 
@@ -114,13 +114,13 @@ public class AtsAutomation {
 
         sleep();
 
-        sendLogs("ATS_DRIVER_STARTED");
+        sendLogs("ATS_DRIVER_RUNNING");
     }
 
     public void sendLogs(String message){
         Bundle b = new Bundle();
         b.putString("atsLogs",  message);
-        instrument.sendStatus(1, b);
+        instrument.sendStatus(0, b);
     }
 
     private void launchAtsWidget(){
@@ -324,7 +324,7 @@ public class AtsAutomation {
         return -1;
     }
 
-    public void startDriverThread(){
+    public void startDriverThread(String user){
         stopDriverThread();
 
         wakeUp();
@@ -332,9 +332,13 @@ public class AtsAutomation {
 
         driverThread = new DriverThread(this);
         (new Thread(driverThread)).start();
+
+        sendLogs("ATS_DRIVER_START:" + user);
     }
 
     public void stopDriverThread(){
+
+        sendLogs("ATS_DRIVER_STOP");
 
         launchAtsWidget();
 
@@ -359,6 +363,7 @@ public class AtsAutomation {
     }
 
     public void terminate(){
+        runner.stop();
         executeShell("am force-stop com.ats.atsdroid");
         /*if(!this.usbMode) {
             executeShell("am force-stop com.ats.atsdroid");

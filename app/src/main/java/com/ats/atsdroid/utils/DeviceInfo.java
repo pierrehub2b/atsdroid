@@ -124,12 +124,6 @@ public class DeviceInfo {
         channelWidth = d.getDisplayWidth();
         channelHeight = d.getDisplayHeight();
 
-        /*int barHeight = 0;
-        int resourceId = context.getResources().getIdentifier("navigation_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            barHeight = context.getResources().getDimensionPixelSize(resourceId);
-        }*/
-
         int dh = Resources.getSystem().getConfiguration().screenHeightDp;
         if(dh > 640){
             dh = 640;

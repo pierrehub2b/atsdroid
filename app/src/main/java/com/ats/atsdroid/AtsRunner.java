@@ -24,7 +24,6 @@ import android.support.test.runner.AndroidJUnit4;
 
 import com.ats.atsdroid.server.AtsHttpServer;
 import com.ats.atsdroid.utils.AtsAutomation;
-import com.ats.atsdroid.utils.DeviceInfo;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,12 +42,11 @@ public class AtsRunner {
 
     public static final int DEFAULT_PORT = 8080;
 
+    private AtsAutomation automation;
     private boolean running = true;
-    public boolean isRunning(){
-        return running;
-    }
-    public void setRunning(boolean value){
-        this.running = value;
+
+    public void stop(){
+        running = false;
     }
 
     @Test
@@ -69,13 +67,12 @@ public class AtsRunner {
             ipAddress = InstrumentationRegistry.getArguments().getString("ipAddress");
         }catch(Exception e){}
 
-        final AtsAutomation automation = new AtsAutomation(port, this, ipAddress, usbMode);
+        automation = new AtsAutomation(port, this, ipAddress, usbMode);
 
-        ServerSocket serverConnect;
         try {
-            serverConnect = new ServerSocket(port);
-            while (running) {
-                if(!usbMode) {
+            ServerSocket serverConnect = new ServerSocket(port);
+            if(!usbMode) {
+                while (running) {
                     final AtsHttpServer atsServer = new AtsHttpServer(serverConnect.accept(), automation);
                     (new Thread(atsServer)).start();
                 }

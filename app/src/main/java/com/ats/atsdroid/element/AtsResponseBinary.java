@@ -1,15 +1,7 @@
 package com.ats.atsdroid.element;
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.os.Environment;
-import android.support.test.InstrumentationRegistry;
-import android.util.Log;
-import android.view.View;
-import android.provider.MediaStore;
+
 import android.util.Base64;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.io.BufferedOutputStream;
@@ -36,6 +28,6 @@ public class AtsResponseBinary extends AtsResponse {
     }
 
     public void sendDataToUsbPort(PrintWriter writer) {
-        writer.print(RESPONSESPLITTER + Base64.encodeToString(binaryData, Base64.DEFAULT) + RESPONSESPLITTER);
+        writer.print(RESPONSESPLITTER + Base64.encodeToString(binaryData, Base64.NO_WRAP) + "\u001a");
     }
 }

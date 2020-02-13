@@ -22,17 +22,10 @@ package com.ats.atsdroid.ui;
 import android.app.Activity;
 import android.app.KeyguardManager;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.PowerManager;
-import android.view.View;
 import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 
-import java.io.Console;
-import java.util.concurrent.TimeUnit;
-import com.ats.atsdroid.AtsRunner;
-import com.ats.atsdroid.BuildConfig;
 import com.ats.atsdroid.element.AbstractAtsElement;
 import com.ats.atsdroid.element.AtsResponse;
 import com.ats.atsdroid.element.AtsResponseBinary;
@@ -117,6 +110,7 @@ public class AtsActivity extends Activity {
     }
 
     public static AtsResponse executeRequest(RequestType req, Boolean usb) {
+
         try {
             obj.put("type", req.type);
 
@@ -158,6 +152,7 @@ public class AtsActivity extends Activity {
                     }
                 }
             } else if (RequestType.INFO.equals(req.type)) {
+
                 try {
                     DeviceInfo.getInstance().driverInfoBase(obj);
 
@@ -186,7 +181,8 @@ public class AtsActivity extends Activity {
             } else if (RequestType.DRIVER.equals(req.type)) {
                 if (req.parameters.length > 0) {
                     if (RequestType.START.equals(req.parameters[0])) {
-                        automation.startDriverThread();
+
+                        automation.startDriverThread(req.userAgent);
 
                         DeviceInfo.getInstance().driverInfoBase(obj);
                         obj.put("status", "0");
@@ -214,11 +210,8 @@ public class AtsActivity extends Activity {
                         obj.put("status", "0");
                         obj.put("message", "close ats driver");
 
-                        if(automation.runner.isRunning()) {
-                            automation.runner.setRunning(false);
-                        }
-
                         automation.terminate();
+
                         return new AtsResponseJSON(obj);
                     } else {
                         obj.put("status", "-42");

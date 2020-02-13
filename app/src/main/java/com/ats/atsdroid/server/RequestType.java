@@ -19,7 +19,6 @@ under the License.
 
 package com.ats.atsdroid.server;
 
-import java.lang.reflect.Array;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,8 +45,12 @@ public class RequestType {
 
     public String type = "";
     public String[] parameters = new String[0];
+    public String userAgent = "";
 
-    public RequestType(String value, String body){
+    public RequestType(String value, String body, String userAgent){
+
+        this.userAgent = userAgent;
+
         Matcher match = requestPattern.matcher(value);
         if(match.find()){
             this.type = match.group(1);

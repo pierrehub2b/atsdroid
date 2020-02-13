@@ -3,7 +3,6 @@ package com.ats.atsdroid.server;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 
-import com.ats.atsdroid.AtsRunner;
 import com.ats.atsdroid.element.AtsResponse;
 import com.ats.atsdroid.element.AtsResponseJSON;
 import com.ats.atsdroid.ui.AtsActivity;
@@ -20,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 
 public class AtsHttpServer implements Runnable{
     private final static String CONTENT_LENGTH = "Content-Length: ";
+    private final static String USER_AGENT = "User-Agent: ";
 
     private Socket socket;
     private AtsAutomation automation;
@@ -37,7 +37,9 @@ public class AtsHttpServer implements Runnable{
             in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
 
             String line;
+            String userAgent = socket.getInetAddress().getHostAddress();
             int contentLength = 0;
+
             String input = in.readLine();
 
             while (!(line = in.readLine()).equals("")) {
@@ -45,6 +47,8 @@ public class AtsHttpServer implements Runnable{
                     try {
                         contentLength = Integer.parseInt(line.substring(CONTENT_LENGTH.length()));
                     }catch(NumberFormatException e){}
+                }else if(line.startsWith(USER_AGENT)){
+                    userAgent = line.substring(USER_AGENT.length()) + " " + userAgent;
                 }
             }
 
@@ -56,7 +60,7 @@ public class AtsHttpServer implements Runnable{
             }
 
             if(input != null) {
-                final RequestType req = new RequestType(input, postData);
+                final RequestType req = new RequestType(input, postData, userAgent);
                 AtsResponse response = AtsActivity.executeRequest(req, false);
                 response.sendDataHttpServer(socket);
             } else{
