@@ -21,11 +21,17 @@ package com.ats.atsdroid.utils;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.graphics.Matrix;
+import android.graphics.Point;
 import android.os.Build;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 
 import com.ats.atsdroid.BuildConfig;
+import com.ats.atsdroid.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -117,12 +123,16 @@ public class DeviceInfo {
     private String version = Build.VERSION.RELEASE;
     private String hostName;
     private String btAdapter;
+    private Point pts;
 
     public void initDevice(int p, UiDevice d, String ipAddress){
         hostName = ipAddress;
         port = p;
-        channelWidth = d.getDisplayWidth();
-        channelHeight = d.getDisplayHeight();
+
+        pts = d.getDisplaySizeDp();
+        DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
+        channelHeight = (int) ((pts.y - 48) * metrics.scaledDensity);
+        channelWidth = (int) (pts.x * metrics.scaledDensity);
 
         /*int barHeight = 0;
         int resourceId = context.getResources().getIdentifier("navigation_bar_height", "dimen", "android");
@@ -131,8 +141,8 @@ public class DeviceInfo {
         }*/
 
         int dh = Resources.getSystem().getConfiguration().screenHeightDp;
-        if(dh > 640){
-            dh = 640;
+        if(dh > 480){
+            dh = 480;
         }
         float ratio = channelHeight / dh;
 
