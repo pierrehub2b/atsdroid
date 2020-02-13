@@ -430,27 +430,32 @@ public class AtsAutomation {
     }
 
     public byte[] getScreenData() {
-        return getScreenByteArray(Bitmap.CompressFormat.JPEG, 50, true);
+        return getResizedScreenByteArray(Bitmap.CompressFormat.JPEG, 60);
     }
 
     public byte[] getScreenDataHires() {
-        return getScreenByteArray(Bitmap.CompressFormat.PNG, 100, false);
+        return getScreenByteArray(Bitmap.CompressFormat.PNG, 100);
     }
 
-    public Bitmap getScreenCapture() {
-        return automation.takeScreenshot();
+    private byte[] getResizedScreenByteArray(Bitmap.CompressFormat cf, int level){
+        Bitmap screen = getScreenBitmap();
+        screen = Bitmap.createBitmap(screen, 0, 0, deviceInfo.getChannelWidth(), deviceInfo.getChannelHeight(), deviceInfo.getMatrix(), true);
+        return getBitmapBytes(screen, cf, level);
     }
 
-    private byte[] getScreenByteArray(Bitmap.CompressFormat cf, int level, boolean resize){
+    private byte[] getScreenByteArray(Bitmap.CompressFormat cf, int level){
+        return getBitmapBytes(getScreenBitmap(), cf, level);
+    }
+
+    private Bitmap getScreenBitmap(){
         Bitmap screen = automation.takeScreenshot();
         if (screen == null) {
             screen = createEmptyBitmap(deviceInfo.getChannelWidth(), deviceInfo.getChannelHeight());
         }
+        return screen;
+    }
 
-        if(resize){
-            screen = Bitmap.createBitmap(screen, 0, 0, deviceInfo.getChannelWidth(), deviceInfo.getChannelHeight(), deviceInfo.getMatrix(), true);
-        }
-
+    private byte[] getBitmapBytes(Bitmap screen, Bitmap.CompressFormat cf, int level){
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         screen.compress(cf, level, outputStream);
         screen.recycle();
