@@ -31,6 +31,10 @@ public class AtsResponseJSON extends AtsResponse {
     }
 
     public void sendDataToUsbPort(PrintWriter writer) {
-        writer.print(RESPONSESPLITTER + this.jsonObject.toString() + RESPONSESPLITTER);
+        String data = this.jsonObject.toString();
+        int dataLen = data.length();
+        writer.print("\u0010AtsContentLength:" +  dataLen + "\u0011");
+        writer.print(data);
+        writer.flush();
     }
 }

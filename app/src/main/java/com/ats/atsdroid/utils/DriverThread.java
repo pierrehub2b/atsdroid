@@ -8,7 +8,6 @@ public class DriverThread implements Runnable {
 
     public DriverThread(AtsAutomation automation){
         this.automation = automation;
-
         this.screenCapture = new CaptureScreenServer(automation);
         (new Thread(this.screenCapture)).start();
     }
