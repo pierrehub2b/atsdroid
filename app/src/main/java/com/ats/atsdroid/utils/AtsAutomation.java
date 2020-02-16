@@ -375,7 +375,7 @@ public class AtsAutomation {
     public ApplicationInfo startChannel(String pkg){
         final ApplicationInfo app = getApplicationByPackage(pkg);
         if(app != null) {
-
+            device.pressHome();
             app.start(context, device);
 
             //executeShell("am start -W -S -f 4194304 -f 268435456 -f 65536 -f 1073741824 -f 2097152 -f 32 -n " + app.getPackageActivityName());
@@ -413,7 +413,8 @@ public class AtsAutomation {
 
         final ApplicationInfo app = getApplicationByPackage(pkg);
         if(app != null) {
-            app.toFront(context);
+            device.pressHome();
+            executeShell("am start --activity-single-top " + app.getPackageActivityName() + "\n");
             reloadRoot();
         }
     }

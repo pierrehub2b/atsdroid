@@ -48,6 +48,7 @@ public class ApplicationInfo {
     public void start(Context context, UiDevice device){
         final Intent startChannel = getIntent(
                 Intent.FLAG_ACTIVITY_NEW_TASK,
+                Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT,
                 Intent.FLAG_ACTIVITY_MULTIPLE_TASK,
                 Intent.FLAG_ACTIVITY_NO_ANIMATION,
                 Intent.FLAG_ACTIVITY_NO_HISTORY,
@@ -55,13 +56,7 @@ public class ApplicationInfo {
                 Intent.FLAG_INCLUDE_STOPPED_PACKAGES
         );
         context.startActivity(startChannel);
-        toFront(context);
-
-        device.waitForWindowUpdate(packageName, 1000);
-    }
-
-    public void toFront(Context context){
-        context.startActivity(getIntent(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT, Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));
+        device.waitForWindowUpdate(packageName, 3000);
     }
 
     public boolean packageEquals(String value){
