@@ -70,8 +70,8 @@ public class AtsRunner {
         automation = new AtsAutomation(port, this, ipAddress, usbMode);
 
         try {
-            ServerSocket serverConnect = new ServerSocket(port);
             if(!usbMode) {
+                ServerSocket serverConnect = new ServerSocket(port);
                 while (running) {
                     final AtsHttpServer atsServer = new AtsHttpServer(serverConnect.accept(), automation);
                     (new Thread(atsServer)).start();

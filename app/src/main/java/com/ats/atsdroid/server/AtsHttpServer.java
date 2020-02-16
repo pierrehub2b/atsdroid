@@ -5,7 +5,6 @@ import android.support.annotation.RequiresApi;
 
 import com.ats.atsdroid.element.AtsResponse;
 import com.ats.atsdroid.element.AtsResponseJSON;
-import com.ats.atsdroid.ui.AtsActivity;
 import com.ats.atsdroid.utils.AtsAutomation;
 
 import org.json.JSONException;
@@ -60,8 +59,7 @@ public class AtsHttpServer implements Runnable{
             }
 
             if(input != null) {
-                final RequestType req = new RequestType(input, postData, userAgent);
-                AtsResponse response = AtsActivity.executeRequest(req, false);
+                final AtsResponse response = automation.executeRequest(new RequestType(input, postData, userAgent), false);
                 response.sendDataHttpServer(socket);
             } else{
                 new AtsResponseJSON(new JSONObject("{\"status\":\"-11\",\"message\":\"unknown command\"}")).sendDataHttpServer(socket);

@@ -21,61 +21,25 @@ package com.ats.atsdroid.ui;
 
 import android.app.Activity;
 import android.app.KeyguardManager;
-import android.content.Context;
 import android.os.Bundle;
-import android.os.PowerManager;
 import android.view.WindowManager;
-
-import com.ats.atsdroid.element.AbstractAtsElement;
-import com.ats.atsdroid.element.AtsResponse;
-import com.ats.atsdroid.element.AtsResponseBinary;
-import com.ats.atsdroid.element.AtsResponseJSON;
-import com.ats.atsdroid.server.RequestType;
-import com.ats.atsdroid.utils.ApplicationInfo;
-import com.ats.atsdroid.utils.AtsAutomation;
-import com.ats.atsdroid.utils.DeviceInfo;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.FileDescriptor;
-import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.List;
 
 public class AtsActivity extends Activity {
 
-    private final static String EMPTY_DATA = "&empty;";
-    private final static String ENTERKEY = "$KEY-ENTER";
-    private final static String TABKEY = "$KEY-TAB";
-
-    private static AtsAutomation automation;
-    public static AtsView rootView;
     public static float mScreenDensity;
-    public static JSONObject obj = new JSONObject();
-
-    public static void setAutomation(AtsAutomation auto) {
-        automation = auto;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        rootView = new AtsView(this);
-        setContentView(rootView);
+        setContentView(new AtsView(this));
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "no sleep");
-        wakeLock.acquire();
 
         KeyguardManager keyguardManager = (KeyguardManager)getSystemService(Activity.KEYGUARD_SERVICE);
         KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock(KEYGUARD_SERVICE);
         lock.disableKeyguard();
+
         mScreenDensity = this.getResources().getDisplayMetrics().density;
 
         /*int resourceId = this.getResources().getIdentifier("status_bar_height", "dimen", "android");
@@ -84,7 +48,7 @@ public class AtsActivity extends Activity {
         }*/
     }
 
-    @Override
+    /*@Override
     public void dump (String prefix, FileDescriptor fd, PrintWriter writer, String[] args){
         try {
             if(args.length > 0){
@@ -95,8 +59,7 @@ public class AtsActivity extends Activity {
                     parameters = Arrays.copyOfRange(args, 1, args.length);
                 }
 
-                RequestType req = new RequestType(type, parameters);
-                AtsResponse resp = executeRequest(req, true);
+                final AtsResponse resp = automation.executeRequest(new RequestType(type, parameters), true);
                 resp.sendDataToUsbPort(writer);
 
             }else{
@@ -107,221 +70,5 @@ public class AtsActivity extends Activity {
         } finally {
             writer.flush();
         }
-    }
-
-    public static AtsResponse executeRequest(RequestType req, Boolean usb) {
-
-        try {
-            obj.put("type", req.type);
-
-            if (RequestType.APP.equals(req.type)) {
-                if (req.parameters.length > 1) {
-                    if (RequestType.START.equals(req.parameters[0])) {
-                        try {
-                            final ApplicationInfo app = automation.startChannel(req.parameters[1]);
-                            if (app != null) {
-                                obj.put("status", "0");
-                                obj.put("message", "start app : " + app.getPackageName());
-                                obj.put("label", app.getLabel());
-                                obj.put("icon", app.getIcon());
-                                obj.put("version", app.getVersion());
-                            } else {
-                                obj.put("status", "-51");
-                                obj.put("message", "app package not found : " + req.parameters[1]);
-                            }
-                        } catch (Exception e) {
-                            System.err.println("Ats error : " + e.getMessage());
-                        }
-                    } else if (RequestType.STOP.equals(req.parameters[0])) {
-                        automation.stopChannel(req.parameters[1]);
-                        obj.put("status", "0");
-                        obj.put("message", "stop app : " + req.parameters[1]);
-                    } else if (RequestType.SWITCH.equals(req.parameters[0])) {
-                        automation.switchChannel(req.parameters[1]);
-                        obj.put("status", "0");
-                        obj.put("message", "switch app : " + req.parameters[1]);
-                    } else if (RequestType.INFO.equals(req.parameters[0])) {
-                        final ApplicationInfo app = automation.getApplicationInfo(req.parameters[1]);
-                        if (app != null) {
-                            obj.put("status", "0");
-                            obj.put("info", app.getJson());
-                        } else {
-                            obj.put("status", "-81");
-                            obj.put("message", "app not found : " + req.parameters[1]);
-                        }
-                    }
-                }
-            } else if (RequestType.INFO.equals(req.type)) {
-
-                try {
-                    DeviceInfo.getInstance().driverInfoBase(obj);
-
-                    obj.put("status", "0");
-                    obj.put("message", "device capabilities");
-                    obj.put("id", DeviceInfo.getInstance().getDeviceId());
-                    obj.put("model", DeviceInfo.getInstance().getModel());
-                    obj.put("manufacturer", DeviceInfo.getInstance().getManufacturer());
-                    obj.put("brand", DeviceInfo.getInstance().getBrand());
-                    obj.put("version", DeviceInfo.getInstance().getVersion());
-                    obj.put("bluetoothName", DeviceInfo.getInstance().getBtAdapter());
-
-                    final List<ApplicationInfo> apps = automation.getApplications();
-
-                    JSONArray applications = new JSONArray();
-                    for (ApplicationInfo appInfo : apps) {
-                        applications.put(appInfo.getJson());
-                    }
-                    obj.put("applications", applications);
-
-                } catch (Exception e) {
-                    obj.put("status", "-99");
-                    obj.put("message", e.getMessage());
-                }
-
-            } else if (RequestType.DRIVER.equals(req.type)) {
-                if (req.parameters.length > 0) {
-                    if (RequestType.START.equals(req.parameters[0])) {
-
-                        automation.startDriverThread(req.userAgent);
-
-                        DeviceInfo.getInstance().driverInfoBase(obj);
-                        obj.put("status", "0");
-
-                        int screenCapturePort = automation.getScreenCapturePort();
-                        if(automation.usbMode && req.parameters.length > 2) {
-                            if(req.parameters[1].indexOf("true") > -1) {
-                                obj.put("udpEndPoint", req.parameters[2]);
-                                obj.put("screenCapturePort", screenCapturePort);
-                            } else {
-                                obj.put("screenCapturePort", req.parameters[3]);
-                            }
-                        } else {
-                            obj.put("screenCapturePort", screenCapturePort);
-                        }
-                    } else if (RequestType.STOP.equals(req.parameters[0])) {
-
-                        automation.stopDriverThread();
-                        obj.put("status", "0");
-                        obj.put("message", "stop ats driver");
-
-                    } else if (RequestType.QUIT.equals(req.parameters[0])) {
-
-                        automation.stopDriverThread();
-                        obj.put("status", "0");
-                        obj.put("message", "close ats driver");
-
-                        automation.terminate();
-
-                        return new AtsResponseJSON(obj);
-                    } else {
-                        obj.put("status", "-42");
-                        obj.put("message", "wrong driver action type : " + req.parameters[0]);
-                    }
-                } else {
-                    obj.put("status", "-41");
-                    obj.put("message", "missing driver action");
-                }
-
-            } else if (RequestType.BUTTON.equals(req.type)) {
-
-                if (req.parameters.length > 0) {
-                    automation.deviceButton(req.parameters[0]);
-                    obj.put("status", "0");
-                    obj.put("message", "button : " + req.parameters[0]);
-                } else {
-                    obj.put("status", "-31");
-                    obj.put("message", "missing button type");
-                }
-
-            } else if (RequestType.CAPTURE.equals(req.type)) {
-
-                automation.reloadRoot();
-                obj = automation.getRootObject();
-
-            } else if (RequestType.ELEMENT.equals(req.type)) {
-                if (req.parameters.length > 2) {
-                    AbstractAtsElement element = automation.getElement(req.parameters[0]);
-
-                    if (element != null) {
-
-                        if (RequestType.INPUT.equals(req.parameters[1])) {
-
-                            obj.put("status", "0");
-
-                            String text = req.parameters[2];
-                            if (EMPTY_DATA.equals(text)) {
-                                obj.put("message", "element clear text");
-                                element.clearText(automation);
-                            } else if(ENTERKEY.equals(text)) {
-                                obj.put("message", "press enter on keyboard");
-                                automation.enterKeyboard(rootView);
-                            } else if(TABKEY.equals(text)) {
-                                obj.put("message", "hide keyboard");
-                                automation.hideKeyboard(rootView);
-                            } else {
-                                element.inputText(automation, text);
-                                obj.put("message", "element send keys : " + text);
-                            }
-                        } else {
-
-                            int offsetX = 0;
-                            int offsetY = 0;
-
-                            if (req.parameters.length > 3) {
-                                try {
-                                    offsetX = Integer.parseInt(req.parameters[2]);
-                                    offsetY = Integer.parseInt(req.parameters[3]);
-                                } catch (NumberFormatException e) {
-                                }
-                            }
-
-                            if (RequestType.TAP.equals(req.parameters[1])) {
-
-                                element.click(automation, offsetX, offsetY);
-
-                                obj.put("status", "0");
-                                obj.put("message", "click on element");
-
-                            } else if (RequestType.SWIPE.equals(req.parameters[1])) {
-                                int directionX = 0;
-                                int directionY = 0;
-                                if (req.parameters.length > 5) {
-                                    try {
-                                        directionX = Integer.parseInt(req.parameters[4]);
-                                        directionY = Integer.parseInt(req.parameters[5]);
-                                    } catch (NumberFormatException e) {
-                                    }
-                                }
-                                element.swipe(automation, offsetX, offsetY, directionX, directionY);
-                                obj.put("status", "0");
-                                obj.put("message", "swipe element to " + directionX + ":" + directionY);
-                            }
-                        }
-                    } else {
-                        obj.put("status", "-22");
-                        obj.put("message", "element not found");
-                    }
-                } else {
-                    obj.put("status", "-21");
-                    obj.put("message", "missing element id");
-                }
-            } else if (RequestType.SCREENSHOT.equals(req.type)) {
-                if(req.parameters.length > 1 && req.parameters[1].indexOf(RequestType.SCREENSHOT_HIRES) == 0){
-                    return new AtsResponseBinary(automation.getScreenDataHires());
-                }else{
-                    return new AtsResponseBinary(automation.getScreenData());
-                }
-            }else if(RequestType.PACKAGE.equals(req.type)) {
-                String activityName = automation.getActivityName(req.parameters[0]);
-                obj.put("activityName", activityName + "");
-            } else {
-                obj.put("status", "-12");
-                obj.put("message", "unknown command : " + req.type);
-            }
-            return new AtsResponseJSON(obj);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return new AtsResponseJSON(obj);
-    }
+    }*/
 }

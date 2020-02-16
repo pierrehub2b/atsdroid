@@ -21,17 +21,13 @@ package com.ats.atsdroid.utils;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.res.Resources;
-import android.content.res.TypedArray;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.os.Build;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
 import android.util.DisplayMetrics;
-import android.util.TypedValue;
 
 import com.ats.atsdroid.BuildConfig;
-import com.ats.atsdroid.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -189,13 +185,5 @@ public class DeviceInfo {
     }
     public String getBtAdapter() {
         return btAdapter;
-    }
-
-    public void setHostName(String hostName) {
-        this.hostName = hostName;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
     }
 }

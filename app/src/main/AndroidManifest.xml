@@ -25,9 +25,14 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".ui.HighlightService">
-        </service>
+<!--        <service
+            android:name="com.ats.atsdroid.utils.BackgroundService"
+            android:permission="com.ats.atsdroid.utils.BackgroundService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.ats.atsdroid.utils.BackgroundService"/>
+            </intent-filter>
+        </service>-->
 
     </application>
 

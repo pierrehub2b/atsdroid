@@ -10,6 +10,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.support.test.uiautomator.UiDevice;
 import android.util.Base64;
 
 import org.json.JSONException;
@@ -44,20 +45,26 @@ public class ApplicationInfo {
         }
     }
 
-    public boolean start(Context context){
-        try {
-            context.startActivity(getIntent(Intent.FLAG_ACTIVITY_NEW_TASK));
-            return true;
-        }catch (Exception e){
-            return false;
-        }
+    public void start(Context context, UiDevice device){
+        final Intent startChannel = getIntent(
+                Intent.FLAG_ACTIVITY_NEW_TASK,
+                Intent.FLAG_ACTIVITY_MULTIPLE_TASK,
+                Intent.FLAG_ACTIVITY_NO_ANIMATION,
+                Intent.FLAG_ACTIVITY_NO_HISTORY,
+                Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED,
+                Intent.FLAG_INCLUDE_STOPPED_PACKAGES
+        );
+        context.startActivity(startChannel);
+        toFront(context);
+
+        device.waitForWindowUpdate(packageName, 1000);
     }
 
     public void toFront(Context context){
-        context.startActivity(getIntent(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT));
+        context.startActivity(getIntent(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT, Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));
     }
 
-    public boolean samePackage(String value){
+    public boolean packageEquals(String value){
         return packageName.equals(value);
     }
 
@@ -79,10 +86,12 @@ public class ApplicationInfo {
         return packageName + "/" + activity;
     }
 
-    private Intent getIntent(int flag){
+    public Intent getIntent(int... flag){
         final Intent intent = new Intent();
         intent.setClassName(packageName, activity);
-        intent.addFlags(flag);
+        for (int i=0; i< flag.length; i++){
+            intent.addFlags(flag[i]);
+        }
         return intent;
     }
 

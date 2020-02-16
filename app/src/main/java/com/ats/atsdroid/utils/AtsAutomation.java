@@ -30,7 +30,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.test.InstrumentationRegistry;
@@ -41,10 +40,15 @@ import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.ats.atsdroid.AtsRunner;
 import com.ats.atsdroid.element.AbstractAtsElement;
+import com.ats.atsdroid.element.AtsResponse;
+import com.ats.atsdroid.element.AtsResponseBinary;
+import com.ats.atsdroid.element.AtsResponseJSON;
 import com.ats.atsdroid.element.AtsRootElement;
+import com.ats.atsdroid.server.RequestType;
 import com.ats.atsdroid.ui.AtsActivity;
-import com.ats.atsdroid.ui.AtsView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -70,12 +74,11 @@ public class AtsAutomation {
     private final UiDevice device = UiDevice.getInstance(instrument);
     private final DeviceInfo deviceInfo = DeviceInfo.getInstance();
 
-    //private final Context context = InstrumentationRegistry.getContext();
     private final Context context = InstrumentationRegistry.getTargetContext();
 
     private List<ApplicationInfo> applications;
     private AtsRootElement rootElement;
-    private DriverThread driverThread;
+    private CaptureScreenServer screenCapture;
 
     public Boolean usbMode;
 
@@ -90,13 +93,7 @@ public class AtsAutomation {
         this.port = port;
         this.runner = runner;
 
-        AtsActivity.setAutomation(this);
         Configurator.getInstance().setWaitForIdleTimeout(0);
-
-        try {
-            device.setOrientationNatural();
-            device.freezeRotation();
-        }catch (RemoteException e){}
 
         deviceInfo.initDevice(port, device, ipAddress);
 
@@ -109,10 +106,10 @@ public class AtsAutomation {
 
         device.pressHome();
         launchAtsWidget();
-        reloadRoot();
+
         loadApplications();
 
-        sleep();
+        deviceSleep();
 
         sendLogs("ATS_DRIVER_RUNNING");
     }
@@ -151,13 +148,13 @@ public class AtsAutomation {
         }
     }
 
-    public void hideKeyboard(AtsView rootView) {
+    public void hideKeyboard() {
         // use application level context to avoid unnecessary leaks.
         deviceButton(BACK);
         wait(500);
     }
 
-    public void enterKeyboard(AtsView rootView) {
+    public void enterKeyboard() {
         // use application level context to avoid unnecessary leaks.
         deviceButton(ENTER);
     }
@@ -231,7 +228,7 @@ public class AtsAutomation {
 
     private ApplicationInfo getApplicationByPackage(String pkg){
         for (ApplicationInfo app : applications) {
-            if (app.samePackage(pkg)) {
+            if (app.packageEquals(pkg)) {
                 return app;
             }
         }
@@ -266,10 +263,11 @@ public class AtsAutomation {
         }
     }
 
-    private void executeShell(String value){
+    private String executeShell(String value){
         try {
-            device.executeShellCommand(value);
+            return device.executeShellCommand(value);
         }catch(Exception e){}
+        return "";
     }
 
     public void wait(int ms){
@@ -291,24 +289,6 @@ public class AtsAutomation {
         wait(150);
     }
 
-    public void highlightElement(Rect bounds){
-
-        //context.startService( new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:com.ats.atsdroid.ui"), context, HighlightService.class));
-
-        //context.startService( new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:com.ats.atsdroid"), context, HighlightService.class));
-        //context.st
-
-        /*final Intent highlightIntent = new Intent();
-        highlightIntent.setClassName(context, "com.ats.atsdroid.ui.HighlightActivityx");
-        highlightIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        highlightIntent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-        highlightIntent.addFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION);
-        highlightIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        highlightIntent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        highlightIntent.putExtra(HighlightActivityx.ELEMENT_BOUNDS, new int[]{bounds.left, bounds.top, bounds.width(), bounds.height()});
-        context.startActivity(highlightIntent);*/
-    }
-
     //----------------------------------------------------------------------------------------------------
     //----------------------------------------------------------------------------------------------------
 
@@ -317,47 +297,69 @@ public class AtsAutomation {
         wait(swipeSteps*6);
     }
 
+    //----------------------------------------------------------------------------------------------------
+    // Driver start stop
+    //----------------------------------------------------------------------------------------------------
+
+    private boolean driverStarted = false;
+
     public int getScreenCapturePort(){
-        if(driverThread != null){
-            return driverThread.getScreenCapturePort();
+        if(screenCapture != null){
+            return screenCapture.getPort();
         }
         return -1;
     }
 
-    public void startDriverThread(String user){
-        stopDriverThread();
+    public void startDriver(String user){
+        if(!driverStarted) {
+            driverStarted = true;
 
-        wakeUp();
-        launchAtsWidget();
+            deviceWakeUp();
+            executeShell("svc power stayon true");
 
-        driverThread = new DriverThread(this);
-        (new Thread(driverThread)).start();
+            launchAtsWidget();
 
-        sendLogs("ATS_DRIVER_START:" + user);
-    }
+            screenCapture = new CaptureScreenServer(this);
+            (new Thread(screenCapture)).start();
 
-    public void stopDriverThread(){
-
-        sendLogs("ATS_DRIVER_STOP");
-
-        launchAtsWidget();
-
-        if(driverThread != null){
-            driverThread.stop();
+            sendLogs("ATS_DRIVER_START:" + user);
         }
     }
 
-    public void wakeUp(){
+    public void stopDriver(){
+
+        if(driverStarted) {
+            driverStarted = false;
+
+            sendLogs("ATS_DRIVER_STOP");
+
+            executeShell("svc power stayon false");
+            launchAtsWidget();
+
+            if (screenCapture != null) {
+                screenCapture.stop();
+                screenCapture = null;
+            }
+
+            deviceSleep();
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------------
+    // Driver start stop
+    //----------------------------------------------------------------------------------------------------
+
+    private void deviceWakeUp(){
         try {
+            device.setOrientationNatural();
+            device.freezeRotation();
             device.wakeUp();
         }catch(RemoteException e){}
     }
 
-    //----------------------------------------------------------------------------------------------------
-    //----------------------------------------------------------------------------------------------------
-
-    public void sleep(){
+    private void deviceSleep(){
         try {
+            device.unfreezeRotation();
             device.sleep();
         }catch(RemoteException e){}
     }
@@ -365,33 +367,26 @@ public class AtsAutomation {
     public void terminate(){
         runner.stop();
         executeShell("am force-stop com.ats.atsdroid");
-        /*if(!this.usbMode) {
-            executeShell("am force-stop com.ats.atsdroid");
-        }*/
     }
+
+    //----------------------------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------------------------------
 
     public ApplicationInfo startChannel(String pkg){
         final ApplicationInfo app = getApplicationByPackage(pkg);
         if(app != null) {
-            executeShell("am start -W -S -f 4194304 -f 268435456 -f 65536 -f 1073741824 -f 2097152 -f 32 -n " + app.getPackageActivityName());
-            /*
-            4194304 = FLAG_ACTIVITY_BROUGHT_TO_FRONT
+
+            app.start(context, device);
+
+            //executeShell("am start -W -S -f 4194304 -f 268435456 -f 65536 -f 1073741824 -f 2097152 -f 32 -n " + app.getPackageActivityName());
+            /*4194304 = FLAG_ACTIVITY_BROUGHT_TO_FRONT
             134217728 = FLAG_ACTIVITY_MULTIPLE_TASK
             65536 = FLAG_ACTIVITY_NO_ANIMATION
             1073741824 = FLAG_ACTIVITY_NO_HISTORY
-
-
-
             268435456 = FLAG_ACTIVITY_NEW_TASK
             2097152 = FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
-            32 = FLAG_INCLUDE_STOPPED_PACKAGES
+            32 = FLAG_INCLUDE_STOPPED_PACKAGES*/
 
-
-
-             */
-            /*if(!this.usbMode) {
-                executeShell("am start -W -S --activity-brought-to-front --activity-multiple-task --activity-no-animation --activity-no-history -n " + app.getPackageActivityName());
-            }*/
             reloadRoot();
         }
         return app;
@@ -418,13 +413,7 @@ public class AtsAutomation {
 
         final ApplicationInfo app = getApplicationByPackage(pkg);
         if(app != null) {
-
             app.toFront(context);
-
-            wait(1000);
-            device.waitForIdle();
-            device.waitForWindowUpdate(null, 2000);
-
             reloadRoot();
         }
     }
@@ -434,15 +423,15 @@ public class AtsAutomation {
         launchAtsWidget();
     }
 
+    private void stopActivity(String pkg){
+        if(pkg != null){
+            executeShell("am force-stop " + pkg + "\n");
+        }
+    }
+
     //----------------------------------------------------------------------------------------------------
     // Screen capture
     //----------------------------------------------------------------------------------------------------
-
-    private void stopActivity(String pkg){
-        if(pkg != null){
-            executeShell("am force-stop " + pkg);
-        }
-    }
 
     public byte[] getScreenData() {
         return getResizedScreenByteArray(Bitmap.CompressFormat.JPEG, 60);
@@ -498,5 +487,231 @@ public class AtsAutomation {
 
         rootElement.drawElements(canvas, context.getResources());
         return bitmap;
+    }
+
+    //--------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------------------------------------
+
+    private final static String EMPTY_DATA = "&empty;";
+    private final static String ENTER_KEY = "$KEY-ENTER";
+    private final static String TAB_KEY = "$KEY-TAB";
+
+    public AtsResponse executeRequest(RequestType req, Boolean usb) {
+
+        JSONObject obj = new JSONObject();
+
+        try {
+            obj.put("type", req.type);
+
+            if (RequestType.APP.equals(req.type)) {
+                if (req.parameters.length > 1) {
+                    if (RequestType.START.equals(req.parameters[0])) {
+                        try {
+                            final ApplicationInfo app = startChannel(req.parameters[1]);
+                            if (app != null) {
+                                obj.put("status", "0");
+                                obj.put("message", "start app : " + app.getPackageName());
+                                obj.put("label", app.getLabel());
+                                obj.put("icon", app.getIcon());
+                                obj.put("version", app.getVersion());
+                            } else {
+                                obj.put("status", "-51");
+                                obj.put("message", "app package not found : " + req.parameters[1]);
+                            }
+                        } catch (Exception e) {
+                            System.err.println("Ats error : " + e.getMessage());
+                        }
+                    } else if (RequestType.STOP.equals(req.parameters[0])) {
+                        stopChannel(req.parameters[1]);
+                        obj.put("status", "0");
+                        obj.put("message", "stop app : " + req.parameters[1]);
+                    } else if (RequestType.SWITCH.equals(req.parameters[0])) {
+                        switchChannel(req.parameters[1]);
+                        obj.put("status", "0");
+                        obj.put("message", "switch app : " + req.parameters[1]);
+                    } else if (RequestType.INFO.equals(req.parameters[0])) {
+                        final ApplicationInfo app = getApplicationInfo(req.parameters[1]);
+                        if (app != null) {
+                            obj.put("status", "0");
+                            obj.put("info", app.getJson());
+                        } else {
+                            obj.put("status", "-81");
+                            obj.put("message", "app not found : " + req.parameters[1]);
+                        }
+                    }
+                }
+            } else if (RequestType.INFO.equals(req.type)) {
+
+                try {
+                    DeviceInfo.getInstance().driverInfoBase(obj);
+
+                    obj.put("status", "0");
+                    obj.put("message", "device capabilities");
+                    obj.put("id", DeviceInfo.getInstance().getDeviceId());
+                    obj.put("model", DeviceInfo.getInstance().getModel());
+                    obj.put("manufacturer", DeviceInfo.getInstance().getManufacturer());
+                    obj.put("brand", DeviceInfo.getInstance().getBrand());
+                    obj.put("version", DeviceInfo.getInstance().getVersion());
+                    obj.put("bluetoothName", DeviceInfo.getInstance().getBtAdapter());
+
+                    final List<ApplicationInfo> apps = getApplications();
+
+                    JSONArray applications = new JSONArray();
+                    for (ApplicationInfo appInfo : apps) {
+                        applications.put(appInfo.getJson());
+                    }
+                    obj.put("applications", applications);
+
+                } catch (Exception e) {
+                    obj.put("status", "-99");
+                    obj.put("message", e.getMessage());
+                }
+
+            } else if (RequestType.DRIVER.equals(req.type)) {
+                if (req.parameters.length > 0) {
+                    if (RequestType.START.equals(req.parameters[0])) {
+
+                        startDriver(req.userAgent);
+
+                        DeviceInfo.getInstance().driverInfoBase(obj);
+                        obj.put("status", "0");
+
+                        int screenCapturePort = getScreenCapturePort();
+                        if(usbMode && req.parameters.length > 2) {
+                            if(req.parameters[1].indexOf("true") > -1) {
+                                obj.put("udpEndPoint", req.parameters[2]);
+                                obj.put("screenCapturePort", screenCapturePort);
+                            } else {
+                                obj.put("screenCapturePort", req.parameters[3]);
+                            }
+                        } else {
+                            obj.put("screenCapturePort", screenCapturePort);
+                        }
+                    } else if (RequestType.STOP.equals(req.parameters[0])) {
+
+                        stopDriver();
+                        obj.put("status", "0");
+                        obj.put("message", "stop ats driver");
+
+                    } else if (RequestType.QUIT.equals(req.parameters[0])) {
+
+                        stopDriver();
+                        obj.put("status", "0");
+                        obj.put("message", "close ats driver");
+
+                        terminate();
+
+                        return new AtsResponseJSON(obj);
+                    } else {
+                        obj.put("status", "-42");
+                        obj.put("message", "wrong driver action type : " + req.parameters[0]);
+                    }
+                } else {
+                    obj.put("status", "-41");
+                    obj.put("message", "missing driver action");
+                }
+
+            } else if (RequestType.BUTTON.equals(req.type)) {
+
+                if (req.parameters.length > 0) {
+                    deviceButton(req.parameters[0]);
+                    obj.put("status", "0");
+                    obj.put("message", "button : " + req.parameters[0]);
+                } else {
+                    obj.put("status", "-31");
+                    obj.put("message", "missing button type");
+                }
+
+            } else if (RequestType.CAPTURE.equals(req.type)) {
+
+                reloadRoot();
+                obj = getRootObject();
+
+            } else if (RequestType.ELEMENT.equals(req.type)) {
+                if (req.parameters.length > 2) {
+                    AbstractAtsElement element = getElement(req.parameters[0]);
+
+                    if (element != null) {
+
+                        if (RequestType.INPUT.equals(req.parameters[1])) {
+
+                            obj.put("status", "0");
+
+                            String text = req.parameters[2];
+                            if (EMPTY_DATA.equals(text)) {
+                                obj.put("message", "element clear text");
+                                element.clearText(this);
+                            } else if(ENTER_KEY.equals(text)) {
+                                obj.put("message", "press enter on keyboard");
+                                enterKeyboard();
+                            } else if(TAB_KEY.equals(text)) {
+                                obj.put("message", "hide keyboard");
+                                hideKeyboard();
+                            } else {
+                                element.inputText(this, text);
+                                obj.put("message", "element send keys : " + text);
+                            }
+                        } else {
+
+                            int offsetX = 0;
+                            int offsetY = 0;
+
+                            if (req.parameters.length > 3) {
+                                try {
+                                    offsetX = Integer.parseInt(req.parameters[2]);
+                                    offsetY = Integer.parseInt(req.parameters[3]);
+                                } catch (NumberFormatException e) {
+                                }
+                            }
+
+                            if (RequestType.TAP.equals(req.parameters[1])) {
+
+                                element.click(this, offsetX, offsetY);
+
+                                obj.put("status", "0");
+                                obj.put("message", "click on element");
+
+                            } else if (RequestType.SWIPE.equals(req.parameters[1])) {
+                                int directionX = 0;
+                                int directionY = 0;
+                                if (req.parameters.length > 5) {
+                                    try {
+                                        directionX = Integer.parseInt(req.parameters[4]);
+                                        directionY = Integer.parseInt(req.parameters[5]);
+                                    } catch (NumberFormatException e) {
+                                    }
+                                }
+                                element.swipe(this, offsetX, offsetY, directionX, directionY);
+                                obj.put("status", "0");
+                                obj.put("message", "swipe element to " + directionX + ":" + directionY);
+                            }
+                        }
+                    } else {
+                        obj.put("status", "-22");
+                        obj.put("message", "element not found");
+                    }
+                } else {
+                    obj.put("status", "-21");
+                    obj.put("message", "missing element id");
+                }
+            } else if (RequestType.SCREENSHOT.equals(req.type)) {
+                if(req.parameters.length > 1 && req.parameters[1].indexOf(RequestType.SCREENSHOT_HIRES) == 0){
+                    return new AtsResponseBinary(getScreenDataHires());
+                }else{
+                    return new AtsResponseBinary(getScreenData());
+                }
+            }else if(RequestType.PACKAGE.equals(req.type)) {
+                String activityName = getActivityName(req.parameters[0]);
+                obj.put("activityName", activityName + "");
+            } else {
+                obj.put("status", "-12");
+                obj.put("message", "unknown command : " + req.type);
+            }
+
+        } catch (JSONException e) {
+            sendLogs("Json Error -> " + e.getMessage());
+        }
+
+        return new AtsResponseJSON(obj);
     }
 }
