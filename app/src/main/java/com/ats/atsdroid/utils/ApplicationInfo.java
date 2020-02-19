@@ -47,9 +47,8 @@ public class ApplicationInfo {
 
     public void start(Context context, UiDevice device){
         final Intent startChannel = getIntent(
-                Intent.FLAG_ACTIVITY_NEW_TASK,
                 Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT,
-                Intent.FLAG_ACTIVITY_MULTIPLE_TASK,
+                Intent.FLAG_ACTIVITY_NEW_TASK,
                 Intent.FLAG_ACTIVITY_NO_ANIMATION,
                 Intent.FLAG_ACTIVITY_NO_HISTORY,
                 Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED,

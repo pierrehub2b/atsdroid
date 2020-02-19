@@ -127,7 +127,7 @@ public class DeviceInfo {
 
         pts = d.getDisplaySizeDp();
         DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
-        channelHeight = (int) ((pts.y - 48) * metrics.scaledDensity);
+        channelHeight = (int) ((pts.y - 46) * metrics.scaledDensity);
         channelWidth = (int) (pts.x * metrics.scaledDensity);
 
         int dh = Resources.getSystem().getConfiguration().screenHeightDp;

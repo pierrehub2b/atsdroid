@@ -376,16 +376,19 @@ public class AtsAutomation {
         final ApplicationInfo app = getApplicationByPackage(pkg);
         if(app != null) {
             device.pressHome();
-            app.start(context, device);
+            //app.start(context, device);
 
-            //executeShell("am start -W -S -f 4194304 -f 268435456 -f 65536 -f 1073741824 -f 2097152 -f 32 -n " + app.getPackageActivityName());
-            /*4194304 = FLAG_ACTIVITY_BROUGHT_TO_FRONT
-            134217728 = FLAG_ACTIVITY_MULTIPLE_TASK
-            65536 = FLAG_ACTIVITY_NO_ANIMATION
-            1073741824 = FLAG_ACTIVITY_NO_HISTORY
-            268435456 = FLAG_ACTIVITY_NEW_TASK
-            2097152 = FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
-            32 = FLAG_INCLUDE_STOPPED_PACKAGES*/
+            executeShell("am start -W -S -f 4194304 -f 268435456 -f 65536 -f 1073741824 -f 2097152 -f 32 -n " + app.getPackageActivityName());
+            /*
+                4194304 = FLAG_ACTIVITY_BROUGHT_TO_FRONT
+                268435456 = FLAG_ACTIVITY_NEW_TASK
+                65536 = FLAG_ACTIVITY_NO_ANIMATION
+                1073741824 = FLAG_ACTIVITY_NO_HISTORY
+                2097152 = FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+                32 = FLAG_INCLUDE_STOPPED_PACKAGES
+
+                134217728 = FLAG_ACTIVITY_MULTIPLE_TASK
+            */
 
             reloadRoot();
         }
@@ -414,7 +417,7 @@ public class AtsAutomation {
         final ApplicationInfo app = getApplicationByPackage(pkg);
         if(app != null) {
             device.pressHome();
-            executeShell("am start --activity-single-top " + app.getPackageActivityName() + "\n");
+            executeShell("am start -f 536870912 " + app.getPackageActivityName() + "\n");
             reloadRoot();
         }
     }
