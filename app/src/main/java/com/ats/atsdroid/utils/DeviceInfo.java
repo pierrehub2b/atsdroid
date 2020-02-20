@@ -53,6 +53,7 @@ public class DeviceInfo {
     }
 
     private DeviceInfo() {
+        AtsAutomation.sendLogs("Get bluetooth adapter name");
         BluetoothAdapter btDevice = BluetoothAdapter.getDefaultAdapter();
         btAdapter = btDevice.getName();
         hostName = tryGetHostname();
@@ -88,6 +89,7 @@ public class DeviceInfo {
                     InetAddress inetAddress = enumInetAddress.nextElement();
 
                     if (inetAddress.isSiteLocalAddress()) {
+                        AtsAutomation.sendLogs("getting IP Addresse" + inetAddress.getHostName());
                         return inetAddress.getHostName();
                     }
                 }

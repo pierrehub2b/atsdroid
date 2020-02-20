@@ -114,10 +114,10 @@ public class AtsAutomation {
         sendLogs("ATS_DRIVER_RUNNING");
     }
 
-    public void sendLogs(String message){
+    public static void sendLogs(String message){
         Bundle b = new Bundle();
         b.putString("atsLogs",  message);
-        instrument.sendStatus(0, b);
+        InstrumentationRegistry.getInstrumentation().sendStatus(0, b);
     }
 
     private void launchAtsWidget(){
@@ -143,6 +143,7 @@ public class AtsAutomation {
         try {
             rootElement = new AtsRootElement(rootNode);
         }catch (Exception e){
+            AtsAutomation.sendLogs("Error on reloadRoot, retrying:" + e.getMessage());
             wait(200);
             reloadRoot();
         }
@@ -209,7 +210,9 @@ public class AtsAutomation {
                     String version = "";
                     try {
                         version = pkgManager.getPackageInfo(pkg, 0).versionName;
-                    } catch (PackageManager.NameNotFoundException e) {}
+                    } catch (PackageManager.NameNotFoundException e) {
+                        AtsAutomation.sendLogs("Error, cannot get version name:" + e.getMessage());
+                    }
 
                     applications.add(new ApplicationInfo(
                             pkg,
@@ -266,7 +269,9 @@ public class AtsAutomation {
     private String executeShell(String value){
         try {
             return device.executeShellCommand(value);
-        }catch(Exception e){}
+        }catch(Exception e){
+            AtsAutomation.sendLogs("Error exceute shell command:" + e.getMessage());
+        }
         return "";
     }
 
@@ -567,6 +572,7 @@ public class AtsAutomation {
                     obj.put("applications", applications);
 
                 } catch (Exception e) {
+                    AtsAutomation.sendLogs("Error when getting device info:" + e.getMessage());
                     obj.put("status", "-99");
                     obj.put("message", e.getMessage());
                 }
@@ -665,6 +671,7 @@ public class AtsAutomation {
                                     offsetX = Integer.parseInt(req.parameters[2]);
                                     offsetY = Integer.parseInt(req.parameters[3]);
                                 } catch (NumberFormatException e) {
+                                    AtsAutomation.sendLogs("Error not enough parameters:" + e.getMessage());
                                 }
                             }
 
@@ -683,6 +690,7 @@ public class AtsAutomation {
                                         directionX = Integer.parseInt(req.parameters[4]);
                                         directionY = Integer.parseInt(req.parameters[5]);
                                     } catch (NumberFormatException e) {
+                                        AtsAutomation.sendLogs("Error not enough parameters:" + e.getMessage());
                                     }
                                 }
                                 element.swipe(this, offsetX, offsetY, directionX, directionY);

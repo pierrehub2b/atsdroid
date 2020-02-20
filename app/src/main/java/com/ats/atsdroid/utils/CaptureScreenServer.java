@@ -41,7 +41,9 @@ public class CaptureScreenServer implements Runnable  {
         try {
             serverSocket = new DatagramSocket();
             port = serverSocket.getLocalPort();
-        } catch (SocketException e) {}
+        } catch (SocketException e) {
+            AtsAutomation.sendLogs("Error socket exception:" + e.getMessage());
+        }
     }
 
     public void stop() {
@@ -76,7 +78,9 @@ public class CaptureScreenServer implements Runnable  {
                     sendData(screen, currentPos, dataLength, packetSize, address, port);
                 }
 
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                AtsAutomation.sendLogs("Error on screen server:" + e.getMessage());
+            }
         }
         serverSocket.close();
     }

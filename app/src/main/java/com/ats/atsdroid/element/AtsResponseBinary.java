@@ -2,6 +2,8 @@ package com.ats.atsdroid.element;
 
 import android.util.Base64;
 
+import com.ats.atsdroid.utils.AtsAutomation;
+
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.io.BufferedOutputStream;
@@ -24,7 +26,9 @@ public class AtsResponseBinary extends AtsResponse {
             bf.write(this.binaryData, 0, this.binaryData.length);
             bf.flush();
             bf.close();
-        }catch(IOException e){}
+        }catch(IOException e){
+            AtsAutomation.sendLogs("Error when sending binary data to udp server:" + e.getMessage());
+        }
     }
 
     public void sendDataToUsbPort(PrintWriter writer) {

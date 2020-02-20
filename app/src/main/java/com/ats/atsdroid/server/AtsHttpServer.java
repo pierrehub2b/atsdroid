@@ -45,7 +45,9 @@ public class AtsHttpServer implements Runnable{
                 if (line.startsWith(CONTENT_LENGTH)) {
                     try {
                         contentLength = Integer.parseInt(line.substring(CONTENT_LENGTH.length()));
-                    }catch(NumberFormatException e){}
+                    }catch(NumberFormatException e){
+                        AtsAutomation.sendLogs("Error number format expression on HttpServer:" + e.getMessage());
+                    }
                 }else if(line.startsWith(USER_AGENT)){
                     userAgent = line.substring(USER_AGENT.length()) + " " + userAgent;
                 }
@@ -66,14 +68,16 @@ public class AtsHttpServer implements Runnable{
             }
 
         } catch (IOException | JSONException e) {
-
+            AtsAutomation.sendLogs("IOError or JSONException on HttpServer:" + e.getMessage());
         } finally {
             try {
                 if(in != null) {
                     in.close();
                 }
                 socket.close(); // we close socket connection
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                AtsAutomation.sendLogs("Cannot close HTTPServer:" + e.getMessage());
+            }
         }
     }
 }

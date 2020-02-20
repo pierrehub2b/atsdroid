@@ -23,6 +23,8 @@ import android.os.Build;
 import android.text.InputType;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import com.ats.atsdroid.utils.AtsAutomation;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -101,7 +103,9 @@ public class AtsElement extends AbstractAtsElement {
         JSONObject base = super.getJsonObject();
         try{
             base.put("attributes", new JSONObject(attributes));
-        } catch (JSONException e) {}
+        } catch (JSONException e) {
+            AtsAutomation.sendLogs("Error on putting attributes:" + e.getMessage());
+        }
         return base;
     }
 }
