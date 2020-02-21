@@ -30,6 +30,9 @@ import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -41,7 +44,6 @@ import java.net.ServerSocket;
 public class AtsRunner {
 
     public static final int DEFAULT_PORT = 8080;
-
     private AtsAutomation automation;
     private boolean running = true;
 
@@ -51,7 +53,20 @@ public class AtsRunner {
 
     @Test
     public void testMain() {
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                final String ipAdd = automation.deviceInfo.tryGetHostname();
+                if(ipAdd.indexOf("error") > -1 || ipAdd.indexOf("undefined") > -1) {
+                    automation.forceStop("ATS_WIFI_STOP");
+                    this.cancel();
+                }
+            }
+        };
+
+
         Boolean usbMode = false;
+
         int port = DEFAULT_PORT;
         String ipAddress = "";
 
@@ -68,6 +83,10 @@ public class AtsRunner {
         }catch(Exception e){}
 
         automation = new AtsAutomation(port, this, ipAddress, usbMode);
+
+        Timer timer = new Timer(true);
+        timer.scheduleAtFixedRate(timerTask, 0, 5000);
+
 
         try {
             if(!usbMode) {

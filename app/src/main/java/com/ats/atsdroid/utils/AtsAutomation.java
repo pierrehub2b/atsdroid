@@ -72,7 +72,7 @@ public class AtsAutomation {
     private final UiAutomation automation = instrument.getUiAutomation();
 
     private final UiDevice device = UiDevice.getInstance(instrument);
-    private final DeviceInfo deviceInfo = DeviceInfo.getInstance();
+    public final DeviceInfo deviceInfo = DeviceInfo.getInstance();
 
     private final Context context = InstrumentationRegistry.getTargetContext();
 
@@ -334,20 +334,24 @@ public class AtsAutomation {
     public void stopDriver(){
 
         if(driverStarted) {
-            driverStarted = false;
-
-            sendLogs("ATS_DRIVER_STOP");
-
-            executeShell("svc power stayon false");
-            launchAtsWidget();
-
-            if (screenCapture != null) {
-                screenCapture.stop();
-                screenCapture = null;
-            }
-
-            deviceSleep();
+            forceStop("ATS_DRIVER_STOP");
         }
+    }
+
+    public void forceStop(String log) {
+        driverStarted = false;
+
+        sendLogs(log);
+
+        executeShell("svc power stayon false");
+        launchAtsWidget();
+
+        if (screenCapture != null) {
+            screenCapture.stop();
+            screenCapture = null;
+        }
+
+        deviceSleep();
     }
 
     //----------------------------------------------------------------------------------------------------
