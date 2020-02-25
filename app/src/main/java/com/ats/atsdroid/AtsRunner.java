@@ -84,8 +84,8 @@ public class AtsRunner {
 
         automation = new AtsAutomation(port, this, ipAddress, usbMode);
 
-        Timer timer = new Timer(true);
-        timer.scheduleAtFixedRate(timerTask, 0, 5000);
+        //Timer timer = new Timer(true);
+        //timer.scheduleAtFixedRate(timerTask, 0, 5000);
 
 
         try {
