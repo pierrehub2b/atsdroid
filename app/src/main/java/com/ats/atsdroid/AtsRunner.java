@@ -53,7 +53,7 @@ public class AtsRunner {
 
     @Test
     public void testMain() {
-        TimerTask timerTask = new TimerTask() {
+       /* TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
                 final String ipAdd = automation.deviceInfo.tryGetHostname();
@@ -62,7 +62,7 @@ public class AtsRunner {
                     this.cancel();
                 }
             }
-        };
+        };*/
 
 
         Boolean usbMode = false;
