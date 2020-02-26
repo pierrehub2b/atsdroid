@@ -135,8 +135,8 @@ public class DeviceInfo {
         channelWidth = (int) (pts.x * metrics.scaledDensity);
 
         int dh = Resources.getSystem().getConfiguration().screenHeightDp;
-        if(dh > 480){
-            dh = 480;
+        if(dh > pts.x){
+            dh = pts.x;
         }
         float ratio = channelHeight / dh;
 
