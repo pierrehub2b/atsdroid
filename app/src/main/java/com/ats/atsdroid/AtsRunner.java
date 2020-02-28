@@ -69,6 +69,7 @@ public class AtsRunner {
 
         int port = DEFAULT_PORT;
         String ipAddress = "";
+        String screenResolution = "1920x1080";
 
         try {
             port = Integer.parseInt(InstrumentationRegistry.getArguments().getString("atsPort"));
@@ -82,7 +83,11 @@ public class AtsRunner {
             ipAddress = InstrumentationRegistry.getArguments().getString("ipAddress");
         }catch(Exception e){}
 
-        automation = new AtsAutomation(port, this, ipAddress, usbMode);
+        try {
+            screenResolution = InstrumentationRegistry.getArguments().getString("screenResolution");
+        }catch(Exception e){}
+
+        automation = new AtsAutomation(port, this, ipAddress, usbMode, screenResolution);
 
         //Timer timer = new Timer(true);
         //timer.scheduleAtFixedRate(timerTask, 0, 5000);

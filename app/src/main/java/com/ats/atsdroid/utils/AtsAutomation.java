@@ -88,14 +88,14 @@ public class AtsAutomation {
     private AtsRunner runner;
     public int port;
 
-    public AtsAutomation(int port, AtsRunner runner, String ipAddress, Boolean usb){
+    public AtsAutomation(int port, AtsRunner runner, String ipAddress, Boolean usb, String screenResolution){
         this.usbMode = usb;
         this.port = port;
         this.runner = runner;
 
         Configurator.getInstance().setWaitForIdleTimeout(0);
 
-        deviceInfo.initDevice(port, device, ipAddress);
+        deviceInfo.initDevice(port, device, ipAddress, screenResolution);
 
         //-------------------------------------------------------------
         // Bitmap factory default
