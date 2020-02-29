@@ -183,6 +183,7 @@ public class AtsAutomation {
     }
 
     public List<ApplicationInfo> getApplications(){
+        loadApplications();
         return applications;
     }
 
@@ -447,7 +448,7 @@ public class AtsAutomation {
     //----------------------------------------------------------------------------------------------------
 
     public byte[] getScreenData() {
-        return getResizedScreenByteArray(Bitmap.CompressFormat.JPEG, 60);
+        return getResizedScreenByteArray(Bitmap.CompressFormat.JPEG, 80);
     }
 
     public byte[] getScreenDataHires() {
