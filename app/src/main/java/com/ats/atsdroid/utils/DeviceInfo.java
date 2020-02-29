@@ -20,6 +20,7 @@ under the License.
 package com.ats.atsdroid.utils;
 
 import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Matrix;
 import android.graphics.Point;
@@ -124,24 +125,28 @@ public class DeviceInfo {
     private String hostName;
     private String btAdapter;
     private Point pts;
+    private String[] resolution;
 
-    public void initDevice(int p, UiDevice d, String ipAddress){
+    public void initDevice(int p, UiDevice d, String ipAddress, String screenResolution){
         hostName = ipAddress;
         port = p;
-
         pts = d.getDisplaySizeDp();
         DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
         channelHeight = (int) ((pts.y - 46) * metrics.scaledDensity);
         channelWidth = (int) (pts.x * metrics.scaledDensity);
+        double ratio = 1.0;
 
-        int dh = Resources.getSystem().getConfiguration().screenHeightDp;
-        if(dh > pts.x){
-            dh = pts.x;
+        resolution = screenResolution.split("x");
+        int desktopScreenHeight = Integer.parseInt(resolution[1]);
+        int desktopScreenWidth = Integer.parseInt(resolution[0]);
+
+        if(desktopScreenHeight < channelHeight) {
+            ratio = (double)channelHeight / (double)(desktopScreenHeight - 200);
+        } else if(desktopScreenWidth < channelWidth) {
+            ratio = (double)channelWidth / (double)(desktopScreenWidth - 200);
         }
-        float ratio = channelHeight / dh;
-
-        deviceWidth = Math.round((float)channelWidth / ratio);
-        deviceHeight = Math.round((float)channelHeight / ratio);
+        deviceWidth = (int) Math.round(channelWidth / ratio);
+        deviceHeight = (int) Math.round(channelHeight / ratio);
 
         matrix = new Matrix();
         matrix.preScale((float)deviceWidth / (float)channelWidth, (float)deviceHeight / (float)channelHeight);
