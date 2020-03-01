@@ -26,8 +26,6 @@ import android.view.WindowManager;
 
 public class AtsActivity extends Activity {
 
-    public static float mScreenDensity;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,13 +37,6 @@ public class AtsActivity extends Activity {
         KeyguardManager keyguardManager = (KeyguardManager)getSystemService(Activity.KEYGUARD_SERVICE);
         KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock(KEYGUARD_SERVICE);
         lock.disableKeyguard();
-
-        mScreenDensity = this.getResources().getDisplayMetrics().density;
-
-        /*int resourceId = this.getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            statusBarHeight = this.getResources().getDimensionPixelSize(resourceId);
-        }*/
     }
 
     /*@Override

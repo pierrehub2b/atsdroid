@@ -7,9 +7,14 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.Shader;
+import android.os.Build;
+import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.View;
+import android.view.WindowManager;
 
 import com.ats.atsdroid.BuildConfig;
 import com.ats.atsdroid.R;

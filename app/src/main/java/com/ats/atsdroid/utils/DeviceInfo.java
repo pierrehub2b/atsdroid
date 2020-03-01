@@ -27,6 +27,7 @@ import android.graphics.Point;
 import android.os.Build;
 import android.support.test.uiautomator.UiDevice;
 import android.util.DisplayMetrics;
+import android.view.Display;
 
 import com.ats.atsdroid.BuildConfig;
 
@@ -125,28 +126,39 @@ public class DeviceInfo {
     private String hostName;
     private String btAdapter;
     private Point pts;
-    private String[] resolution;
+    //private String[] resolution;
 
-    public void initDevice(int p, UiDevice d, String ipAddress, String screenResolution){
+    public void initDevice(int p, UiDevice d, String ipAddress){
         hostName = ipAddress;
         port = p;
         pts = d.getDisplaySizeDp();
         DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
         channelHeight = (int) ((pts.y - 46) * metrics.scaledDensity);
         channelWidth = (int) (pts.x * metrics.scaledDensity);
-        double ratio = 1.0;
+
+        /*double ratio = 1.0;
 
         resolution = screenResolution.split("x");
         int desktopScreenHeight = Integer.parseInt(resolution[1]);
-        int desktopScreenWidth = Integer.parseInt(resolution[0]);
+        int desktopScreenWidth = Integer.parseInt(resolution[0]);*/
 
-        if(desktopScreenHeight < channelHeight) {
+        /*if(desktopScreenHeight < channelHeight) {
             ratio = (double)channelHeight / (double)(desktopScreenHeight - 200);
         } else if(desktopScreenWidth < channelWidth) {
             ratio = (double)channelWidth / (double)(desktopScreenWidth - 200);
         }
+
         deviceWidth = (int) Math.round(channelWidth / ratio);
-        deviceHeight = (int) Math.round(channelHeight / ratio);
+        deviceHeight = (int) Math.round(channelHeight / ratio);*/
+
+        int dh = Resources.getSystem().getConfiguration().screenHeightDp;
+        if(dh > 480){
+            dh = 480;
+        }
+        float ratio = channelHeight / dh / 0.88F;
+
+        deviceWidth = Math.round((float)channelWidth / ratio);
+        deviceHeight = Math.round((float)channelHeight / ratio);
 
         matrix = new Matrix();
         matrix.preScale((float)deviceWidth / (float)channelWidth, (float)deviceHeight / (float)channelHeight);
