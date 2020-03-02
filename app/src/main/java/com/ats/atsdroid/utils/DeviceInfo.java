@@ -21,6 +21,7 @@ package com.ats.atsdroid.utils;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Matrix;
 import android.graphics.Point;
@@ -28,6 +29,8 @@ import android.os.Build;
 import android.support.test.uiautomator.UiDevice;
 import android.util.DisplayMetrics;
 import android.view.Display;
+import android.view.KeyCharacterMap;
+import android.view.KeyEvent;
 
 import com.ats.atsdroid.BuildConfig;
 
@@ -132,30 +135,15 @@ public class DeviceInfo {
         hostName = ipAddress;
         port = p;
         pts = d.getDisplaySizeDp();
+
         DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
-        channelHeight = (int) ((pts.y - 46) * metrics.scaledDensity);
+        channelHeight = (int) ((pts.y) * metrics.scaledDensity);
+        int navBarHeight = channelHeight - Resources.getSystem().getDisplayMetrics().heightPixels;
+        channelHeight -= navBarHeight;
+
         channelWidth = (int) (pts.x * metrics.scaledDensity);
-
-        /*double ratio = 1.0;
-
-        resolution = screenResolution.split("x");
-        int desktopScreenHeight = Integer.parseInt(resolution[1]);
-        int desktopScreenWidth = Integer.parseInt(resolution[0]);*/
-
-        /*if(desktopScreenHeight < channelHeight) {
-            ratio = (double)channelHeight / (double)(desktopScreenHeight - 200);
-        } else if(desktopScreenWidth < channelWidth) {
-            ratio = (double)channelWidth / (double)(desktopScreenWidth - 200);
-        }
-
-        deviceWidth = (int) Math.round(channelWidth / ratio);
-        deviceHeight = (int) Math.round(channelHeight / ratio);*/
-
-        int dh = Resources.getSystem().getConfiguration().screenHeightDp;
-        if(dh > 480){
-            dh = 480;
-        }
-        float ratio = channelHeight / dh / 0.88F;
+        double x = channelHeight/metrics.scaledDensity;
+        float ratio = channelHeight / (float)x;
 
         deviceWidth = Math.round((float)channelWidth / ratio);
         deviceHeight = Math.round((float)channelHeight / ratio);
