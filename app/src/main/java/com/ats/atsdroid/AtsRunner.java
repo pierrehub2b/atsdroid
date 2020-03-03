@@ -75,7 +75,9 @@ public class AtsRunner {
                 ServerSocket serverConnect = new ServerSocket(port);
                 while (running) {
                     final AtsHttpServer atsServer = new AtsHttpServer(serverConnect.accept(), automation);
-                    (new Thread(atsServer)).start();
+                    // create dedicated thread to manage the client connection
+                    Thread thread = new Thread(atsServer);
+                    thread.start();
                 }
             }
         } catch(IOException e){

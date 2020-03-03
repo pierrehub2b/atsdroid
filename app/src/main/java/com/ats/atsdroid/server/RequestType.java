@@ -19,6 +19,9 @@ under the License.
 
 package com.ats.atsdroid.server;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,16 +48,28 @@ public class RequestType {
 
     public String type = "";
     public String[] parameters = new String[0];
-    public String userAgent = "";
 
-    public RequestType(String value, String body, String userAgent){
-
-        this.userAgent = userAgent;
-
+    public RequestType(String value, String body){
         Matcher match = requestPattern.matcher(value);
         if(match.find()){
             this.type = match.group(1);
-            this.parameters = body.split("\n");
+            String[] params = body.split("\n");
+            List<String> p = new ArrayList<String>();
+            Boolean isParam = false;
+            for (int i=0; i<params.length; i++)
+            {
+                String var = params[i];
+                if(isParam) {
+                    p.add(var);
+                }
+                if(var.equals("\r")) {
+                    isParam = true;
+                }
+            }
+
+            if(p.size() > 0) {
+                this.parameters = p.toArray(new String[0]);
+            }
         }
     }
 

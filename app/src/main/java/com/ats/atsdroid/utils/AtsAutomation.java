@@ -76,7 +76,7 @@ public class AtsAutomation {
 
     private final Context context = InstrumentationRegistry.getTargetContext();
 
-    private List<ApplicationInfo> applications;
+    private List<ApplicationInfo> applications = new ArrayList<>();
     private AtsRootElement rootElement;
     private CaptureScreenServer screenCapture;
 
@@ -192,8 +192,6 @@ public class AtsAutomation {
     }
 
     private void loadApplications(){
-
-        applications = new ArrayList<ApplicationInfo>();
 
         final Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -316,7 +314,7 @@ public class AtsAutomation {
         return -1;
     }
 
-    public void startDriver(String user){
+    public void startDriver(){
         if(!driverStarted) {
             driverStarted = true;
 
@@ -328,7 +326,7 @@ public class AtsAutomation {
             screenCapture = new CaptureScreenServer(this);
             (new Thread(screenCapture)).start();
 
-            sendLogs("ATS_DRIVER_START:" + user);
+            //sendLogs("ATS_DRIVER_START:" + user);
         }
     }
 
@@ -568,12 +566,13 @@ public class AtsAutomation {
                     obj.put("version", DeviceInfo.getInstance().getVersion());
                     obj.put("bluetoothName", DeviceInfo.getInstance().getBtAdapter());
 
-                    final List<ApplicationInfo> apps = getApplications();
+                    List<ApplicationInfo> apps = getApplications();
 
                     JSONArray applications = new JSONArray();
                     for (ApplicationInfo appInfo : apps) {
                         applications.put(appInfo.getJson());
                     }
+
                     obj.put("applications", applications);
 
                 } catch (Exception e) {
@@ -586,7 +585,7 @@ public class AtsAutomation {
                 if (req.parameters.length > 0) {
                     if (RequestType.START.equals(req.parameters[0])) {
 
-                        startDriver(req.userAgent);
+                        startDriver();
 
                         DeviceInfo.getInstance().driverInfoBase(obj);
                         obj.put("status", "0");
