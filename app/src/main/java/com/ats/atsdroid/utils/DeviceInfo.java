@@ -78,6 +78,8 @@ public class DeviceInfo {
         else if(release<7)codeName="Marshmallow";
         else if(release<8)codeName="Nougat";
         else if(release<9)codeName="Oreo";
+        else if(release<10)codeName="Pie";
+        else if(release<11)codeName="Android 10";
         return codeName+" v"+release+", API Level: "+Build.VERSION.SDK_INT;
     }
 
