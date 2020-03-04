@@ -20,17 +20,12 @@ under the License.
 package com.ats.atsdroid.utils;
 
 import android.bluetooth.BluetoothAdapter;
-import android.content.Context;
-import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.os.Build;
 import android.support.test.uiautomator.UiDevice;
 import android.util.DisplayMetrics;
-import android.view.Display;
-import android.view.KeyCharacterMap;
-import android.view.KeyEvent;
 
 import com.ats.atsdroid.BuildConfig;
 
@@ -131,16 +126,23 @@ public class DeviceInfo {
     private String hostName;
     private String btAdapter;
     private Point pts;
+    private UiDevice device;
+
+
     //private String[] resolution;
 
     public void initDevice(int p, UiDevice d, String ipAddress){
         hostName = ipAddress;
         port = p;
-        pts = d.getDisplaySizeDp();
+        device = d;
+        pts = device.getDisplaySizeDp();
+    }
 
+    public void setupScreenInformation(int height) {
+        pts = device.getDisplaySizeDp();
         DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
         channelHeight = (int) ((pts.y) * metrics.scaledDensity);
-        int navBarHeight = channelHeight - Resources.getSystem().getDisplayMetrics().heightPixels;
+        int navBarHeight = channelHeight - height;
         channelHeight -= navBarHeight;
 
         channelWidth = (int) (pts.x * metrics.scaledDensity);
@@ -158,7 +160,8 @@ public class DeviceInfo {
         return matrix;
     }
 
-    public void driverInfoBase(JSONObject obj) throws JSONException {
+    public void driverInfoBase(JSONObject obj, int height) throws JSONException {
+        setupScreenInformation(height);
         obj.put("os", "android");
         obj.put("driverVersion", BuildConfig.VERSION_NAME);
         obj.put("systemName", systemName);

@@ -69,9 +69,10 @@ public class AtsAutomation {
     private static final int swipeSteps = 10;
 
     private final Instrumentation instrument = InstrumentationRegistry.getInstrumentation();
+    private UiDevice device;
     private final UiAutomation automation = instrument.getUiAutomation();
 
-    private final UiDevice device = UiDevice.getInstance(instrument);
+
     public final DeviceInfo deviceInfo = DeviceInfo.getInstance();
 
     private final Context context = InstrumentationRegistry.getTargetContext();
@@ -92,6 +93,7 @@ public class AtsAutomation {
         this.usbMode = usb;
         this.port = port;
         this.runner = runner;
+        this.device = UiDevice.getInstance(instrument);
 
         Configurator.getInstance().setWaitForIdleTimeout(0);
 
@@ -555,7 +557,7 @@ public class AtsAutomation {
             } else if (RequestType.INFO.equals(req.type)) {
 
                 try {
-                    DeviceInfo.getInstance().driverInfoBase(obj);
+                    DeviceInfo.getInstance().driverInfoBase(obj, device.getDisplayHeight());
 
                     obj.put("status", "0");
                     obj.put("message", "device capabilities");
@@ -586,8 +588,7 @@ public class AtsAutomation {
                     if (RequestType.START.equals(req.parameters[0])) {
 
                         startDriver();
-
-                        DeviceInfo.getInstance().driverInfoBase(obj);
+                        DeviceInfo.getInstance().driverInfoBase(obj, device.getDisplayHeight());
                         obj.put("status", "0");
 
                         int screenCapturePort = getScreenCapturePort();
