@@ -43,6 +43,11 @@ public class ApplicationInfo {
         if(icon != null){
             this.icon = drawableToBase64(icon);
         }
+
+        //prevent empty icons
+        if(this.icon == "" || this.icon == null) {
+            this.icon = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAQAAADZc7J/AAAAIUlEQVR42mP8/5+BIsA4asCoAaMGjBowasCoAaMGDDcDAFIVP+GKh4jUAAAAAElFTkSuQmCC";
+        }
     }
 
     public void start(Context context, UiDevice device){
