@@ -136,6 +136,7 @@ public class DeviceInfo {
         port = p;
         device = d;
         pts = device.getDisplaySizeDp();
+        setupScreenInformation(device.getDisplayHeight());
     }
 
     public void setupScreenInformation(int height) {
