@@ -71,14 +71,12 @@ public class AtsRunner {
         automation = new AtsAutomation(port, this, ipAddress, usbMode);
 
         try {
-            if(!usbMode) {
-                ServerSocket serverConnect = new ServerSocket(port);
-                while (running) {
-                    final AtsHttpServer atsServer = new AtsHttpServer(serverConnect.accept(), automation);
-                    // create dedicated thread to manage the client connection
-                    Thread thread = new Thread(atsServer);
-                    thread.start();
-                }
+            ServerSocket serverConnect = new ServerSocket(port);
+            while (running) {
+                final AtsHttpServer atsServer = new AtsHttpServer(serverConnect.accept(), automation);
+                // create dedicated thread to manage the client connection
+                Thread thread = new Thread(atsServer);
+                thread.start();
             }
         } catch(IOException e){
             System.err.println("Server Connection error : " + e.getMessage());
