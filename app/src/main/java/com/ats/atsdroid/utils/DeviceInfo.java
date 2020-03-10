@@ -21,6 +21,7 @@ package com.ats.atsdroid.utils;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.os.Build;
@@ -140,19 +141,16 @@ public class DeviceInfo {
     }
 
     public void setupScreenInformation(int height) {
-        pts = device.getDisplaySizeDp();
         DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
-        channelHeight = (int) ((pts.y) * metrics.scaledDensity);
+        channelHeight = device.getDisplayWidth();
+        channelWidth = device.getDisplayWidth();
         int navBarHeight = channelHeight - height;
         channelHeight -= navBarHeight;
-
-        channelWidth = (int) (pts.x * metrics.scaledDensity);
         double x = channelHeight/metrics.scaledDensity;
         float ratio = channelHeight / (float)x;
 
         deviceWidth = Math.round((float)channelWidth / ratio);
         deviceHeight = Math.round((float)channelHeight / ratio);
-
         matrix = new Matrix();
         matrix.preScale((float)deviceWidth / (float)channelWidth, (float)deviceHeight / (float)channelHeight);
     }
