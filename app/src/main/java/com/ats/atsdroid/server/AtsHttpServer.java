@@ -48,25 +48,44 @@ public class AtsHttpServer implements Runnable {
         return fileData;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void run() {
         BufferedReader in = null;
-
         try {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+
+            String line;
+            String userAgent = socket.getInetAddress().getHostAddress();
+            int contentLength = 0;
+
             String input = in.readLine();
-            StringBuilder payload = new StringBuilder();
-            while(in.ready()){
-                payload.append((char) in.read());
+
+            while (!(line = in.readLine()).equals("")) {
+                if (line.startsWith(CONTENT_LENGTH)) {
+                    try {
+                        contentLength = Integer.parseInt(line.substring(CONTENT_LENGTH.length()));
+                    }catch(NumberFormatException e){
+                        AtsAutomation.sendLogs("Error number format expression on HttpServer:" + e.getMessage());
+                    }
+                }else if(line.startsWith(USER_AGENT)){
+                    userAgent = line.substring(USER_AGENT.length()) + " " + userAgent;
+                }
+            }
+
+            String postData = "";
+            if (contentLength > 0) {
+                char[] charArray = new char[contentLength];
+                in.read(charArray, 0, contentLength);
+                postData = new String(charArray);
             }
 
             if(input != null) {
-                final AtsResponse response = automation.executeRequest(new RequestType(input, payload.toString()), false);
+                final AtsResponse response = automation.executeRequest(new RequestType(input, postData, userAgent), false);
                 response.sendDataHttpServer(socket);
             } else{
                 new AtsResponseJSON(new JSONObject("{\"status\":\"-11\",\"message\":\"unknown command\"}")).sendDataHttpServer(socket);
             }
-
 
         } catch (IOException | JSONException e) {
             AtsAutomation.sendLogs("IOError or JSONException on HttpServer:" + e.getMessage());

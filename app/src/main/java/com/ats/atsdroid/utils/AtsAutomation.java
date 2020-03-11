@@ -712,14 +712,11 @@ public class AtsAutomation {
                     obj.put("message", "missing element id");
                 }
             } else if (RequestType.SCREENSHOT.equals(req.type)) {
-                if(req.parameters.length > 1 && req.parameters[1].indexOf(RequestType.SCREENSHOT_HIRES) == 0){
+                if(req.parameters.length > 0 && req.parameters[0].indexOf(RequestType.SCREENSHOT_HIRES) == 0){
                     return new AtsResponseBinary(getScreenDataHires());
                 }else{
                     return new AtsResponseBinary(getScreenData());
                 }
-            }else if(RequestType.PACKAGE.equals(req.type)) {
-                String activityName = getActivityName(req.parameters[0]);
-                obj.put("activityName", activityName + "");
             } else {
                 obj.put("status", "-12");
                 obj.put("message", "unknown command : " + req.type);
