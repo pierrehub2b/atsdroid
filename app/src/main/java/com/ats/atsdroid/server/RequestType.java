@@ -19,6 +19,10 @@ under the License.
 
 package com.ats.atsdroid.server;
 
+import com.ats.atsdroid.utils.AtsAutomation;
+
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +30,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RequestType {
+
+    private final static String CONTENT_LENGTH = "Content-Length: ";
+    private final static String USER_AGENT = "User-Agent: ";
 
     public static final String APP = "app";
     public static final String DRIVER = "driver";
@@ -50,7 +57,7 @@ public class RequestType {
     public String[] parameters = new String[0];
     public String userAgent = "";
 
-    public RequestType(String value, String body, String userAgent){
+    public RequestType(String value, String body, String userAgent) {
 
         this.userAgent = userAgent;
 
@@ -61,8 +68,41 @@ public class RequestType {
         }
     }
 
-    public RequestType(String value, String[] args){
+    /* public RequestType(String value, String[] args){
         this.type = value;
         this.parameters = args;
+    } */
+
+
+    public static RequestType generate(BufferedReader in, String userAgent) throws IOException {
+        String line;
+        int contentLength = 0;
+
+        String input = in.readLine();
+
+        while (!(line = in.readLine()).equals("")) {
+            if (line.startsWith(CONTENT_LENGTH)) {
+                try {
+                    contentLength = Integer.parseInt(line.substring(CONTENT_LENGTH.length()));
+                } catch(NumberFormatException e){
+                    AtsAutomation.sendLogs("Error number format expression on HttpServer:" + e.getMessage());
+                }
+            } else if(line.startsWith(USER_AGENT)){
+                userAgent = line.substring(USER_AGENT.length()) + " " + userAgent;
+            }
+        }
+
+        String postData = "";
+        if (contentLength > 0) {
+            char[] charArray = new char[contentLength];
+            in.read(charArray, 0, contentLength);
+            postData = new String(charArray);
+        }
+
+        if (input != null) {
+            return new RequestType(input, postData, userAgent);
+        } else {
+            return null;
+        }
     }
 }

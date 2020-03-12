@@ -19,10 +19,6 @@ import java.nio.ByteBuffer;
 
 public class AtsWebSocketServer extends WebSocketServer {
 
-    // To refactor
-    private final static String CONTENT_LENGTH = "Content-Length: ";
-    private final static String USER_AGENT = "User-Agent: ";
-
     private AtsAutomation automation;
 
     public AtsWebSocketServer(InetSocketAddress address, AtsAutomation automation) {
@@ -47,49 +43,6 @@ public class AtsWebSocketServer extends WebSocketServer {
     }
 
     @Override
-    public void onMessage(WebSocket conn, ByteBuffer message) {
-        BufferedReader in = null;
-        try {
-            in =new BufferedReader(new InputStreamReader(new ByteArrayInputStream(message.array())));
-
-            String line;
-            String userAgent = conn.getRemoteSocketAddress().getHostString();
-            int contentLength = 0;
-
-            String input = in.readLine();
-
-            while (!(line = in.readLine()).equals("")) {
-                if (line.startsWith(CONTENT_LENGTH)) {
-                    try {
-                        contentLength = Integer.parseInt(line.substring(CONTENT_LENGTH.length()));
-                    }catch(NumberFormatException e){
-                        AtsAutomation.sendLogs("Error number format expression on HttpServer:" + e.getMessage());
-                    }
-                }else if(line.startsWith(USER_AGENT)){
-                    userAgent = line.substring(USER_AGENT.length()) + " " + userAgent;
-                }
-            }
-
-            String postData = "";
-            if (contentLength > 0) {
-                char[] charArray = new char[contentLength];
-                in.read(charArray, 0, contentLength);
-                postData = new String(charArray);
-            }
-
-            if(input != null) {
-                final AtsResponse response = automation.executeRequest(new RequestType(input, postData, userAgent), false);
-                response.sendDataToUsbPort(conn);
-            } else{
-                new AtsResponseJSON(new JSONObject("{\"status\":\"-11\",\"message\":\"unknown command\"}")).sendDataToUsbPort(conn);
-            }
-
-        } catch (IOException | JSONException e) {
-            AtsAutomation.sendLogs("IOError or JSONException on HttpServer:" + e.getMessage());
-        }
-    }
-
-    @Override
     public void onError(WebSocket conn, Exception ex) {
 
     }
@@ -97,5 +50,26 @@ public class AtsWebSocketServer extends WebSocketServer {
     @Override
     public void onStart() {
 
+    }
+
+    @Override
+    public void onMessage(WebSocket conn, ByteBuffer message) {
+        try {
+            final BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(message.array())));
+            final String userAgent = conn.getRemoteSocketAddress().getHostString();
+
+            final RequestType request = RequestType.generate(in, userAgent);
+
+            if(request != null) {
+                final AtsResponse response = automation.executeRequest(request, false);
+                response.sendDataToUsbPort(conn);
+            } else{
+                final AtsResponse response = new AtsResponseJSON(new JSONObject("{\"status\":\"-11\",\"message\":\"unknown command\"}"));
+                response.sendDataToUsbPort(conn);
+            }
+
+        } catch (IOException | JSONException e) {
+            AtsAutomation.sendLogs("IOError or JSONException on HttpServer:" + e.getMessage());
+        }
     }
 }

@@ -37,57 +37,17 @@ public class AtsHttpServer implements Runnable {
         this.automation = automation;
     }
 
-    /* private byte[] readFileData(File file, int fileLength) throws IOException {
-        FileInputStream fileIn = null;
-        byte[] fileData = new byte[fileLength];
-
-        try {
-            fileIn = new FileInputStream(file);
-            fileIn.read(fileData);
-        } finally {
-            if (fileIn != null)
-                fileIn.close();
-        }
-
-        return fileData;
-    }
-     */
-
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void run() {
-
         BufferedReader in = null;
         try {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+            final String userAgent = socket.getInetAddress().getHostAddress();
+            final RequestType request = RequestType.generate(in, userAgent);
 
-            String line;
-            String userAgent = socket.getInetAddress().getHostAddress();
-            int contentLength = 0;
-
-            String input = in.readLine();
-
-            while (!(line = in.readLine()).equals("")) {
-                if (line.startsWith(CONTENT_LENGTH)) {
-                    try {
-                        contentLength = Integer.parseInt(line.substring(CONTENT_LENGTH.length()));
-                    }catch(NumberFormatException e){
-                        AtsAutomation.sendLogs("Error number format expression on HttpServer:" + e.getMessage());
-                    }
-                }else if(line.startsWith(USER_AGENT)){
-                    userAgent = line.substring(USER_AGENT.length()) + " " + userAgent;
-                }
-            }
-
-            String postData = "";
-            if (contentLength > 0) {
-                char[] charArray = new char[contentLength];
-                in.read(charArray, 0, contentLength);
-                postData = new String(charArray);
-            }
-
-            if(input != null) {
-                final AtsResponse response = automation.executeRequest(new RequestType(input, postData, userAgent), false);
+            if(request != null) {
+                final AtsResponse response = automation.executeRequest(request, false);
                 response.sendDataHttpServer(socket);
             } else{
                 new AtsResponseJSON(new JSONObject("{\"status\":\"-11\",\"message\":\"unknown command\"}")).sendDataHttpServer(socket);
