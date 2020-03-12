@@ -21,15 +21,9 @@ package com.ats.atsdroid;
 
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
-
-import com.ats.atsdroid.server.AtsHttpServer;
 import com.ats.atsdroid.utils.AtsAutomation;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.io.IOException;
-import java.net.ServerSocket;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -40,9 +34,10 @@ import java.net.ServerSocket;
 @RunWith(AndroidJUnit4.class)
 public class AtsRunner {
 
-    public static final int DEFAULT_PORT = 8080;
-    private AtsAutomation automation;
-    private boolean running = true;
+    protected static final int DEFAULT_PORT = 8080;
+    protected AtsAutomation automation;
+    protected boolean running = true;
+    protected int port = DEFAULT_PORT;
 
     public void stop(){
         running = false;
@@ -53,7 +48,6 @@ public class AtsRunner {
 
         Boolean usbMode = false;
 
-        int port = DEFAULT_PORT;
         String ipAddress = "";
 
         try {
@@ -69,17 +63,5 @@ public class AtsRunner {
         }catch(Exception e){}
 
         automation = new AtsAutomation(port, this, ipAddress, usbMode);
-
-        try {
-            ServerSocket serverConnect = new ServerSocket(port);
-            while (running) {
-                final AtsHttpServer atsServer = new AtsHttpServer(serverConnect.accept(), automation);
-                // create dedicated thread to manage the client connection
-                Thread thread = new Thread(atsServer);
-                thread.start();
-            }
-        } catch(IOException e){
-            System.err.println("Server Connection error : " + e.getMessage());
-        }
     }
 }

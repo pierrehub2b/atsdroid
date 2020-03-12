@@ -1,5 +1,6 @@
 package com.ats.atsdroid.element;
-import java.io.PrintWriter;
+
+import org.java_websocket.WebSocket;
 import java.net.Socket;
 
 public class AtsResponse {
@@ -9,7 +10,7 @@ public class AtsResponse {
         //overrided in childs
     }
 
-    public void sendDataToUsbPort(PrintWriter writer) {
+    public void sendDataToUsbPort(WebSocket conn) {
         //overrided in childs
     }
 }
