@@ -21,7 +21,8 @@ public class AtsResponseBinary extends AtsResponse {
     }
 
     public void sendDataHttpServer(Socket socket) {
-        byte[] header = ("HTTP/1.1 200 OK\r\nServer: AtsDroid Driver\r\nDate: " + new Date() + "\r\nContent-type: application/octet-stream\r\nContent-length: " + this.binaryData.length + "\r\n\r\n").getBytes();
+        byte[] header = ("HTTP/1.1 200 OK\r\nServer: AtsDroid Driver\r\nDate: " + new Date() + "\r\nContent-type: application/octet-stream\r\nContent-length: "
+                + this.binaryData.length + "\r\n\r\n").getBytes();
         BufferedOutputStream bf = null;
         try {
             bf = new BufferedOutputStream(socket.getOutputStream());
