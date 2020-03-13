@@ -27,8 +27,7 @@ public class AtsRunnerUsb extends AtsRunner {
         super.testMain();
 
         server = new AtsWebSocketServer(new InetSocketAddress(port), automation);
-        Thread thread = new Thread(server);
-        thread.start();
+        server.start();
 
         while (running) { }
     }
