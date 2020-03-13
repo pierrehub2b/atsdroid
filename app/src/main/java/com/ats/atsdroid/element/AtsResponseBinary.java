@@ -4,12 +4,16 @@ import android.util.Base64;
 
 import com.ats.atsdroid.utils.AtsAutomation;
 
+import org.java_websocket.WebSocket;
+
+import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Date;
 
 public class AtsResponseBinary extends AtsResponse {
@@ -18,6 +22,21 @@ public class AtsResponseBinary extends AtsResponse {
 
     public AtsResponseBinary(byte[] bytes) {
         this.binaryData = bytes;
+    }
+
+    @Override
+    public void sendDataToUsbPort(WebSocket conn) {
+        byte[] header = ("HTTP/1.1 200 OK\r\nServer: AtsDroid Driver\r\nDate: " + new Date() + "\r\nContent-type: application/octet-stream\r\nContent-length: "+ this.binaryData.length + "\r\n\r\n").getBytes();
+        try {
+            final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            outputStream.write(header);
+            outputStream.write(this.binaryData);
+
+            conn.send(ByteBuffer.wrap(outputStream.toByteArray()));
+            outputStream.close();
+        } catch(IOException e) {
+            AtsAutomation.sendLogs("Error when sending binary data to udp server:" + e.getMessage());
+        }
     }
 
     public void sendDataHttpServer(Socket socket) {
