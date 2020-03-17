@@ -5,6 +5,7 @@ import com.ats.atsdroid.element.AtsResponseJSON;
 import com.ats.atsdroid.utils.AtsAutomation;
 
 import org.java_websocket.WebSocket;
+import org.java_websocket.WebSocketFactory;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.json.JSONException;
@@ -23,7 +24,6 @@ public class AtsWebSocketServer extends WebSocketServer {
 
     public AtsWebSocketServer(InetSocketAddress address, AtsAutomation automation) {
         super(address);
-
         this.automation = automation;
     }
 
@@ -39,7 +39,8 @@ public class AtsWebSocketServer extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-
+        final byte[] screenshot = automation.getScreenData();
+        conn.send(screenshot);
     }
 
     @Override
@@ -54,6 +55,7 @@ public class AtsWebSocketServer extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, ByteBuffer message) {
+
         try {
             final BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(message.array())));
             final String userAgent = conn.getRemoteSocketAddress().getHostString();

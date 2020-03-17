@@ -1,5 +1,7 @@
 package com.ats.atsdroid;
 
+import android.support.test.InstrumentationRegistry;
+
 import com.ats.atsdroid.server.AtsWebSocketServer;
 
 import java.io.IOException;
@@ -7,12 +9,16 @@ import java.net.InetSocketAddress;
 
 public class AtsRunnerUsb extends AtsRunner {
 
-    private AtsWebSocketServer server;
+    private AtsWebSocketServer tcpServer;
+    // private AtsWebSocketServer udpServer;
+
+    public int udpPort = DEFAULT_PORT;
 
     @Override
     public void stop() {
         try {
-            server.stop();
+            tcpServer.stop();
+            // udpServer.stop();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -26,8 +32,15 @@ public class AtsRunnerUsb extends AtsRunner {
     public void testMain() {
         super.testMain();
 
-        server = new AtsWebSocketServer(new InetSocketAddress(port), automation);
-        server.start();
+        try {
+            udpPort = Integer.parseInt(InstrumentationRegistry.getArguments().getString("udpPort"));
+        }catch(Exception e){}
+
+        tcpServer = new AtsWebSocketServer(new InetSocketAddress(port), automation);
+        tcpServer.start();
+
+        // udpServer = new AtsWebSocketServer(new InetSocketAddress(port+1), automation);
+        // udpServer.start();
 
         while (running) { }
     }

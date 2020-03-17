@@ -39,6 +39,7 @@ import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.ats.atsdroid.AtsRunner;
+import com.ats.atsdroid.AtsRunnerUsb;
 import com.ats.atsdroid.element.AbstractAtsElement;
 import com.ats.atsdroid.element.AtsResponse;
 import com.ats.atsdroid.element.AtsResponseBinary;
@@ -325,8 +326,10 @@ public class AtsAutomation {
 
             launchAtsWidget();
 
-            screenCapture = new CaptureScreenServer(this);
-            (new Thread(screenCapture)).start();
+            if(!usbMode) {
+                screenCapture = new CaptureScreenServer(this);
+                (new Thread(screenCapture)).start();
+            }
 
             //sendLogs("ATS_DRIVER_START:" + user);
         }
@@ -591,16 +594,17 @@ public class AtsAutomation {
                         DeviceInfo.getInstance().driverInfoBase(obj, device.getDisplayHeight());
                         obj.put("status", "0");
 
-                        int screenCapturePort = getScreenCapturePort();
-                        if(usbMode && req.parameters.length > 2) {
-                            if(req.parameters[1].indexOf("true") > -1) {
+                        if(usbMode/* && req.parameters.length > 2*/) {
+                            int screenCapturePort = ((AtsRunnerUsb)runner).udpPort;
+                            obj.put("screenCapturePort", screenCapturePort);
+                            /*if(req.parameters[1].indexOf("true") > -1) {
                                 obj.put("udpEndPoint", req.parameters[2]);
                                 obj.put("screenCapturePort", screenCapturePort);
                             } else {
                                 obj.put("screenCapturePort", req.parameters[3]);
-                            }
+                            }*/
                         } else {
-                            obj.put("screenCapturePort", screenCapturePort);
+                            obj.put("screenCapturePort", screenCapture.getPort());
                         }
                     } else if (RequestType.STOP.equals(req.parameters[0])) {
 

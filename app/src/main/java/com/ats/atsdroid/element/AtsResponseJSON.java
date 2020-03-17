@@ -17,7 +17,7 @@ import java.util.Date;
 public class AtsResponseJSON extends AtsResponse {
     private final static String JSON_RESPONSE_TYPE = "application/json";
 
-    private JSONObject jsonObject = new JSONObject();
+    private JSONObject jsonObject;
 
     public AtsResponseJSON(JSONObject jsonObject) {
         this.jsonObject = jsonObject;
@@ -52,6 +52,7 @@ public class AtsResponseJSON extends AtsResponse {
             outputStream.write(getData());
 
             conn.send(ByteBuffer.wrap(outputStream.toByteArray()));
+            outputStream.close();
         } catch (IOException e) {
             AtsAutomation.sendLogs("Error when sending binary data to udp server:" + e.getMessage());
         }
