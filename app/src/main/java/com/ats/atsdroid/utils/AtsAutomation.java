@@ -102,7 +102,7 @@ public class AtsAutomation {
 
         //-------------------------------------------------------------
         // Bitmap factory default
-        // -------------------------------------------------------------
+        // ------------------------------------------------------------
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.RGB_565;
         //-------------------------------------------------------------

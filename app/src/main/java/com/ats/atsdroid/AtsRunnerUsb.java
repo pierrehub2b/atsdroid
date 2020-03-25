@@ -12,6 +12,7 @@ public class AtsRunnerUsb extends AtsRunner {
     private AtsWebSocketServer tcpServer;
     // private AtsWebSocketServer udpServer;
 
+    /* A REFACTO : NECESSAIRE POUR LE MODE UDP USB */
     public int udpPort = DEFAULT_PORT;
 
     @Override
@@ -32,6 +33,7 @@ public class AtsRunnerUsb extends AtsRunner {
     public void testMain() {
         super.testMain();
 
+        /* A REFACTO : NECESSAIRE POUR LE MODE UDP USB */
         try {
             udpPort = Integer.parseInt(InstrumentationRegistry.getArguments().getString("udpPort"));
         }catch(Exception e){}
