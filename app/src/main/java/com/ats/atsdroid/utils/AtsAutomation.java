@@ -473,6 +473,7 @@ public class AtsAutomation {
         if (screen == null) {
             screen = createEmptyBitmap(deviceInfo.getChannelWidth(), deviceInfo.getChannelHeight());
         }
+        AtsAutomation.sendLogs("ScreenShotSize: " + screen.getWidth() + "x" + screen.getHeight());
         return screen;
     }
 
