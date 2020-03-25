@@ -34,14 +34,14 @@ public class AtsRunnerUsb extends AtsRunner {
     public void testMain() {
         super.testMain();
 
-        /* A REFACTO : NECESSAIRE POUR LE MODE UDP USB */
         try {
+            /* A REFACTO : NECESSAIRE POUR LE MODE UDP USB */
             udpPort = Integer.parseInt(InstrumentationRegistry.getArguments().getString("udpPort"));
-        }catch(Exception e){}
 
-        try {
             ServerSocket serverSocket = new ServerSocket(0);
             int availablePort = serverSocket.getLocalPort();
+            serverSocket.close();
+
             tcpServer = new AtsWebSocketServer(new InetSocketAddress(availablePort), automation);
             tcpServer.start();
 
