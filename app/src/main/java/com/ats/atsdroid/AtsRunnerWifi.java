@@ -18,7 +18,7 @@ public class AtsRunnerWifi extends AtsRunner {
                 Thread thread = new Thread(atsServer);
                 thread.start();
             }
-        } catch(IOException e){
+        } catch(IOException e) {
             System.err.println("Server Connection error : " + e.getMessage());
         }
     }

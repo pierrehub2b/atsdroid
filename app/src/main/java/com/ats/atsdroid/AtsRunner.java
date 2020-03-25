@@ -46,22 +46,17 @@ public class AtsRunner {
     @Test
     public void testMain() {
 
-        Boolean usbMode = false;
-
-        String ipAddress = "";
-
         try {
             port = Integer.parseInt(InstrumentationRegistry.getArguments().getString("atsPort"));
-        }catch(Exception e){}
 
-        try {
-            usbMode = Boolean.parseBoolean(InstrumentationRegistry.getArguments().getString("usbMode"));
-        }catch(Exception e){}
+            Boolean usbMode = Boolean.parseBoolean(InstrumentationRegistry.getArguments().getString("usbMode"));
 
-        try {
-            ipAddress = InstrumentationRegistry.getArguments().getString("ipAddress");
-        }catch(Exception e){}
+            String ipAddress = InstrumentationRegistry.getArguments().getString("ipAddress");
 
-        automation = new AtsAutomation(port, this, ipAddress, usbMode);
+            automation = new AtsAutomation(port, this, ipAddress, usbMode);
+
+        } catch (Exception e) {
+
+        }
     }
 }

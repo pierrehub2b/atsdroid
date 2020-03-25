@@ -310,13 +310,6 @@ public class AtsAutomation {
 
     private boolean driverStarted = false;
 
-    public int getScreenCapturePort(){
-        if(screenCapture != null){
-            return screenCapture.getPort();
-        }
-        return -1;
-    }
-
     public void startDriver(){
         if(!driverStarted) {
             driverStarted = true;

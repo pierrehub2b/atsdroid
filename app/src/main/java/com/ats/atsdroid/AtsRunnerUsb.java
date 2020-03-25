@@ -6,6 +6,7 @@ import com.ats.atsdroid.server.AtsWebSocketServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 
 public class AtsRunnerUsb extends AtsRunner {
 
@@ -38,12 +39,18 @@ public class AtsRunnerUsb extends AtsRunner {
             udpPort = Integer.parseInt(InstrumentationRegistry.getArguments().getString("udpPort"));
         }catch(Exception e){}
 
-        tcpServer = new AtsWebSocketServer(new InetSocketAddress(port), automation);
-        tcpServer.start();
+        try {
+            ServerSocket serverSocket = new ServerSocket(0);
+            int availablePort = serverSocket.getLocalPort();
+            tcpServer = new AtsWebSocketServer(new InetSocketAddress(availablePort), automation);
+            tcpServer.start();
 
-        // udpServer = new AtsWebSocketServer(new InetSocketAddress(port+1), automation);
-        // udpServer.start();
+            // udpServer = new AtsWebSocketServer(new InetSocketAddress(port+1), automation);
+            // udpServer.start();
 
-        while (running) { }
+            while (running) { }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
