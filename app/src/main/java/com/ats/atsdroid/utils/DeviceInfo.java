@@ -142,19 +142,16 @@ public class DeviceInfo {
 
     public void setupScreenInformation(int height) {
         DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
-        AtsAutomation.sendLogs("Metrics -> Scaled density: " + metrics.scaledDensity + "\n");
-        channelHeight = device.getDisplayWidth();
+        channelHeight = device.getDisplayHeight();
         channelWidth = device.getDisplayWidth();
-
         int navBarHeight = channelHeight - height;
         channelHeight -= navBarHeight;
-        AtsAutomation.sendLogs("Screen size -> sended height: " + height + "\n");
-        double x = scale(height);
-        float ratio = channelHeight / (float)x;
-        AtsAutomation.sendLogs("Screen Ratio: " + ratio + "\n");
 
-        deviceWidth = Math.round((float)channelWidth / ratio);
-        deviceHeight = Math.round((float)channelHeight / ratio);
+        AtsAutomation.sendLogs("Screen size: " + channelWidth + " x " + height + "\n");
+        AtsAutomation.sendLogs("Screen Ratio: " + metrics.scaledDensity + "\n");
+
+        deviceWidth = Math.round((float)channelWidth / metrics.scaledDensity);
+        deviceHeight = Math.round((float)channelHeight / metrics.scaledDensity);
         matrix = new Matrix();
         matrix.preScale((float)deviceWidth / (float)channelWidth, (float)deviceHeight / (float)channelHeight);
     }
