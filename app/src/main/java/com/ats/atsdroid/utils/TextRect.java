@@ -27,8 +27,8 @@ public class TextRect
     // GC too much
     private FontMetricsInt metrics = null;
     private Paint paint = null;
-    private int starts[] = new int[MAX_LINES];
-    private int stops[] = new int[MAX_LINES];
+    private int[] starts = new int[MAX_LINES];
+    private int[] stops = new int[MAX_LINES];
     private int lines = 0;
     private int textHeight = 0;
     private Rect bounds = new Rect();

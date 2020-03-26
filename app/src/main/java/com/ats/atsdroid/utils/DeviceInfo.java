@@ -129,7 +129,6 @@ public class DeviceInfo {
     private Point pts;
     private UiDevice device;
 
-
     //private String[] resolution;
 
     public void initDevice(int p, UiDevice d, String ipAddress){
@@ -141,7 +140,7 @@ public class DeviceInfo {
     }
 
     public void setupScreenInformation(int height) {
-        DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
+        /* DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
         channelHeight = device.getDisplayHeight();
         channelWidth = device.getDisplayWidth();
         int navBarHeight = channelHeight - height;
@@ -158,6 +157,27 @@ public class DeviceInfo {
             deviceHeight = Math.round((float)channelHeight / 2);
         }
 
+        matrix = new Matrix();
+        matrix.preScale((float)deviceWidth / (float)channelWidth, (float)deviceHeight / (float)channelHeight); */
+
+        DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
+        AtsAutomation.sendLogs("Metrics -> Scaled density: " + metrics.scaledDensity + "\n");
+        channelHeight = device.getDisplayWidth();
+        channelWidth = device.getDisplayWidth();
+
+        int navBarHeight = channelHeight - height;
+        channelHeight -= navBarHeight;
+        AtsAutomation.sendLogs("Screen size -> sended height: " + height + "\n");
+        double x = scale(height);
+        float ratio = channelHeight / (float)x;
+        AtsAutomation.sendLogs("Screen Ratio: " + ratio + "\n");
+
+
+        deviceWidth = Math.round((float)channelWidth / ratio);
+        deviceHeight = Math.round((float)channelHeight / ratio);
+
+        deviceWidth = Math.round((float)channelWidth / metrics.scaledDensity);
+        deviceHeight = Math.round((float)channelHeight / metrics.scaledDensity);
         matrix = new Matrix();
         matrix.preScale((float)deviceWidth / (float)channelWidth, (float)deviceHeight / (float)channelHeight);
     }
