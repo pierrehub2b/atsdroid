@@ -102,7 +102,7 @@ public class AtsAutomation {
 
         //-------------------------------------------------------------
         // Bitmap factory default
-        // -------------------------------------------------------------
+        // ------------------------------------------------------------
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.RGB_565;
         //-------------------------------------------------------------
@@ -309,13 +309,6 @@ public class AtsAutomation {
     //----------------------------------------------------------------------------------------------------
 
     private boolean driverStarted = false;
-
-    public int getScreenCapturePort(){
-        if(screenCapture != null){
-            return screenCapture.getPort();
-        }
-        return -1;
-    }
 
     public void startDriver(){
         if(!driverStarted) {

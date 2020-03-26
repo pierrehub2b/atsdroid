@@ -6,12 +6,14 @@ import com.ats.atsdroid.server.AtsWebSocketServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 
 public class AtsRunnerUsb extends AtsRunner {
 
     private AtsWebSocketServer tcpServer;
     // private AtsWebSocketServer udpServer;
 
+    /* A REFACTO : NECESSAIRE POUR LE MODE UDP USB */
     public int udpPort = DEFAULT_PORT;
 
     @Override
@@ -33,15 +35,22 @@ public class AtsRunnerUsb extends AtsRunner {
         super.testMain();
 
         try {
+            /* A REFACTO : NECESSAIRE POUR LE MODE UDP USB */
             udpPort = Integer.parseInt(InstrumentationRegistry.getArguments().getString("udpPort"));
-        }catch(Exception e){}
 
-        tcpServer = new AtsWebSocketServer(new InetSocketAddress(port), automation);
-        tcpServer.start();
+            ServerSocket serverSocket = new ServerSocket(0);
+            int availablePort = serverSocket.getLocalPort();
+            serverSocket.close();
 
-        // udpServer = new AtsWebSocketServer(new InetSocketAddress(port+1), automation);
-        // udpServer.start();
+            tcpServer = new AtsWebSocketServer(new InetSocketAddress(availablePort), automation);
+            tcpServer.start();
 
-        while (running) { }
+            // udpServer = new AtsWebSocketServer(new InetSocketAddress(port+1), automation);
+            // udpServer.start();
+
+            while (running) { }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

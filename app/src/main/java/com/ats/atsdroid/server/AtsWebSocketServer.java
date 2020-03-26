@@ -5,7 +5,6 @@ import com.ats.atsdroid.element.AtsResponseJSON;
 import com.ats.atsdroid.utils.AtsAutomation;
 
 import org.java_websocket.WebSocket;
-import org.java_websocket.WebSocketFactory;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.json.JSONException;
@@ -29,7 +28,6 @@ public class AtsWebSocketServer extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        conn.send("Server started !");
     }
 
     @Override
@@ -45,12 +43,12 @@ public class AtsWebSocketServer extends WebSocketServer {
 
     @Override
     public void onError(WebSocket conn, Exception ex) {
-
+        AtsAutomation.sendLogs("ATS_WEB_SOCKET_SERVER_STOP");
     }
 
     @Override
     public void onStart() {
-
+        AtsAutomation.sendLogs("ATS_WEB_SOCKET_SERVER_START:" + this.getPort());
     }
 
     @Override
@@ -62,10 +60,10 @@ public class AtsWebSocketServer extends WebSocketServer {
 
             final RequestType request = RequestType.generate(in, userAgent);
 
-            if(request != null) {
+            if (request != null) {
                 final AtsResponse response = automation.executeRequest(request, false);
                 response.sendDataToUsbPort(conn);
-            } else{
+            } else {
                 final AtsResponse response = new AtsResponseJSON(new JSONObject("{\"status\":\"-11\",\"message\":\"unknown command\"}"));
                 response.sendDataToUsbPort(conn);
             }
