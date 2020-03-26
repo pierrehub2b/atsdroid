@@ -114,7 +114,7 @@ public abstract class AbstractAtsElement {
                     try {
                         automation.pressNumericKey(KeyEvent.KEYCODE_0 + Integer.parseInt(s));
                     } catch (NumberFormatException e) {
-                        automation.sendLogs("Exception on inputText:" + e.getMessage());
+                        automation.sendLogs("Exception on inputText:" + e.getMessage() + "\n");
                     }
                 }
             }
@@ -158,7 +158,7 @@ public abstract class AbstractAtsElement {
             }
             props.put("children", childrenArray);
         } catch (JSONException e) {
-            AtsAutomation.sendLogs("Error on getting attributes:" + e.getMessage());
+            AtsAutomation.sendLogs("Error on getting attributes:" + e.getMessage() + "\n");
         }
         return props;
     }

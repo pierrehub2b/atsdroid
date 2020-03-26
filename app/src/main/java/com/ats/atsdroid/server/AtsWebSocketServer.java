@@ -43,12 +43,12 @@ public class AtsWebSocketServer extends WebSocketServer {
 
     @Override
     public void onError(WebSocket conn, Exception ex) {
-        AtsAutomation.sendLogs("ATS_WEB_SOCKET_SERVER_STOP");
+        AtsAutomation.sendLogs("ATS_WEB_SOCKET_SERVER_STOP\n");
     }
 
     @Override
     public void onStart() {
-        AtsAutomation.sendLogs("ATS_WEB_SOCKET_SERVER_START:" + this.getPort());
+        AtsAutomation.sendLogs("ATS_WEB_SOCKET_SERVER_START:" + this.getPort() + "\n");
     }
 
     @Override
@@ -69,7 +69,7 @@ public class AtsWebSocketServer extends WebSocketServer {
             }
 
         } catch (IOException | JSONException e) {
-            AtsAutomation.sendLogs("IOError or JSONException on HttpServer:" + e.getMessage());
+            AtsAutomation.sendLogs("IOError or JSONException on HttpServer:" + e.getMessage() + "\n");
         }
     }
 }

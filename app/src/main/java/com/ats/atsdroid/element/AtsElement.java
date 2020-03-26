@@ -104,7 +104,7 @@ public class AtsElement extends AbstractAtsElement {
         try{
             base.put("attributes", new JSONObject(attributes));
         } catch (JSONException e) {
-            AtsAutomation.sendLogs("Error on putting attributes:" + e.getMessage());
+            AtsAutomation.sendLogs("Error on putting attributes:" + e.getMessage() + "\n");
         }
         return base;
     }

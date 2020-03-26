@@ -54,7 +54,7 @@ public class AtsHttpServer implements Runnable {
             }
 
         } catch (IOException | JSONException e) {
-            AtsAutomation.sendLogs("IOError or JSONException on HttpServer:" + e.getMessage());
+            AtsAutomation.sendLogs("IOError or JSONException on HttpServer:" + e.getMessage() + "\n");
         } finally {
             try {
                 if(in != null) {
@@ -62,7 +62,7 @@ public class AtsHttpServer implements Runnable {
                 }
                 socket.close(); // we close socket connection
             } catch (Exception e) {
-                AtsAutomation.sendLogs("Cannot close HTTPServer:" + e.getMessage());
+                AtsAutomation.sendLogs("Cannot close HTTPServer:" + e.getMessage() + "\n");
             }
         }
     }

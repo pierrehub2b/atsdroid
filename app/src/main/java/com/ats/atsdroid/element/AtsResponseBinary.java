@@ -35,7 +35,7 @@ public class AtsResponseBinary extends AtsResponse {
             conn.send(ByteBuffer.wrap(outputStream.toByteArray()));
             outputStream.close();
         } catch(IOException e) {
-            AtsAutomation.sendLogs("Error when sending binary data to udp server:" + e.getMessage());
+            AtsAutomation.sendLogs("Error when sending binary data to udp server:" + e.getMessage() + "\n");
         }
     }
 
@@ -63,7 +63,7 @@ public class AtsResponseBinary extends AtsResponse {
 
             bf.write(this.binaryData, 0, this.binaryData.length);
         }catch(IOException e){
-            AtsAutomation.sendLogs("Error when sending binary data to udp server:" + e.getMessage());
+            AtsAutomation.sendLogs("Error when sending binary data to udp server:" + e.getMessage() + "\n");
         } finally {
             try {
                 if(bf != null) {

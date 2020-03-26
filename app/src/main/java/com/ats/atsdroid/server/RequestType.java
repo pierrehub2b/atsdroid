@@ -85,7 +85,7 @@ public class RequestType {
                 try {
                     contentLength = Integer.parseInt(line.substring(CONTENT_LENGTH.length()));
                 } catch(NumberFormatException e){
-                    AtsAutomation.sendLogs("Error number format expression on HttpServer:" + e.getMessage());
+                    AtsAutomation.sendLogs("Error number format expression on HttpServer:" + e.getMessage() + "\n");
                 }
             } else if(line.startsWith(USER_AGENT)){
                 userAgent = line.substring(USER_AGENT.length()) + " " + userAgent;

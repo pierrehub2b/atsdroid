@@ -41,9 +41,9 @@ public class CaptureScreenServer implements Runnable  {
         try {
             serverSocket = new DatagramSocket();
             port = serverSocket.getLocalPort();
-            AtsAutomation.sendLogs("Setup UDP port: " + port);
+            AtsAutomation.sendLogs("Setup UDP port: " + port + "\n");
         } catch (SocketException e) {
-            AtsAutomation.sendLogs("Error socket exception:" + e.getMessage());
+            AtsAutomation.sendLogs("Error socket exception:" + e.getMessage() + "\n");
         }
     }
 
@@ -73,6 +73,7 @@ public class CaptureScreenServer implements Runnable  {
                 AtsAutomation.sendLogs("Port: " + port + "\n");
 
                 sendData(screen, currentPos, dataLength, packetSize, address, port);
+                AtsAutomation.sendLogs("Send Package: " + currentPos + " : " + dataLength + "\n");
 
                 while (dataLength > 0) {
                     currentPos += packetSize;
@@ -81,10 +82,12 @@ public class CaptureScreenServer implements Runnable  {
                         packetSize = dataLength;
                     }
                     sendData(screen, currentPos, dataLength, packetSize, address, port);
+                    AtsAutomation.sendLogs("Send Package: " + currentPos + " : " + dataLength + "\n");
                 }
 
+                AtsAutomation.sendLogs("End of sending package to editor\n");
             } catch (Exception e) {
-                AtsAutomation.sendLogs("Error on screen server:" + e.getMessage());
+                AtsAutomation.sendLogs("Error on screen server:" + e.getMessage() + "\n");
             }
         }
         serverSocket.close();

@@ -114,7 +114,7 @@ public class AtsAutomation {
 
         deviceSleep();
 
-        sendLogs("ATS_DRIVER_RUNNING");
+        sendLogs("ATS_DRIVER_RUNNING\n");
     }
 
     public static void sendLogs(String message){
@@ -136,17 +136,23 @@ public class AtsAutomation {
 
     public void reloadRoot(){
 
+        AtsAutomation.sendLogs("Reload root Object\n");
         AccessibilityNodeInfo rootNode = automation.getRootInActiveWindow();
+
         while (rootNode == null){
             wait(200);
             rootNode = automation.getRootInActiveWindow();
+            AtsAutomation.sendLogs("root node is null\n");
         }
+
+        AtsAutomation.sendLogs("Root node" + rootNode.getViewIdResourceName() + "\n");
         rootNode.refresh();
 
         try {
+            AtsAutomation.sendLogs("Create AtsRootElement\n");
             rootElement = new AtsRootElement(rootNode);
         }catch (Exception e){
-            AtsAutomation.sendLogs("Error on reloadRoot, retrying:" + e.getMessage());
+            AtsAutomation.sendLogs("Error on reloadRoot, retrying:" + e.getMessage() + "\n");
             wait(200);
             reloadRoot();
         }
@@ -213,7 +219,7 @@ public class AtsAutomation {
                     try {
                         version = pkgManager.getPackageInfo(pkg, 0).versionName;
                     } catch (PackageManager.NameNotFoundException e) {
-                        AtsAutomation.sendLogs("Error, cannot get version name:" + e.getMessage());
+                        AtsAutomation.sendLogs("Error, cannot get version name:" + e.getMessage() + "\n");
                     }
 
                     applications.add(new ApplicationInfo(
@@ -272,7 +278,7 @@ public class AtsAutomation {
         try {
             return device.executeShellCommand(value);
         }catch(Exception e){
-            AtsAutomation.sendLogs("Error exceute shell command:" + e.getMessage());
+            AtsAutomation.sendLogs("Error exceute shell command:" + e.getMessage() + "\n");
         }
         return "";
     }
@@ -338,7 +344,7 @@ public class AtsAutomation {
     public void forceStop(String log) {
         driverStarted = false;
 
-        sendLogs(log);
+        sendLogs(log + "\n");
 
         executeShell("svc power stayon false");
         launchAtsWidget();
@@ -444,7 +450,7 @@ public class AtsAutomation {
     //----------------------------------------------------------------------------------------------------
 
     public byte[] getScreenData() {
-        return getResizedScreenByteArray(Bitmap.CompressFormat.JPEG, 76);
+        return getResizedScreenByteArray(Bitmap.CompressFormat.JPEG, 75);
     }
 
     public byte[] getScreenDataHires() {
@@ -453,6 +459,7 @@ public class AtsAutomation {
 
     private byte[] getResizedScreenByteArray(Bitmap.CompressFormat cf, int level){
         Bitmap screen = getScreenBitmap();
+        AtsAutomation.sendLogs("Create Bitmap data\n");
         screen = Bitmap.createBitmap(screen, 0, 0, deviceInfo.getChannelWidth(), deviceInfo.getChannelHeight(), deviceInfo.getMatrix(), true);
         return getBitmapBytes(screen, cf, level);
     }
@@ -466,20 +473,25 @@ public class AtsAutomation {
         if (screen == null) {
             screen = createEmptyBitmap(deviceInfo.getChannelWidth(), deviceInfo.getChannelHeight());
         }
-        AtsAutomation.sendLogs("ScreenShotSize: " + screen.getWidth() + "x" + screen.getHeight());
+        AtsAutomation.sendLogs("ScreenShotSize: " + screen.getWidth() + "x" + screen.getHeight() + "\n");
         return screen;
     }
 
     private byte[] getBitmapBytes(Bitmap screen, Bitmap.CompressFormat cf, int level){
+        AtsAutomation.sendLogs("Get Bitmap bytes data\n");
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         screen.compress(cf, level, outputStream);
+        AtsAutomation.sendLogs("Compress\n");
         screen.recycle();
 
+        AtsAutomation.sendLogs("Copy bytes\n");
         final byte[] bytes = outputStream.toByteArray();
         try {
             outputStream.close();
-        }catch (IOException e){}
-
+        }catch (IOException e){
+            AtsAutomation.sendLogs("Error on Stream close\n");
+        }
+        AtsAutomation.sendLogs("Return bytes data\n");
         return bytes;
     }
 
@@ -575,7 +587,7 @@ public class AtsAutomation {
                     obj.put("applications", applications);
 
                 } catch (Exception e) {
-                    AtsAutomation.sendLogs("Error when getting device info:" + e.getMessage());
+                    AtsAutomation.sendLogs("Error when getting device info:" + e.getMessage() + "\n");
                     obj.put("status", "-99");
                     obj.put("message", e.getMessage());
                 }
@@ -674,7 +686,7 @@ public class AtsAutomation {
                                     offsetX = Integer.parseInt(req.parameters[2]);
                                     offsetY = Integer.parseInt(req.parameters[3]);
                                 } catch (NumberFormatException e) {
-                                    AtsAutomation.sendLogs("Error not enough parameters:" + e.getMessage());
+                                    AtsAutomation.sendLogs("Error not enough parameters:" + e.getMessage() + "\n");
                                 }
                             }
 
@@ -693,7 +705,7 @@ public class AtsAutomation {
                                         directionX = Integer.parseInt(req.parameters[4]);
                                         directionY = Integer.parseInt(req.parameters[5]);
                                     } catch (NumberFormatException e) {
-                                        AtsAutomation.sendLogs("Error not enough parameters:" + e.getMessage());
+                                        AtsAutomation.sendLogs("Error not enough parameters:" + e.getMessage() + "\n");
                                     }
                                 }
                                 element.swipe(this, offsetX, offsetY, directionX, directionY);
@@ -721,7 +733,7 @@ public class AtsAutomation {
             }
 
         } catch (JSONException e) {
-            sendLogs("Json Error -> " + e.getMessage());
+            sendLogs("Json Error -> " + e.getMessage() + "\n");
         }
 
         return new AtsResponseJSON(obj);

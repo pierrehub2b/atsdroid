@@ -54,7 +54,7 @@ public class DeviceInfo {
     }
 
     private DeviceInfo() {
-        AtsAutomation.sendLogs("Get bluetooth adapter name");
+        AtsAutomation.sendLogs("Get bluetooth adapter name\n");
         BluetoothAdapter btDevice = BluetoothAdapter.getDefaultAdapter();
         btAdapter = btDevice.getName();
         hostName = tryGetHostname();
@@ -92,7 +92,7 @@ public class DeviceInfo {
                     InetAddress inetAddress = enumInetAddress.nextElement();
 
                     if (inetAddress.isSiteLocalAddress()) {
-                        AtsAutomation.sendLogs("getting IP Addresse" + inetAddress.getHostName());
+                        AtsAutomation.sendLogs("getting IP Addresse" + inetAddress.getHostName() + "\n");
                         return inetAddress.getHostName();
                     }
                 }
@@ -152,30 +152,14 @@ public class DeviceInfo {
 
         deviceWidth = Math.round((float)channelWidth / metrics.scaledDensity);
         deviceHeight = Math.round((float)channelHeight / metrics.scaledDensity);
+
+        if(height == 1280) {
+            deviceWidth = Math.round((float)channelWidth / 2);
+            deviceHeight = Math.round((float)channelHeight / 2);
+        }
+
         matrix = new Matrix();
         matrix.preScale((float)deviceWidth / (float)channelWidth, (float)deviceHeight / (float)channelHeight);
-    }
-
-    public double scale(int height) {
-        if (height < 750) return 1.0;
-        if (height < 1000) return 1.25;
-        if (height < 1200) return 1.5;
-        if (height < 1400) return 1.75;
-        if (height < 1600) return 2;
-        if (height < 1800) return 2.25;
-        if (height < 2000) return 2.5;
-        if (height < 2200) return 2.75;
-        if (height < 2400) return 3;
-        if (height < 2600) return 3.25;
-        if (height < 2800) return 3.5;
-        if (height < 3000) return 3.75;
-        if (height < 3200) return 4;
-        if (height < 3400) return 4.25;
-        if (height < 3600) return 4.5;
-        if (height < 3800) return 4.75;
-        if (height < 4000) return 5;
-        if (height < 4200) return 5.25;
-        return 5.5;
     }
 
     public Matrix getMatrix(){
