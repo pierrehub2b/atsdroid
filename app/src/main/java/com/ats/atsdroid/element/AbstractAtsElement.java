@@ -114,7 +114,7 @@ public abstract class AbstractAtsElement {
                     try {
                         automation.pressNumericKey(KeyEvent.KEYCODE_0 + Integer.parseInt(s));
                     } catch (NumberFormatException e) {
-                        automation.sendLogs("Exception on inputText:" + e.getMessage());
+                        AtsAutomation.sendLogs("Exception on inputText:" + e.getMessage());
                     }
                 }
             }
