@@ -27,7 +27,7 @@ import java.net.SocketException;
 
 public class CaptureScreenServer implements Runnable  {
 
-    private static final int PACKET_SIZE = 2000;
+    private static final int PACKET_SIZE = 1492;
 
     private boolean running = true;
     private byte[] receiveData = new byte[1];
@@ -68,12 +68,7 @@ public class CaptureScreenServer implements Runnable  {
                 int packetSize = PACKET_SIZE;
                 int currentPos = 0;
 
-                AtsAutomation.sendLogs("screen length: " + screen.length + "\n");
-                AtsAutomation.sendLogs("InetAddress: " + address + "\n");
-                AtsAutomation.sendLogs("Port: " + port + "\n");
-
                 sendData(screen, currentPos, dataLength, packetSize, address, port);
-                AtsAutomation.sendLogs("Send Package: " + currentPos + " : " + dataLength + "\n");
 
                 while (dataLength > 0) {
                     currentPos += packetSize;
@@ -82,10 +77,7 @@ public class CaptureScreenServer implements Runnable  {
                         packetSize = dataLength;
                     }
                     sendData(screen, currentPos, dataLength, packetSize, address, port);
-                    AtsAutomation.sendLogs("Send Package: " + currentPos + " : " + dataLength + "\n");
                 }
-
-                AtsAutomation.sendLogs("End of sending package to editor\n");
             } catch (Exception e) {
                 AtsAutomation.sendLogs("Error on screen server:" + e.getMessage() + "\n");
             }

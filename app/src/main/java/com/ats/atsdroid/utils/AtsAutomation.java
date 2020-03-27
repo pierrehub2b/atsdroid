@@ -139,13 +139,13 @@ public class AtsAutomation {
         AtsAutomation.sendLogs("Reload root Object\n");
         AccessibilityNodeInfo rootNode = automation.getRootInActiveWindow();
 
-        while (rootNode == null){
+        while (rootNode == null && rootNode.getViewIdResourceName() == null){
             wait(200);
             rootNode = automation.getRootInActiveWindow();
             AtsAutomation.sendLogs("root node is null\n");
         }
 
-        AtsAutomation.sendLogs("Root node" + rootNode.getViewIdResourceName() + "\n");
+        AtsAutomation.sendLogs("Root node " + rootNode.getViewIdResourceName() + "\n");
         rootNode.refresh();
 
         try {
@@ -450,7 +450,7 @@ public class AtsAutomation {
     //----------------------------------------------------------------------------------------------------
 
     public byte[] getScreenData() {
-        return getResizedScreenByteArray(Bitmap.CompressFormat.JPEG, 75);
+        return getResizedScreenByteArray(Bitmap.CompressFormat.JPEG, 66);
     }
 
     public byte[] getScreenDataHires() {
@@ -459,7 +459,6 @@ public class AtsAutomation {
 
     private byte[] getResizedScreenByteArray(Bitmap.CompressFormat cf, int level){
         Bitmap screen = getScreenBitmap();
-        AtsAutomation.sendLogs("Create Bitmap data\n");
         screen = Bitmap.createBitmap(screen, 0, 0, deviceInfo.getChannelWidth(), deviceInfo.getChannelHeight(), deviceInfo.getMatrix(), true);
         return getBitmapBytes(screen, cf, level);
     }
@@ -473,25 +472,20 @@ public class AtsAutomation {
         if (screen == null) {
             screen = createEmptyBitmap(deviceInfo.getChannelWidth(), deviceInfo.getChannelHeight());
         }
-        AtsAutomation.sendLogs("ScreenShotSize: " + screen.getWidth() + "x" + screen.getHeight() + "\n");
         return screen;
     }
 
     private byte[] getBitmapBytes(Bitmap screen, Bitmap.CompressFormat cf, int level){
-        AtsAutomation.sendLogs("Get Bitmap bytes data\n");
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         screen.compress(cf, level, outputStream);
-        AtsAutomation.sendLogs("Compress\n");
         screen.recycle();
 
-        AtsAutomation.sendLogs("Copy bytes\n");
         final byte[] bytes = outputStream.toByteArray();
         try {
             outputStream.close();
         }catch (IOException e){
             AtsAutomation.sendLogs("Error on Stream close\n");
         }
-        AtsAutomation.sendLogs("Return bytes data\n");
         return bytes;
     }
 

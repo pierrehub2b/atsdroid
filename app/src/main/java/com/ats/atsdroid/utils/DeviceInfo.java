@@ -146,16 +146,8 @@ public class DeviceInfo {
         int navBarHeight = channelHeight - height;
         channelHeight -= navBarHeight;
 
-        AtsAutomation.sendLogs("Screen size: " + channelWidth + " x " + height + "\n");
-        AtsAutomation.sendLogs("Screen Ratio: " + metrics.scaledDensity + "\n");
-
         deviceWidth = Math.round((float)channelWidth / metrics.scaledDensity);
         deviceHeight = Math.round((float)channelHeight / metrics.scaledDensity);
-
-        if(height == 1280) {
-            deviceWidth = Math.round((float)channelWidth / 2);
-            deviceHeight = Math.round((float)channelHeight / 2);
-        }
 
         matrix = new Matrix();
         matrix.preScale((float)deviceWidth / (float)channelWidth, (float)deviceHeight / (float)channelHeight);
