@@ -48,7 +48,9 @@ public abstract class AbstractAtsElement {
         children = new AbstractAtsElement[count];
         for(int i=0; i<count; i++){
             AccessibilityNodeInfo info = node.getChild(i);
-            children[i] = new AtsElement(info);
+            if(info != null) {
+                children[i] = new AtsElement(info);
+            }
         }
     }
 
@@ -154,7 +156,9 @@ public abstract class AbstractAtsElement {
 
             final JSONArray childrenArray = new JSONArray();
             for (AbstractAtsElement child : children){
-                childrenArray.put(child.getJsonObject());
+                if(child != null) {
+                    childrenArray.put(child.getJsonObject());
+                }
             }
             props.put("children", childrenArray);
         } catch (JSONException e) {

@@ -27,7 +27,7 @@ import java.net.SocketException;
 
 public class CaptureScreenServer implements Runnable  {
 
-    private static final int PACKET_SIZE = 1492;
+    private static final int PACKET_SIZE = 1430;
 
     private boolean running = true;
     private byte[] receiveData = new byte[1];

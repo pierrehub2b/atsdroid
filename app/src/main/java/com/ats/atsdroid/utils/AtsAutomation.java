@@ -136,20 +136,16 @@ public class AtsAutomation {
 
     public void reloadRoot(){
 
-        AtsAutomation.sendLogs("Reload root Object\n");
         AccessibilityNodeInfo rootNode = automation.getRootInActiveWindow();
 
-        while (rootNode == null && rootNode.getViewIdResourceName() == null){
+        while (rootNode == null){
             wait(200);
             rootNode = automation.getRootInActiveWindow();
             AtsAutomation.sendLogs("root node is null\n");
         }
-
-        AtsAutomation.sendLogs("Root node " + rootNode.getViewIdResourceName() + "\n");
         rootNode.refresh();
 
         try {
-            AtsAutomation.sendLogs("Create AtsRootElement\n");
             rootElement = new AtsRootElement(rootNode);
         }catch (Exception e){
             AtsAutomation.sendLogs("Error on reloadRoot, retrying:" + e.getMessage() + "\n");
@@ -171,7 +167,9 @@ public class AtsAutomation {
 
     public AbstractAtsElement getElement(String id){
         found = null;
-        getElement(rootElement, id);
+        if(rootElement != null) {
+            getElement(rootElement, id);
+        }
         return found;
     }
 
