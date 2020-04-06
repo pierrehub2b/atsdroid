@@ -1,5 +1,7 @@
 package com.ats.atsdroid.server;
 
+import android.util.Log;
+
 import com.ats.atsdroid.element.AtsResponse;
 import com.ats.atsdroid.element.AtsResponseJSON;
 import com.ats.atsdroid.utils.AtsAutomation;
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class AtsWebSocketServer extends WebSocketServer {
 
@@ -28,22 +31,26 @@ public class AtsWebSocketServer extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
+        Log.d("WSS", "WebSocket Server get connection");
     }
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-
+        Log.d("WSS", "WebSocket Server closed : " + reason);
+        AtsAutomation.sendLogs("ATS_WEB_SOCKET_SERVER_STOP\n");
     }
 
     @Override
     public void onMessage(WebSocket conn, String message) {
         final byte[] screenshot = automation.getScreenData();
+        // Log.d("WSS", "Capture web socket send " + screenshot.length);
         conn.send(screenshot);
     }
 
     @Override
     public void onError(WebSocket conn, Exception ex) {
-        AtsAutomation.sendLogs("ATS_WEB_SOCKET_SERVER_STOP\n");
+        Log.e("WSS", "WebSocket Server error : " + ex);
+        AtsAutomation.sendLogs("ATS_WEB_SOCKET_SERVER_ERROR:" + ex + "\n");
     }
 
     @Override
@@ -55,17 +62,20 @@ public class AtsWebSocketServer extends WebSocketServer {
     public void onMessage(WebSocket conn, ByteBuffer message) {
 
         try {
-            final BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(message.array())));
+            final int socketID = message.getInt();
+            final byte[] mess = Arrays.copyOfRange(message.array(), 4, message.array().length);
+
+            final BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(mess)));
             final String userAgent = conn.getRemoteSocketAddress().getHostString();
 
             final RequestType request = RequestType.generate(in, userAgent);
 
             if (request != null) {
                 final AtsResponse response = automation.executeRequest(request, false);
-                response.sendDataToUsbPort(conn);
+                response.sendDataToUsbPort(socketID, conn);
             } else {
                 final AtsResponse response = new AtsResponseJSON(new JSONObject("{\"status\":\"-11\",\"message\":\"unknown command\"}"));
-                response.sendDataToUsbPort(conn);
+                response.sendDataToUsbPort(socketID, conn);
             }
 
         } catch (IOException | JSONException e) {
