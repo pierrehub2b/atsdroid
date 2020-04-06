@@ -35,6 +35,7 @@ import android.os.RemoteException;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.Configurator;
 import android.support.test.uiautomator.UiDevice;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -168,24 +169,26 @@ public class AtsAutomation {
     public AbstractAtsElement getElement(String id){
         found = null;
         if(rootElement != null) {
+            Log.d("ATSELEMENT", String.valueOf(rootElement));
             getElement(rootElement, id);
         }
         return found;
     }
 
     private void getElement(AbstractAtsElement parent, String id){
-        if(parent.getId().equals(id)){
+        Log.d("ATSELEMENT", parent + " " + id);
+        if (parent.getId().equals(id)) {
             found = parent;
-        }else{
+        } else {
             for (AbstractAtsElement child : parent.getChildren()) {
-                if(found == null) {
+                if (found == null) {
                     getElement(child, id);
                 }
             }
         }
     }
 
-    public JSONObject getRootObject(){
+    public JSONObject getRootObject() {
         return rootElement.getJsonObject();
     }
 

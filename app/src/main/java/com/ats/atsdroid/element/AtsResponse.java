@@ -10,7 +10,7 @@ public class AtsResponse {
         //overrided in childs
     }
 
-    public void sendDataToUsbPort(WebSocket conn) {
+    public void sendDataToUsbPort(int socketID, WebSocket conn) {
         //overrided in childs
     }
 }

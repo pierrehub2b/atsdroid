@@ -1,6 +1,7 @@
 package com.ats.atsdroid.element;
 
 import android.util.Base64;
+import android.util.Log;
 
 import com.ats.atsdroid.utils.AtsAutomation;
 
@@ -25,10 +26,22 @@ public class AtsResponseBinary extends AtsResponse {
     }
 
     @Override
-    public void sendDataToUsbPort(WebSocket conn) {
-        byte[] header = ("HTTP/1.1 200 OK\r\nServer: AtsDroid Driver\r\nDate: " + new Date() + "\r\nContent-type: application/octet-stream\r\nContent-length: "+ this.binaryData.length + "\r\n\r\n").getBytes();
-        try {
+    public void sendDataToUsbPort(int socketID, WebSocket conn) {
+        final byte[] header = ("HTTP/1.1 200 OK\r\nServer: AtsDroid Driver\r\nDate: " + new Date() + "\r\nContent-type: application/octet-stream\r\nContent-length: "+ this.binaryData.length + "\r\n\r\n").getBytes();
+        final byte[] data = this.binaryData;
+
+        final ByteBuffer buffer = ByteBuffer.allocate(4 + header.length + data.length);
+        buffer.putInt(socketID);
+        buffer.put(header);
+        buffer.put(data);
+
+        Log.d("WSS", "TCP web socket send binary " + 4 + header.length + data.length);
+
+        conn.send(buffer.array());
+
+        /* try {
             final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            outputStream.write(socketID);
             outputStream.write(header);
             outputStream.write(this.binaryData);
 
@@ -36,7 +49,7 @@ public class AtsResponseBinary extends AtsResponse {
             outputStream.close();
         } catch(IOException e) {
             AtsAutomation.sendLogs("Error when sending binary data to udp server:" + e.getMessage() + "\n");
-        }
+        } */
     }
 
     public void sendDataHttpServer(Socket socket) {
