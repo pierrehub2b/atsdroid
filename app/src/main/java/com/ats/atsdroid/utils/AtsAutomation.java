@@ -717,7 +717,7 @@ public class AtsAutomation {
                     obj.put("message", "missing element id");
                 }
             } else if (RequestType.SCREENSHOT.equals(req.type)) {
-                if(req.parameters.length > 0 && req.parameters[0].indexOf(RequestType.SCREENSHOT_HIRES) == 0){
+                if(req.parameters.length > 0/* && req.parameters[0].indexOf(RequestType.SCREENSHOT_HIRES) == 0*/){
                     return new AtsResponseBinary(getScreenDataHires());
                 }else{
                     return new AtsResponseBinary(getScreenData());

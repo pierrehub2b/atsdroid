@@ -25,19 +25,50 @@ public class AtsResponseBinary extends AtsResponse {
         this.binaryData = bytes;
     }
 
+    byte[] toBytes(int i)
+    {
+        byte[] result = new byte[4];
+
+        result[0] = (byte) (i >> 24);
+        result[1] = (byte) (i >> 16);
+        result[2] = (byte) (i >> 8);
+        result[3] = (byte) (i /*>> 0*/);
+
+        return result;
+    }
+
     @Override
     public void sendDataToUsbPort(int socketID, WebSocket conn) {
+        final byte[] socket = toBytes(socketID);
         final byte[] header = ("HTTP/1.1 200 OK\r\nServer: AtsDroid Driver\r\nDate: " + new Date() + "\r\nContent-type: application/octet-stream\r\nContent-length: "+ this.binaryData.length + "\r\n\r\n").getBytes();
         final byte[] data = this.binaryData;
 
-        final ByteBuffer buffer = ByteBuffer.allocate(4 + header.length + data.length);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
+        try {
+            outputStream.write(socket);
+            outputStream.write(header);
+            outputStream.write(data);
+
+            conn.send(outputStream.toByteArray());
+            // Log.d("WSS", "TCP web socket " + socketID + " send binary " + outputStream.count);
+
+            // outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        /* final ByteBuffer buffer = ByteBuffer.allocate(4 + header.length + data.length);
         buffer.putInt(socketID);
         buffer.put(header);
         buffer.put(data);
 
-        Log.d("WSS", "TCP web socket send binary " + 4 + header.length + data.length);
+        Integer a = 3;
+        Byte test = a.byteValue();
+        test.
 
-        conn.send(buffer.array());
+        Log.d("WSS", "TCP web socket " + socketID + " send binary " + buffer.array().length);
+
+        conn.send(buffer.array()); */
 
         /* try {
             final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

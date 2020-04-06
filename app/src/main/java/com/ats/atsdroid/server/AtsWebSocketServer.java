@@ -69,6 +69,7 @@ public class AtsWebSocketServer extends WebSocketServer {
             final String userAgent = conn.getRemoteSocketAddress().getHostString();
 
             final RequestType request = RequestType.generate(in, userAgent);
+            Log.d("WS", "Request " + socketID + " : " + request.userAgent + " " + request.type + " " + Arrays.toString(request.parameters) + " | Lenght : " + message.array().length);
 
             if (request != null) {
                 final AtsResponse response = automation.executeRequest(request, false);
