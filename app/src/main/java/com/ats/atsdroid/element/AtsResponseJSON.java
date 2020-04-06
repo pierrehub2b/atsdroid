@@ -1,5 +1,7 @@
 package com.ats.atsdroid.element;
 
+import android.util.Log;
+
 import com.ats.atsdroid.utils.AtsAutomation;
 
 import org.java_websocket.WebSocket;
@@ -45,17 +47,18 @@ public class AtsResponseJSON extends AtsResponse {
         }
     }
 
-    public void sendDataToUsbPort(WebSocket conn) {
-        try {
-            final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            outputStream.write(getHeader());
-            outputStream.write(getData());
+    public void sendDataToUsbPort(int socketID, WebSocket conn) {
+        final byte[] header = getHeader();
+        final byte[] data = getData();
 
-            conn.send(ByteBuffer.wrap(outputStream.toByteArray()));
-            outputStream.close();
-        } catch (IOException e) {
-            AtsAutomation.sendLogs("Error when sending binary data to udp server:" + e.getMessage() + "\n");
-        }
+        final ByteBuffer buffer = ByteBuffer.allocate(4 + header.length + data.length);
+        buffer.putInt(socketID);
+        buffer.put(header);
+        buffer.put(data);
+
+        Log.d("WSS", "TCP web socket send JSON " + buffer.array().length);
+
+        conn.send(buffer.array());
     }
 
     /* public void sendDataToUsbPort(PrintWriter writer) {
