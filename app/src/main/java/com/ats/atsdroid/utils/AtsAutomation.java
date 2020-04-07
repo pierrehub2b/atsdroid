@@ -181,7 +181,7 @@ public class AtsAutomation {
             found = parent;
         } else {
             for (AbstractAtsElement child : parent.getChildren()) {
-                if (found == null) {
+                if(found == null && child != null) {
                     getElement(child, id);
                 }
             }
