@@ -19,6 +19,7 @@ under the License.
 
 package com.ats.atsdroid.server;
 
+import android.util.Log;
 import com.ats.atsdroid.utils.AtsAutomation;
 
 import java.io.BufferedReader;
@@ -77,6 +78,7 @@ public class RequestType {
     public static RequestType generate(BufferedReader in, String userAgent) throws IOException {
         String line;
         int contentLength = 0;
+
 
         String input = in.readLine();
 

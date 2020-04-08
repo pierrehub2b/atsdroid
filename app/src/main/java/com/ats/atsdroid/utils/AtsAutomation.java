@@ -168,20 +168,18 @@ public class AtsAutomation {
 
     public AbstractAtsElement getElement(String id){
         found = null;
-        if(rootElement != null) {
-            Log.d("ATSELEMENT", String.valueOf(rootElement));
-            getElement(rootElement, id);
-        }
+        getElement(rootElement, id);
         return found;
     }
 
     private void getElement(AbstractAtsElement parent, String id){
-        Log.d("ATSELEMENT", parent + " " + id);
+        if (parent == null) { return; }
+
         if (parent.getId().equals(id)) {
             found = parent;
         } else {
             for (AbstractAtsElement child : parent.getChildren()) {
-                if(found == null && child != null) {
+                if (found == null) {
                     getElement(child, id);
                 }
             }
@@ -717,9 +715,9 @@ public class AtsAutomation {
                     obj.put("message", "missing element id");
                 }
             } else if (RequestType.SCREENSHOT.equals(req.type)) {
-                if(req.parameters.length > 0/* && req.parameters[0].indexOf(RequestType.SCREENSHOT_HIRES) == 0*/){
+                if (req.parameters.length > 0 && req.parameters[0].indexOf(RequestType.SCREENSHOT_HIRES) == 0) {
                     return new AtsResponseBinary(getScreenDataHires());
-                }else{
+                } else {
                     return new AtsResponseBinary(getScreenData());
                 }
             } else {
