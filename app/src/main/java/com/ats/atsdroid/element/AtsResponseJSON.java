@@ -1,16 +1,12 @@
 package com.ats.atsdroid.element;
 
-import android.util.Log;
-
 import com.ats.atsdroid.utils.AtsAutomation;
 
 import org.java_websocket.WebSocket;
 import org.json.JSONObject;
 
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -55,8 +51,6 @@ public class AtsResponseJSON extends AtsResponse {
         buffer.putInt(socketID);
         buffer.put(header);
         buffer.put(data);
-
-        Log.d("WSS", "TCP web socket send JSON " + buffer.array().length);
 
         conn.send(buffer.array());
     }

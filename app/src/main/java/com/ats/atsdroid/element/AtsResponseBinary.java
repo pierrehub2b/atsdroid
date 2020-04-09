@@ -1,24 +1,17 @@
 package com.ats.atsdroid.element;
 
-import android.util.Base64;
-import android.util.Log;
-
 import com.ats.atsdroid.utils.AtsAutomation;
 
 import org.java_websocket.WebSocket;
 
 import java.io.ByteArrayOutputStream;
-import java.io.PrintWriter;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Date;
 
 public class AtsResponseBinary extends AtsResponse {
-    private static final int PACKET_SIZE = 2000;
+    // private static final int PACKET_SIZE = 2000;
     private byte[] binaryData;
 
     public AtsResponseBinary(byte[] bytes) {
@@ -48,39 +41,11 @@ public class AtsResponseBinary extends AtsResponse {
             outputStream.write(socket);
             outputStream.write(header);
             outputStream.write(data);
-
             conn.send(outputStream.toByteArray());
-            // Log.d("WSS", "TCP web socket " + socketID + " send binary " + outputStream.count);
-
-            // outputStream.close();
+            outputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        /* final ByteBuffer buffer = ByteBuffer.allocate(4 + header.length + data.length);
-        buffer.putInt(socketID);
-        buffer.put(header);
-        buffer.put(data);
-
-        Integer a = 3;
-        Byte test = a.byteValue();
-        test.
-
-        Log.d("WSS", "TCP web socket " + socketID + " send binary " + buffer.array().length);
-
-        conn.send(buffer.array()); */
-
-        /* try {
-            final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            outputStream.write(socketID);
-            outputStream.write(header);
-            outputStream.write(this.binaryData);
-
-            conn.send(ByteBuffer.wrap(outputStream.toByteArray()));
-            outputStream.close();
-        } catch(IOException e) {
-            AtsAutomation.sendLogs("Error when sending binary data to udp server:" + e.getMessage() + "\n");
-        } */
     }
 
     public void sendDataHttpServer(Socket socket) {
@@ -106,7 +71,7 @@ public class AtsResponseBinary extends AtsResponse {
             }*/
 
             bf.write(this.binaryData, 0, this.binaryData.length);
-        }catch(IOException e){
+        } catch (IOException e) {
             AtsAutomation.sendLogs("Error when sending binary data to udp server:" + e.getMessage() + "\n");
         } finally {
             try {
@@ -121,7 +86,7 @@ public class AtsResponseBinary extends AtsResponse {
         }
     }
 
-    public void sendDataToUsbPort(PrintWriter writer) {
+    /* public void sendDataToUsbPort(PrintWriter writer) {
         writer.print(RESPONSESPLITTER + Base64.encodeToString(binaryData, Base64.NO_WRAP) + "\u001a");
     }
 
@@ -145,6 +110,6 @@ public class AtsResponseBinary extends AtsResponse {
         data[7] = (byte)(dataLength);
 
         return data;
-    }
+    } */
 
 }
