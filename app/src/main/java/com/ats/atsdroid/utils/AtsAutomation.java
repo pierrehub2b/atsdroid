@@ -35,7 +35,6 @@ import android.os.RemoteException;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.Configurator;
 import android.support.test.uiautomator.UiDevice;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -46,6 +45,8 @@ import com.ats.atsdroid.element.AtsResponse;
 import com.ats.atsdroid.element.AtsResponseBinary;
 import com.ats.atsdroid.element.AtsResponseJSON;
 import com.ats.atsdroid.element.AtsRootElement;
+import com.ats.atsdroid.scripting.ScriptingElementAction;
+import com.ats.atsdroid.scripting.ScriptingModeAction;
 import com.ats.atsdroid.server.RequestType;
 import com.ats.atsdroid.ui.AtsActivity;
 
@@ -277,7 +278,7 @@ public class AtsAutomation {
         try {
             return device.executeShellCommand(value);
         }catch(Exception e){
-            AtsAutomation.sendLogs("Error exceute shell command:" + e.getMessage() + "\n");
+            AtsAutomation.sendLogs("Error execute shell command:" + e.getMessage() + "\n");
         }
         return "";
     }
@@ -292,8 +293,17 @@ public class AtsAutomation {
     //----------------------------------------------------------------------------------------------------
 
     public void clickAt(int x, int y){
-        device.click(x, y);
-        wait(500);
+        clickAt(x, y, 1);
+    }
+
+    public void clickAt(int x, int y, int count) {
+        while (count > 0) {
+            device.click(x, y);
+            wait(150);
+            count--;
+        }
+
+        wait(350);
     }
 
     public void pressNumericKey(int key){
@@ -304,8 +314,16 @@ public class AtsAutomation {
     //----------------------------------------------------------------------------------------------------
     //----------------------------------------------------------------------------------------------------
 
-    public void swipe(int x, int y, int xTo, int yTo){
-        device.swipe(x, y, x + xTo, y + yTo, swipeSteps);
+    public void press(int x, int y, int duration) {
+        swipe(x, y, 0, 0, duration * 50);
+    }
+
+    public void swipe(int x, int y, int xTo, int yTo) {
+        swipe(x, y, xTo, yTo, swipeSteps);
+    }
+
+    public void swipe(int x, int y, int xTo, int yTo, int duration) {
+        device.swipe(x, y, x + xTo, y + yTo, duration);
         wait(swipeSteps*6);
     }
 
@@ -669,7 +687,18 @@ public class AtsAutomation {
                                 element.inputText(this, text);
                                 obj.put("message", "element send keys : " + text);
                             }
-                        } else {
+                        }
+
+                        else if (RequestType.SCRIPTING.equals(req.parameters[1])) {
+                            String script = req.parameters[2];
+                            ScriptingElementAction action = new ScriptingElementAction(element, script, this);
+                            action.execute();
+
+                            obj.put("status", "0");
+                            obj.put("message", "scripting on element");
+                        }
+
+                        else {
 
                             int offsetX = 0;
                             int offsetY = 0;
@@ -714,19 +743,36 @@ public class AtsAutomation {
                     obj.put("status", "-21");
                     obj.put("message", "missing element id");
                 }
-            } else if (RequestType.SCREENSHOT.equals(req.type)) {
+            }
+
+            else if (RequestType.SCREENSHOT.equals(req.type)) {
                 if (req.parameters.length > 0 && req.parameters[0].indexOf(RequestType.SCREENSHOT_HIRES) == 0) {
                     return new AtsResponseBinary(getScreenDataHires());
                 } else {
                     return new AtsResponseBinary(getScreenData());
                 }
-            } else {
+            }
+
+            else if (RequestType.SCRIPTING.equals(req.type)) {
+                if (req.parameters.length > 0) {
+                    String script = req.parameters[0];
+                    ScriptingModeAction action = new ScriptingModeAction(script, this);
+                    action.execute();
+                } else {
+                    obj.put("status", "-21");
+                    obj.put("message", "missing script");
+                }
+            }
+
+            else {
                 obj.put("status", "-12");
                 obj.put("message", "unknown command : " + req.type);
             }
 
         } catch (JSONException e) {
             sendLogs("Json Error -> " + e.getMessage() + "\n");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return new AtsResponseJSON(obj);

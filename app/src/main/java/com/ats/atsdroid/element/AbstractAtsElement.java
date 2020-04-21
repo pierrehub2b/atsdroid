@@ -68,6 +68,18 @@ public abstract class AbstractAtsElement {
     // Actions
     //--------------------------------------------------------------------------------------------
 
+    public void longPress(AtsAutomation automation, int duration) {
+        node.refresh();
+        node.getBoundsInScreen(bounds);
+        automation.press(bounds.left, bounds.top, duration);
+    }
+
+    public void click(AtsAutomation automation, int count) {
+        node.refresh();
+        node.getBoundsInScreen(bounds);
+        automation.clickAt(bounds.left, bounds.top, count);
+    }
+
     public void click(AtsAutomation automation, int offsetX, int offsetY){
         node.refresh();
         node.getBoundsInScreen(bounds);

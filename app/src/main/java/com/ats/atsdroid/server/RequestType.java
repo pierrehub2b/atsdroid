@@ -46,6 +46,7 @@ public class RequestType {
     public static final String PACKAGE = "package";
     public static final String CAPTURE = "capture";
     public static final String ELEMENT = "element";
+    public static final String SCRIPTING = "scripting";
     public static final String INPUT = "input";
     public static final String TAP = "tap";
     public static final String SWIPE = "swipe";
