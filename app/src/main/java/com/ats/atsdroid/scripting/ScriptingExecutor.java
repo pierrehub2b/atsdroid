@@ -6,8 +6,11 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 import android.provider.Settings;
+import android.support.annotation.Nullable;
 import android.support.test.InstrumentationRegistry;
 import com.ats.atsdroid.element.AbstractAtsElement;
+import com.ats.atsdroid.exceptions.DriverException;
+import com.ats.atsdroid.exceptions.SyntaxException;
 import com.ats.atsdroid.utils.AtsAutomation;
 
 import java.io.BufferedReader;
@@ -37,7 +40,8 @@ public class ScriptingExecutor {
         this.actions = script.split(";");
     }
 
-    public void execute(AbstractAtsElement element) throws Exception {
+    public @Nullable
+    String execute(AbstractAtsElement element) throws Exception {
 
         for (String action : actions)
         {
@@ -48,62 +52,60 @@ public class ScriptingExecutor {
 
                 try {
                     Method method = this.getClass().getDeclaredMethod(functionName, AbstractAtsElement.class, String.class);
-                    method.invoke(this, element, parameter);
+                    Object obj = method.invoke(this, element, parameter);
+                    if (obj instanceof String) {
+                        return (String)obj;
+                    }
                 } catch (NoSuchMethodException e) {
-                    String cmdOutput = executeShellCommand(action);
+                    return executeShellCommand(action);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace();
                 }
             } else {
-                // bad script
+                throw new SyntaxException(SyntaxException.INVALID_METHOD);
             }
         }
+
+        return null;
     }
 
-    private String executeShellCommand(String command) {
+    private String executeShellCommand(String command) throws Exception {
         StringBuffer output = new StringBuffer();
 
-        Process p;
-        try {
-            p = Runtime.getRuntime().exec(command);
-            p.waitFor();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        Process p = Runtime.getRuntime().exec(command);
+        p.waitFor();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-            String line = "";
-            while ((line = reader.readLine())!= null) {
-                output.append(line + "n");
-            }
-
-        } catch (Exception e) {
-            // e.printStackTrace();
+        String line = "";
+        while ((line = reader.readLine())!= null) {
+            output.append(line + "n");
         }
 
         return output.toString();
     }
 
-    private void longPress(AbstractAtsElement element, String value) throws Exception {
+    private void longPress(AbstractAtsElement element, String value) throws SyntaxException {
         try {
             int intValue = Integer.parseInt(value);
             element.longPress(automation, intValue);
         } catch (NumberFormatException e) {
-            // if value is not integer throw code exception
-            // e.printStackTrace();
+            throw new SyntaxException(SyntaxException.INVALID_PARAMETER);
         }
     }
 
-    private void tap(AbstractAtsElement element, String value) throws Exception {
+    private void tap(AbstractAtsElement element, String value) throws SyntaxException {
         try {
             int intValue = Integer.parseInt(value);
             element.click(automation, intValue);
         } catch (NumberFormatException e) {
-            // if value is not integer throw code exception
-            // e.printStackTrace();
+            throw new SyntaxException(SyntaxException.INVALID_PARAMETER);
         }
     }
 
-    private void setAirPlaneMode(AbstractAtsElement element, String value) {
+    private void setAirPlaneMode(AbstractAtsElement element, String value) throws DriverException {
         if (automation.usbMode == true) {
-            Boolean booleanValue = Boolean.valueOf(value);
+            Boolean booleanValue = Boolean.parseBoolean(value);
+
             // Settings.Global.putInt(getContentResolver(), Settings.Global.AIRPLANE_MODE_ON, booleanValue ? 1 : 0);
 
             ConnectivityManager mgr = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -114,33 +116,27 @@ public class ScriptingExecutor {
                         airPlane.invoke(mgr, booleanValue);
                     }
                 }
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                throw new DriverException(DriverException.UNKNOWN_ERROR);
             }
         } else {
-            // if usb mode 'on' throw driver exception
+            throw new DriverException(DriverException.UNAVAILABLE_FEATURE);
         }
-
-        // if value is not boolean throw code exception
     }
 
-    private void setWifiEnabled(AbstractAtsElement element, String value) {
+    private void setWifiEnabled(AbstractAtsElement element, String value) throws DriverException {
         if (automation.usbMode == true) {
-            Boolean booleanValue = Boolean.valueOf(value);
+            Boolean booleanValue = Boolean.parseBoolean(value);
 
             WifiManager wifi = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             wifi.setWifiEnabled(booleanValue);
         } else {
-            
+            throw new DriverException(DriverException.UNAVAILABLE_FEATURE);
         }
     }
 
-    private void setBluetoothEnabled(AbstractAtsElement element, String value){
-        Boolean booleanValue = Boolean.valueOf(value);
+    private void setBluetoothEnabled(AbstractAtsElement element, String value) {
+        Boolean booleanValue = Boolean.parseBoolean(value);
 
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (booleanValue) {
@@ -148,17 +144,15 @@ public class ScriptingExecutor {
         } else {
             bluetoothAdapter.disable();
         }
-
-        // if value is not boolean throw code exception
     }
 
-    private void setOrientation(AbstractAtsElement element, String value) {
+    private void setOrientation(AbstractAtsElement element, String value) throws SyntaxException {
         if (value == "portrait" || value == "landscape") {
             ContentResolver contentResolver = getContentResolver();
             Settings.System.putInt(contentResolver, Settings.System.ACCELEROMETER_ROTATION, 0);
             Settings.System.putInt(contentResolver, Settings.System.USER_ROTATION, 3);
         } else {
-            // if value not equals 'portrait' or 'landscape' throw code exception
+            throw new SyntaxException(SyntaxException.INVALID_PARAMETER);
         }
     }
 
