@@ -45,8 +45,7 @@ import com.ats.atsdroid.element.AtsResponse;
 import com.ats.atsdroid.element.AtsResponseBinary;
 import com.ats.atsdroid.element.AtsResponseJSON;
 import com.ats.atsdroid.element.AtsRootElement;
-import com.ats.atsdroid.scripting.ScriptingElementAction;
-import com.ats.atsdroid.scripting.ScriptingModeAction;
+import com.ats.atsdroid.scripting.ScriptingExecutor;
 import com.ats.atsdroid.server.RequestType;
 import com.ats.atsdroid.ui.AtsActivity;
 
@@ -611,15 +610,9 @@ public class AtsAutomation {
                         DeviceInfo.getInstance().driverInfoBase(obj, device.getDisplayHeight());
                         obj.put("status", "0");
 
-                        if(usbMode/* && req.parameters.length > 2*/) {
+                        if(usbMode) {
                             int screenCapturePort = ((AtsRunnerUsb)runner).udpPort;
                             obj.put("screenCapturePort", screenCapturePort);
-                            /*if(req.parameters[1].indexOf("true") > -1) {
-                                obj.put("udpEndPoint", req.parameters[2]);
-                                obj.put("screenCapturePort", screenCapturePort);
-                            } else {
-                                obj.put("screenCapturePort", req.parameters[3]);
-                            }*/
                         } else {
                             obj.put("screenCapturePort", screenCapture.getPort());
                         }
@@ -665,7 +658,14 @@ public class AtsAutomation {
 
             } else if (RequestType.ELEMENT.equals(req.type)) {
                 if (req.parameters.length > 2) {
-                    AbstractAtsElement element = getElement(req.parameters[0]);
+                    AbstractAtsElement element;
+                    String elementId = req.parameters[0];
+
+                    if (elementId.equals("[root]")) {
+                        element = rootElement;
+                    } else {
+                        element = getElement(elementId);
+                    }
 
                     if (element != null) {
 
@@ -691,7 +691,8 @@ public class AtsAutomation {
 
                         else if (RequestType.SCRIPTING.equals(req.parameters[1])) {
                             String script = req.parameters[2];
-                            ScriptingElementAction.execute(script, element, this);
+                            ScriptingExecutor executor = new ScriptingExecutor(this, script);
+                            executor.execute(element);
 
                             obj.put("status", "0");
                             obj.put("message", "scripting on element");
@@ -755,8 +756,8 @@ public class AtsAutomation {
             else if (RequestType.SCRIPTING.equals(req.type)) {
                 if (req.parameters.length > 0) {
                     String script = req.parameters[0];
-                    ScriptingModeAction action = new ScriptingModeAction(script, this);
-                    action.execute();
+                    ScriptingExecutor action = new ScriptingExecutor(this, script);
+                    action.execute(null);
                 } else {
                     obj.put("status", "-21");
                     obj.put("message", "missing script");

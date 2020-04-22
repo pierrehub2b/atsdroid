@@ -77,7 +77,7 @@ public abstract class AbstractAtsElement {
     public void click(AtsAutomation automation, int count) {
         node.refresh();
         node.getBoundsInScreen(bounds);
-        automation.clickAt(bounds.left, bounds.top, count);
+        automation.clickAt(bounds.centerX(), bounds.centerY(), count);
     }
 
     public void click(AtsAutomation automation, int offsetX, int offsetY){

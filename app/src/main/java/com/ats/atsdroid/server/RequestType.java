@@ -19,14 +19,10 @@ under the License.
 
 package com.ats.atsdroid.server;
 
-import android.util.Log;
 import com.ats.atsdroid.utils.AtsAutomation;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -69,12 +65,6 @@ public class RequestType {
             this.parameters = body.split("\n");
         }
     }
-
-    /* public RequestType(String value, String[] args){
-        this.type = value;
-        this.parameters = args;
-    } */
-
 
     public static RequestType generate(BufferedReader in, String userAgent) throws IOException {
         String line;
