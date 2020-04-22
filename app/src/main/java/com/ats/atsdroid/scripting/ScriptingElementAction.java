@@ -3,31 +3,22 @@ package com.ats.atsdroid.scripting;
 import com.ats.atsdroid.element.AbstractAtsElement;
 import com.ats.atsdroid.utils.AtsAutomation;
 
-public class ScriptingElementAction extends ScriptingAction {
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-    private static final String LONGPRESS = "longPress";
-    private static final String TAP = "tap";
+public class ScriptingElementAction {
+    private static Pattern tapPattern = Pattern.compile("/tap(d+)/");
+    private static Pattern longPressPattern = Pattern.compile("longPress\\(([^\\)]*)\\)");
 
-    private AbstractAtsElement element;
-    private int intValue;
+    public static void execute(String script, AbstractAtsElement element, AtsAutomation automation) throws Exception {
 
-    public ScriptingElementAction(AbstractAtsElement element, String script, AtsAutomation automation) throws Exception {
-        super(script, automation);
-        this.element = element;
-        this.intValue = Integer.valueOf(this.value);
-    }
-
-    @Override
-    public void execute() throws Exception {
-        switch (action) {
-            case LONGPRESS:
-                element.longPress(automation, intValue);
-                break;
-            case TAP:
-                element.click(automation, intValue);
-                break;
-            default:
-                throw new Exception("bad scripting action");
+        Matcher m = longPressPattern.matcher(script);
+        if (m.find()) {
+            int value = Integer.valueOf(m.group(1));
+            element.longPress(automation, value);
+            return;
         }
+
+        throw new Exception("bad scripting action");
     }
 }

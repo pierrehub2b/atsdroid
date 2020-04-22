@@ -71,7 +71,7 @@ public abstract class AbstractAtsElement {
     public void longPress(AtsAutomation automation, int duration) {
         node.refresh();
         node.getBoundsInScreen(bounds);
-        automation.press(bounds.left, bounds.top, duration);
+        automation.press(bounds.centerX(), bounds.centerY(), duration);
     }
 
     public void click(AtsAutomation automation, int count) {

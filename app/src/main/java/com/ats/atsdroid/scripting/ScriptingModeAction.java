@@ -16,9 +16,7 @@ public class ScriptingModeAction extends ScriptingAction {
         super(script, automation);
     }
 
-    @Override
     public void execute() throws Exception {
-        super.execute();
 
         switch (action) {
             case AIRPLANEMODE:

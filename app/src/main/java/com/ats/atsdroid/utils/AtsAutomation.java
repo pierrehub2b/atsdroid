@@ -691,8 +691,7 @@ public class AtsAutomation {
 
                         else if (RequestType.SCRIPTING.equals(req.parameters[1])) {
                             String script = req.parameters[2];
-                            ScriptingElementAction action = new ScriptingElementAction(element, script, this);
-                            action.execute();
+                            ScriptingElementAction.execute(script, element, this);
 
                             obj.put("status", "0");
                             obj.put("message", "scripting on element");

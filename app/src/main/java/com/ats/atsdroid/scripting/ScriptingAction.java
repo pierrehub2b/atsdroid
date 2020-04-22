@@ -16,5 +16,5 @@ public class ScriptingAction {
         this.automation = automation;
     }
 
-    public void execute() throws Exception {}
+
 }
