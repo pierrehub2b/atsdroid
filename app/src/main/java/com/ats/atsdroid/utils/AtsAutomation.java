@@ -45,6 +45,8 @@ import com.ats.atsdroid.element.AtsResponse;
 import com.ats.atsdroid.element.AtsResponseBinary;
 import com.ats.atsdroid.element.AtsResponseJSON;
 import com.ats.atsdroid.element.AtsRootElement;
+import com.ats.atsdroid.exceptions.DriverException;
+import com.ats.atsdroid.exceptions.SyntaxException;
 import com.ats.atsdroid.scripting.ScriptingExecutor;
 import com.ats.atsdroid.server.RequestType;
 import com.ats.atsdroid.ui.AtsActivity;
@@ -771,6 +773,20 @@ public class AtsAutomation {
 
         } catch (JSONException e) {
             sendLogs("Json Error -> " + e.getMessage() + "\n");
+        } catch (DriverException e) {
+            try {
+                obj.put("status", "-99");
+                obj.put("message", e.getMessage());
+            } catch (JSONException jsonException) {
+                jsonException.printStackTrace();
+            }
+        } catch (SyntaxException e) {
+            try {
+                obj.put("status", "-99");
+                obj.put("message", e.getMessage());
+            } catch (JSONException jsonException) {
+                jsonException.printStackTrace();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
