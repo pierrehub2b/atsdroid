@@ -71,7 +71,7 @@ public class ScriptingExecutor {
         return null;
     }
 
-    private String cmd(String command) throws Exception {
+    private String cmd(AbstractAtsElement element, String command) throws Exception {
         StringBuffer output = new StringBuffer();
 
         Process p = Runtime.getRuntime().exec(command);
