@@ -45,8 +45,6 @@ import com.ats.atsdroid.element.AtsResponse;
 import com.ats.atsdroid.element.AtsResponseBinary;
 import com.ats.atsdroid.element.AtsResponseJSON;
 import com.ats.atsdroid.element.AtsRootElement;
-import com.ats.atsdroid.exceptions.DriverException;
-import com.ats.atsdroid.exceptions.SyntaxException;
 import com.ats.atsdroid.scripting.ScriptingExecutor;
 import com.ats.atsdroid.server.RequestType;
 import com.ats.atsdroid.ui.AtsActivity;
@@ -694,10 +692,25 @@ public class AtsAutomation {
                         else if (RequestType.SCRIPTING.equals(req.parameters[1])) {
                             String script = req.parameters[2];
                             ScriptingExecutor executor = new ScriptingExecutor(this, script);
-                            executor.execute(element);
 
-                            obj.put("status", "0");
-                            obj.put("message", "scripting on element");
+                            try {
+                                String value = executor.execute(element);
+                                if (value == null) {
+                                    obj.put("message", "scripting on element");
+                                } else {
+                                    obj.put("message", value);
+                                }
+
+                                obj.put("status", "0");
+                            } /* catch (Exception e) {
+                                e.printStackTrace();
+
+                                obj.put("status", "-11");
+                                obj.put("message", "scripting error : " + e.getMessage());
+                            } */ catch (Throwable e) {
+                                obj.put("status", "-11");
+                                obj.put("message", "scripting error : " + e.getMessage());
+                            }
                         }
 
                         else {
@@ -755,17 +768,6 @@ public class AtsAutomation {
                 }
             }
 
-            else if (RequestType.SCRIPTING.equals(req.type)) {
-                if (req.parameters.length > 0) {
-                    String script = req.parameters[0];
-                    ScriptingExecutor action = new ScriptingExecutor(this, script);
-                    action.execute(null);
-                } else {
-                    obj.put("status", "-21");
-                    obj.put("message", "missing script");
-                }
-            }
-
             else {
                 obj.put("status", "-12");
                 obj.put("message", "unknown command : " + req.type);
@@ -773,21 +775,7 @@ public class AtsAutomation {
 
         } catch (JSONException e) {
             sendLogs("Json Error -> " + e.getMessage() + "\n");
-        } catch (DriverException e) {
-            try {
-                obj.put("status", "-99");
-                obj.put("message", e.getMessage());
-            } catch (JSONException jsonException) {
-                jsonException.printStackTrace();
-            }
-        } catch (SyntaxException e) {
-            try {
-                obj.put("status", "-99");
-                obj.put("message", e.getMessage());
-            } catch (JSONException jsonException) {
-                jsonException.printStackTrace();
-            }
-        } catch (Exception e) {
+        }  catch (Exception e) {
             e.printStackTrace();
         }
 
