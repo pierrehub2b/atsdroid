@@ -702,14 +702,9 @@ public class AtsAutomation {
                                 }
 
                                 obj.put("status", "0");
-                            } /* catch (Exception e) {
-                                e.printStackTrace();
-
-                                obj.put("status", "-11");
-                                obj.put("message", "scripting error : " + e.getMessage());
-                            } */ catch (Throwable e) {
-                                obj.put("status", "-11");
-                                obj.put("message", "scripting error : " + e.getMessage());
+                            } catch (Throwable e) {
+                                obj.put("status", "-13");
+                                obj.put("message", e.getMessage());
                             }
                         }
 
