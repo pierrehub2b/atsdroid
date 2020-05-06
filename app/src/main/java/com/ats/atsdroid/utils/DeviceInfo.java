@@ -56,7 +56,11 @@ public class DeviceInfo {
     private DeviceInfo() {
         AtsAutomation.sendLogs("Get bluetooth adapter name\n");
         BluetoothAdapter btDevice = BluetoothAdapter.getDefaultAdapter();
-        btAdapter = btDevice.getName();
+        if (btDevice != null) {
+            btAdapter = btDevice.getName();
+        }
+
+
         hostName = tryGetHostname();
         systemName = getAndroidVersion();
     }
