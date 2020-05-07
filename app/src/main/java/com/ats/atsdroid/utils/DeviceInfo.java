@@ -56,7 +56,11 @@ public class DeviceInfo {
     private DeviceInfo() {
         AtsAutomation.sendLogs("Get bluetooth adapter name\n");
         BluetoothAdapter btDevice = BluetoothAdapter.getDefaultAdapter();
-        btAdapter = btDevice.getName();
+        if (btDevice != null) {
+            btAdapter = btDevice.getName();
+        }
+
+
         hostName = tryGetHostname();
         systemName = getAndroidVersion();
     }
@@ -143,8 +147,8 @@ public class DeviceInfo {
         DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
         channelHeight = device.getDisplayHeight();
         channelWidth = device.getDisplayWidth();
-        int navBarHeight = channelHeight - height;
-        channelHeight -= navBarHeight;
+        //int navBarHeight = channelHeight - height;
+        //channelHeight -= navBarHeight;
 
         deviceWidth = Math.round((float)channelWidth / metrics.scaledDensity);
         deviceHeight = Math.round((float)channelHeight / metrics.scaledDensity);

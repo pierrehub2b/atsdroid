@@ -41,7 +41,7 @@ public class ScriptingExecutor {
     }
 
     public @Nullable
-    String execute(AbstractAtsElement element) throws Exception {
+    String execute(AbstractAtsElement element) throws Throwable {
 
         for (String action : actions)
         {
@@ -57,9 +57,11 @@ public class ScriptingExecutor {
                         return (String)obj;
                     }
                 } catch (NoSuchMethodException e) {
-                    return executeShellCommand(action);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
+                    throw new DriverException(DriverException.UNKNOWN_FUNCTION);
+                } catch (InvocationTargetException e) {
+                    throw e.getTargetException();
+                } catch (IllegalAccessException e) {
+                    throw e;
                 }
             } else {
                 throw new SyntaxException(SyntaxException.INVALID_METHOD);
@@ -69,7 +71,7 @@ public class ScriptingExecutor {
         return null;
     }
 
-    private String executeShellCommand(String command) throws Exception {
+    private String cmd(AbstractAtsElement element, String command) throws Exception {
         StringBuffer output = new StringBuffer();
 
         Process p = Runtime.getRuntime().exec(command);
