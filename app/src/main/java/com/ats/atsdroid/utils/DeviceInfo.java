@@ -147,8 +147,8 @@ public class DeviceInfo {
         DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
         channelHeight = device.getDisplayHeight();
         channelWidth = device.getDisplayWidth();
-        int navBarHeight = channelHeight - height;
-        channelHeight -= navBarHeight;
+        //int navBarHeight = channelHeight - height;
+        //channelHeight -= navBarHeight;
 
         deviceWidth = Math.round((float)channelWidth / metrics.scaledDensity);
         deviceHeight = Math.round((float)channelHeight / metrics.scaledDensity);
