@@ -45,6 +45,7 @@ import com.ats.atsdroid.element.AtsResponse;
 import com.ats.atsdroid.element.AtsResponseBinary;
 import com.ats.atsdroid.element.AtsResponseJSON;
 import com.ats.atsdroid.element.AtsRootElement;
+import com.ats.atsdroid.exceptions.DriverException;
 import com.ats.atsdroid.scripting.ScriptingExecutor;
 import com.ats.atsdroid.server.RequestType;
 import com.ats.atsdroid.ui.AtsActivity;
@@ -406,7 +407,7 @@ public class AtsAutomation {
         final ApplicationInfo app = getApplicationByPackage(pkg);
         if(app != null) {
 
-            if (locked == false) {
+            // if (locked == false) {
                 device.pressHome();
                 //app.start(context, device);
 
@@ -424,10 +425,10 @@ public class AtsAutomation {
 
                 reloadRoot();
 
-                locked = true;
+            /*   locked = true;
             } else {
                 throw new DriverException(DriverException.DEVICE_LOCKED);
-            }
+            } */
         }
         return app;
     }
