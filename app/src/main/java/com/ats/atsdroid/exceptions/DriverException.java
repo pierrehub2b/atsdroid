@@ -4,8 +4,9 @@ public class DriverException extends Exception {
 
     public static final String UNAVAILABLE_FEATURE = "Feature is unavailable";
     public static final String UNKNOWN_ERROR = "Driver error";
+    public static final String DEVICE_LOCKED = "Device is already in use";
 
-     public DriverException(String message) {
+    public DriverException(String message) {
         super(message);
     }
 }

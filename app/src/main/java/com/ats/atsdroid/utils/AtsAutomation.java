@@ -93,6 +93,8 @@ public class AtsAutomation {
     private AtsRunner runner;
     public int port;
 
+    private Boolean locked = false;
+
     public AtsAutomation(int port, AtsRunner runner, String ipAddress, Boolean usb){
         this.usbMode = usb;
         this.port = port;
@@ -402,13 +404,15 @@ public class AtsAutomation {
     //----------------------------------------------------------------------------------------------------
     //----------------------------------------------------------------------------------------------------
 
-    public ApplicationInfo startChannel(String pkg){
+    public ApplicationInfo startChannel(String pkg) throws DriverException {
         final ApplicationInfo app = getApplicationByPackage(pkg);
         if(app != null) {
-            device.pressHome();
-            //app.start(context, device);
 
-            executeShell("am start -W -S -f 4194304 -f 268435456 -f 65536 -f 1073741824 -f 2097152 -f 32 -n " + app.getPackageActivityName());
+            if (locked == false) {
+                device.pressHome();
+                //app.start(context, device);
+
+                executeShell("am start -W -S -f 4194304 -f 268435456 -f 65536 -f 1073741824 -f 2097152 -f 32 -n " + app.getPackageActivityName());
             /*
                 4194304 = FLAG_ACTIVITY_BROUGHT_TO_FRONT
                 268435456 = FLAG_ACTIVITY_NEW_TASK
@@ -420,7 +424,12 @@ public class AtsAutomation {
                 134217728 = FLAG_ACTIVITY_MULTIPLE_TASK
             */
 
-            reloadRoot();
+                reloadRoot();
+
+                locked = true;
+            } else {
+                throw new DriverException(DriverException.DEVICE_LOCKED);
+            }
         }
         return app;
     }
@@ -553,6 +562,9 @@ public class AtsAutomation {
                                 obj.put("status", "-51");
                                 obj.put("message", "app package not found : " + req.parameters[1]);
                             }
+                        } catch (DriverException e) {
+                            obj.put("status", "-19");
+                            obj.put("message", e.getMessage());
                         } catch (Exception e) {
                             System.err.println("Ats error : " + e.getMessage());
                         }
