@@ -6,6 +6,7 @@ import com.ats.atsdroid.element.AtsResponse;
 import com.ats.atsdroid.element.AtsResponseJSON;
 import com.ats.atsdroid.utils.AtsAutomation;
 
+import com.ats.atsdroid.utils.AtsClient;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -67,17 +68,28 @@ public class AtsWebSocketServer extends WebSocketServer {
 
             final BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(mess)));
             final String userAgent = conn.getRemoteSocketAddress().getHostString();
-
             final RequestType request = RequestType.generate(in, userAgent);
-            Log.d("WS", "Request " + socketID + " : " + request.userAgent + " " + request.type + " " + Arrays.toString(request.parameters) + " | Lenght : " + message.array().length);
 
-            if (request != null) {
-                final AtsResponse response = automation.executeRequest(request, false);
-                response.sendDataToUsbPort(socketID, conn);
+            final AtsResponse response;
+            if (request == null) {
+                response = new AtsResponseJSON(new JSONObject("{\"status\":\"-11\",\"message\":\"unknown command\"}"));
             } else {
-                final AtsResponse response = new AtsResponseJSON(new JSONObject("{\"status\":\"-11\",\"message\":\"unknown command\"}"));
-                response.sendDataToUsbPort(socketID, conn);
+                if (AtsClient.current != null) {
+                    if (request.token == null) {
+                        response = new AtsResponseJSON(new JSONObject("{\"status\":\"-20\",\"message\":\"Device already in use : " + AtsClient.current.userAgent + "\"}"));
+                    } else {
+                        if (request.token.equals(AtsClient.current.token)) {
+                            response = automation.executeRequest(request);
+                        } else {
+                            response = new AtsResponseJSON(new JSONObject("{\"status\":\"-20\",\"message\":\"Device already in use : " + AtsClient.current.userAgent + "\"}"));
+                        }
+                    }
+                } else {
+                    response = automation.executeRequest(request);
+                }
             }
+
+            response.sendDataToUsbPort(socketID, conn);
 
         } catch (IOException | JSONException e) {
             AtsAutomation.sendLogs("IOError or JSONException on HttpServer:" + e.getMessage() + "\n");

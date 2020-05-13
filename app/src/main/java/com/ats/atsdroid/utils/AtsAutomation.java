@@ -37,19 +37,13 @@ import android.support.test.uiautomator.Configurator;
 import android.support.test.uiautomator.UiDevice;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
-
 import com.ats.atsdroid.AtsRunner;
 import com.ats.atsdroid.AtsRunnerUsb;
-import com.ats.atsdroid.element.AbstractAtsElement;
-import com.ats.atsdroid.element.AtsResponse;
-import com.ats.atsdroid.element.AtsResponseBinary;
-import com.ats.atsdroid.element.AtsResponseJSON;
-import com.ats.atsdroid.element.AtsRootElement;
+import com.ats.atsdroid.element.*;
 import com.ats.atsdroid.exceptions.DriverException;
 import com.ats.atsdroid.scripting.ScriptingExecutor;
 import com.ats.atsdroid.server.RequestType;
 import com.ats.atsdroid.ui.AtsActivity;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -58,6 +52,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class AtsAutomation {
 
@@ -80,7 +75,7 @@ public class AtsAutomation {
 
     private final Context context = InstrumentationRegistry.getTargetContext();
 
-    private List<ApplicationInfo> applications = new ArrayList<>();
+    private final List<ApplicationInfo> applications = new ArrayList<>();
     private AtsRootElement rootElement;
     private CaptureScreenServer screenCapture;
 
@@ -89,10 +84,8 @@ public class AtsAutomation {
     //-------------------------------------------------------
     private AbstractAtsElement found = null;
 
-    private AtsRunner runner;
+    private final AtsRunner runner;
     public int port;
-
-    private Boolean locked = false;
 
     public AtsAutomation(int port, AtsRunner runner, String ipAddress, Boolean usb){
         this.usbMode = usb;
@@ -335,26 +328,33 @@ public class AtsAutomation {
 
     private boolean driverStarted = false;
 
-    public void startDriver(){
-        if(!driverStarted) {
-            driverStarted = true;
-
-            deviceWakeUp();
-            executeShell("svc power stayon true");
-
-            launchAtsWidget();
-
-            if(!usbMode) {
-                screenCapture = new CaptureScreenServer(this);
-                (new Thread(screenCapture)).start();
-            }
-
-            //sendLogs("ATS_DRIVER_START:" + user);
+    public String startDriver() throws DriverException {
+        if (driverStarted) {
+            // to-do: change exception
+            throw new DriverException(DriverException.DEVICE_LOCKED);
         }
+
+        Boolean alreadyInUse = AtsClient.current != null;
+        if (alreadyInUse) {
+            throw new DriverException(DriverException.DEVICE_LOCKED);
+        }
+
+        driverStarted = true;
+
+        deviceWakeUp();
+        executeShell("svc power stayon true");
+
+        launchAtsWidget();
+
+        if(!usbMode) {
+            screenCapture = new CaptureScreenServer(this);
+            (new Thread(screenCapture)).start();
+        }
+
+        return UUID.randomUUID().toString();
     }
 
-    public void stopDriver(){
-
+    public void stopDriver() throws DriverException {
         if(driverStarted) {
             forceStop("ATS_DRIVER_STOP");
         }
@@ -406,8 +406,6 @@ public class AtsAutomation {
     public ApplicationInfo startChannel(String pkg) throws DriverException {
         final ApplicationInfo app = getApplicationByPackage(pkg);
         if(app != null) {
-
-            // if (locked == false) {
                 device.pressHome();
                 //app.start(context, device);
 
@@ -424,11 +422,7 @@ public class AtsAutomation {
             */
 
                 reloadRoot();
-
-            /*   locked = true;
-            } else {
-                throw new DriverException(DriverException.DEVICE_LOCKED);
-            } */
+                sendLogs("ATS_DEVICE_LOCKED\n");
         }
         return app;
     }
@@ -539,12 +533,12 @@ public class AtsAutomation {
     private final static String ENTER_KEY = "$KEY-ENTER";
     private final static String TAB_KEY = "$KEY-TAB";
 
-    public AtsResponse executeRequest(RequestType req, Boolean usb) {
+    public AtsResponse executeRequest(RequestType req) {
 
-        JSONObject obj = new JSONObject();
+        JSONObject jsonObject = new JSONObject();
 
         try {
-            obj.put("type", req.type);
+            jsonObject.put("type", req.type);
 
             if (RequestType.APP.equals(req.type)) {
                 if (req.parameters.length > 1) {
@@ -552,53 +546,53 @@ public class AtsAutomation {
                         try {
                             final ApplicationInfo app = startChannel(req.parameters[1]);
                             if (app != null) {
-                                obj.put("status", "0");
-                                obj.put("message", "start app : " + app.getPackageName());
-                                obj.put("label", app.getLabel());
-                                obj.put("icon", app.getIcon());
-                                obj.put("version", app.getVersion());
+                                jsonObject.put("status", "0");
+                                jsonObject.put("message", "start app : " + app.getPackageName());
+                                jsonObject.put("label", app.getLabel());
+                                jsonObject.put("icon", app.getIcon());
+                                jsonObject.put("version", app.getVersion());
                             } else {
-                                obj.put("status", "-51");
-                                obj.put("message", "app package not found : " + req.parameters[1]);
+                                jsonObject.put("status", "-51");
+                                jsonObject.put("message", "app package not found : " + req.parameters[1]);
                             }
                         } catch (DriverException e) {
-                            obj.put("status", "-19");
-                            obj.put("message", e.getMessage());
+                            jsonObject.put("status", "-19");
+                            jsonObject.put("message", e.getMessage());
                         } catch (Exception e) {
                             System.err.println("Ats error : " + e.getMessage());
                         }
                     } else if (RequestType.STOP.equals(req.parameters[0])) {
                         stopChannel(req.parameters[1]);
-                        obj.put("status", "0");
-                        obj.put("message", "stop app : " + req.parameters[1]);
+                        jsonObject.put("status", "0");
+                        jsonObject.put("message", "stop app : " + req.parameters[1]);
                     } else if (RequestType.SWITCH.equals(req.parameters[0])) {
                         switchChannel(req.parameters[1]);
-                        obj.put("status", "0");
-                        obj.put("message", "switch app : " + req.parameters[1]);
+                        jsonObject.put("status", "0");
+                        jsonObject.put("message", "switch app : " + req.parameters[1]);
                     } else if (RequestType.INFO.equals(req.parameters[0])) {
                         final ApplicationInfo app = getApplicationInfo(req.parameters[1]);
                         if (app != null) {
-                            obj.put("status", "0");
-                            obj.put("info", app.getJson());
+                            jsonObject.put("status", "0");
+                            jsonObject.put("info", app.getJson());
                         } else {
-                            obj.put("status", "-81");
-                            obj.put("message", "app not found : " + req.parameters[1]);
+                            jsonObject.put("status", "-81");
+                            jsonObject.put("message", "app not found : " + req.parameters[1]);
                         }
                     }
                 }
             } else if (RequestType.INFO.equals(req.type)) {
 
                 try {
-                    DeviceInfo.getInstance().driverInfoBase(obj, device.getDisplayHeight());
+                    DeviceInfo.getInstance().driverInfoBase(jsonObject, device.getDisplayHeight());
 
-                    obj.put("status", "0");
-                    obj.put("message", "device capabilities");
-                    obj.put("id", DeviceInfo.getInstance().getDeviceId());
-                    obj.put("model", DeviceInfo.getInstance().getModel());
-                    obj.put("manufacturer", DeviceInfo.getInstance().getManufacturer());
-                    obj.put("brand", DeviceInfo.getInstance().getBrand());
-                    obj.put("version", DeviceInfo.getInstance().getVersion());
-                    obj.put("bluetoothName", DeviceInfo.getInstance().getBtAdapter());
+                    jsonObject.put("status", "0");
+                    jsonObject.put("message", "device capabilities");
+                    jsonObject.put("id", DeviceInfo.getInstance().getDeviceId());
+                    jsonObject.put("model", DeviceInfo.getInstance().getModel());
+                    jsonObject.put("manufacturer", DeviceInfo.getInstance().getManufacturer());
+                    jsonObject.put("brand", DeviceInfo.getInstance().getBrand());
+                    jsonObject.put("version", DeviceInfo.getInstance().getVersion());
+                    jsonObject.put("bluetoothName", DeviceInfo.getInstance().getBtAdapter());
 
                     List<ApplicationInfo> apps = getApplications();
 
@@ -607,67 +601,80 @@ public class AtsAutomation {
                         applications.put(appInfo.getJson());
                     }
 
-                    obj.put("applications", applications);
+                    jsonObject.put("applications", applications);
 
                 } catch (Exception e) {
                     AtsAutomation.sendLogs("Error when getting device info:" + e.getMessage() + "\n");
-                    obj.put("status", "-99");
-                    obj.put("message", e.getMessage());
+                    jsonObject.put("status", "-99");
+                    jsonObject.put("message", e.getMessage());
                 }
 
             } else if (RequestType.DRIVER.equals(req.type)) {
                 if (req.parameters.length > 0) {
                     if (RequestType.START.equals(req.parameters[0])) {
 
-                        startDriver();
-                        DeviceInfo.getInstance().driverInfoBase(obj, device.getDisplayHeight());
-                        obj.put("status", "0");
+                        try {
+                            String token = startDriver();
+                            jsonObject.put("token", token);
+                            jsonObject.put("status", "0");
+                            DeviceInfo.getInstance().driverInfoBase(jsonObject, device.getDisplayHeight());
 
-                        if(usbMode) {
-                            int screenCapturePort = ((AtsRunnerUsb)runner).udpPort;
-                            obj.put("screenCapturePort", screenCapturePort);
-                        } else {
-                            obj.put("screenCapturePort", screenCapture.getPort());
+                            AtsClient.current = new AtsClient(token, req.userAgent,null);
+
+                            if (usbMode) {
+                                int screenCapturePort = ((AtsRunnerUsb)runner).udpPort;
+                                jsonObject.put("screenCapturePort", screenCapturePort);
+                            } else {
+                                jsonObject.put("screenCapturePort", screenCapture.getPort());
+                            }
+                        } catch (DriverException e) {
+                            e.printStackTrace();
+
+                            jsonObject.put("message", e.getMessage() + " by " + AtsClient.current.userAgent);
+                            jsonObject.put("status", "-10");
                         }
+
                     } else if (RequestType.STOP.equals(req.parameters[0])) {
 
                         stopDriver();
-                        obj.put("status", "0");
-                        obj.put("message", "stop ats driver");
+                        AtsClient.current = null;
+
+                        jsonObject.put("status", "0");
+                        jsonObject.put("message", "stop ats driver");
 
                     } else if (RequestType.QUIT.equals(req.parameters[0])) {
 
                         stopDriver();
-                        obj.put("status", "0");
-                        obj.put("message", "close ats driver");
+                        jsonObject.put("status", "0");
+                        jsonObject.put("message", "close ats driver");
 
                         terminate();
 
-                        return new AtsResponseJSON(obj);
+                        return new AtsResponseJSON(jsonObject);
                     } else {
-                        obj.put("status", "-42");
-                        obj.put("message", "wrong driver action type : " + req.parameters[0]);
+                        jsonObject.put("status", "-42");
+                        jsonObject.put("message", "wrong driver action type : " + req.parameters[0]);
                     }
                 } else {
-                    obj.put("status", "-41");
-                    obj.put("message", "missing driver action");
+                    jsonObject.put("status", "-41");
+                    jsonObject.put("message", "missing driver action");
                 }
 
             } else if (RequestType.BUTTON.equals(req.type)) {
 
                 if (req.parameters.length > 0) {
                     deviceButton(req.parameters[0]);
-                    obj.put("status", "0");
-                    obj.put("message", "button : " + req.parameters[0]);
+                    jsonObject.put("status", "0");
+                    jsonObject.put("message", "button : " + req.parameters[0]);
                 } else {
-                    obj.put("status", "-31");
-                    obj.put("message", "missing button type");
+                    jsonObject.put("status", "-31");
+                    jsonObject.put("message", "missing button type");
                 }
 
             } else if (RequestType.CAPTURE.equals(req.type)) {
 
                 reloadRoot();
-                obj = getRootObject();
+                jsonObject = getRootObject();
 
             } else if (RequestType.ELEMENT.equals(req.type)) {
                 if (req.parameters.length > 2) {
@@ -684,21 +691,21 @@ public class AtsAutomation {
 
                         if (RequestType.INPUT.equals(req.parameters[1])) {
 
-                            obj.put("status", "0");
+                            jsonObject.put("status", "0");
 
                             String text = req.parameters[2];
                             if (EMPTY_DATA.equals(text)) {
-                                obj.put("message", "element clear text");
+                                jsonObject.put("message", "element clear text");
                                 element.clearText(this);
                             } else if(ENTER_KEY.equals(text)) {
-                                obj.put("message", "press enter on keyboard");
+                                jsonObject.put("message", "press enter on keyboard");
                                 enterKeyboard();
                             } else if(TAB_KEY.equals(text)) {
-                                obj.put("message", "hide keyboard");
+                                jsonObject.put("message", "hide keyboard");
                                 hideKeyboard();
                             } else {
                                 element.inputText(this, text);
-                                obj.put("message", "element send keys : " + text);
+                                jsonObject.put("message", "element send keys : " + text);
                             }
                         }
 
@@ -709,15 +716,15 @@ public class AtsAutomation {
                             try {
                                 String value = executor.execute(element);
                                 if (value == null) {
-                                    obj.put("message", "scripting on element");
+                                    jsonObject.put("message", "scripting on element");
                                 } else {
-                                    obj.put("message", value);
+                                    jsonObject.put("message", value);
                                 }
 
-                                obj.put("status", "0");
+                                jsonObject.put("status", "0");
                             } catch (Throwable e) {
-                                obj.put("status", "-13");
-                                obj.put("message", e.getMessage());
+                                jsonObject.put("status", "-13");
+                                jsonObject.put("message", e.getMessage());
                             }
                         }
 
@@ -739,8 +746,8 @@ public class AtsAutomation {
 
                                 element.click(this, offsetX, offsetY);
 
-                                obj.put("status", "0");
-                                obj.put("message", "click on element");
+                                jsonObject.put("status", "0");
+                                jsonObject.put("message", "click on element");
 
                             } else if (RequestType.SWIPE.equals(req.parameters[1])) {
                                 int directionX = 0;
@@ -754,17 +761,17 @@ public class AtsAutomation {
                                     }
                                 }
                                 element.swipe(this, offsetX, offsetY, directionX, directionY);
-                                obj.put("status", "0");
-                                obj.put("message", "swipe element to " + directionX + ":" + directionY);
+                                jsonObject.put("status", "0");
+                                jsonObject.put("message", "swipe element to " + directionX + ":" + directionY);
                             }
                         }
                     } else {
-                        obj.put("status", "-22");
-                        obj.put("message", "element not found");
+                        jsonObject.put("status", "-22");
+                        jsonObject.put("message", "element not found");
                     }
                 } else {
-                    obj.put("status", "-21");
-                    obj.put("message", "missing element id");
+                    jsonObject.put("status", "-21");
+                    jsonObject.put("message", "missing element id");
                 }
             }
 
@@ -777,8 +784,8 @@ public class AtsAutomation {
             }
 
             else {
-                obj.put("status", "-12");
-                obj.put("message", "unknown command : " + req.type);
+                jsonObject.put("status", "-12");
+                jsonObject.put("message", "unknown command : " + req.type);
             }
 
         } catch (JSONException e) {
@@ -787,6 +794,6 @@ public class AtsAutomation {
             e.printStackTrace();
         }
 
-        return new AtsResponseJSON(obj);
+        return new AtsResponseJSON(jsonObject);
     }
 }

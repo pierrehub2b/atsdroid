@@ -30,6 +30,7 @@ public class RequestType {
 
     private final static String CONTENT_LENGTH = "Content-Length: ";
     private final static String USER_AGENT = "User-Agent: ";
+    private final static String TOKEN = "Token: ";
 
     public static final String APP = "app";
     public static final String DRIVER = "driver";
@@ -39,7 +40,6 @@ public class RequestType {
     public static final String SWITCH = "switch";
     public static final String BUTTON = "button";
     public static final String INFO = "info";
-    public static final String PACKAGE = "package";
     public static final String CAPTURE = "capture";
     public static final String ELEMENT = "element";
     public static final String SCRIPTING = "scripting";
@@ -49,15 +49,16 @@ public class RequestType {
     public static final String SCREENSHOT = "screenshot";
     public static final String SCREENSHOT_HIRES = "hires";
 
-    private static Pattern requestPattern = Pattern.compile("POST /(.*) HTTP/1.1");
+    private static final Pattern requestPattern = Pattern.compile("POST /(.*) HTTP/1.1");
 
     public String type = "";
     public String[] parameters = new String[0];
-    public String userAgent = "";
+    public String userAgent;
+    public String token;
 
-    public RequestType(String value, String body, String userAgent) {
-
+    public RequestType(String value, String body, String userAgent, String token) {
         this.userAgent = userAgent;
+        this.token = token;
 
         Matcher match = requestPattern.matcher(value);
         if(match.find()){
@@ -69,10 +70,11 @@ public class RequestType {
     public static RequestType generate(BufferedReader in, String userAgent) throws IOException {
         String line;
         int contentLength = 0;
-
+        String token = null;
 
         String input = in.readLine();
 
+        StringBuilder userAgentBuilder = new StringBuilder(userAgent);
         while (!(line = in.readLine()).equals("")) {
             if (line.startsWith(CONTENT_LENGTH)) {
                 try {
@@ -81,9 +83,12 @@ public class RequestType {
                     AtsAutomation.sendLogs("Error number format expression on HttpServer:" + e.getMessage() + "\n");
                 }
             } else if(line.startsWith(USER_AGENT)){
-                userAgent = line.substring(USER_AGENT.length()) + " " + userAgent;
+                userAgentBuilder.insert(0, line.substring(USER_AGENT.length()) + " ");
+            } else if (line.startsWith(TOKEN)) {
+                token = line.substring(TOKEN.length());
             }
         }
+        userAgent = userAgentBuilder.toString();
 
         String postData = "";
         if (contentLength > 0) {
@@ -93,7 +98,7 @@ public class RequestType {
         }
 
         if (input != null) {
-            return new RequestType(input, postData, userAgent);
+            return new RequestType(input, postData, userAgent, token);
         } else {
             return null;
         }

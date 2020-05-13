@@ -7,30 +7,19 @@ import com.ats.atsdroid.element.AtsResponse;
 import com.ats.atsdroid.element.AtsResponseJSON;
 import com.ats.atsdroid.utils.AtsAutomation;
 
-import org.java_websocket.WebSocket;
-import org.java_websocket.handshake.ClientHandshake;
-import org.java_websocket.server.WebSocketServer;
+import com.ats.atsdroid.utils.AtsClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.StringTokenizer;
 
 public class AtsHttpServer implements Runnable {
-    private final static String CONTENT_LENGTH = "Content-Length: ";
-    private final static String USER_AGENT = "User-Agent: ";
-
-    private Socket socket;
-    private AtsAutomation automation;
+    private final Socket socket;
+    private final AtsAutomation automation;
 
     public AtsHttpServer(Socket socket, AtsAutomation automation) {
         this.socket = socket;
@@ -46,13 +35,26 @@ public class AtsHttpServer implements Runnable {
             final String userAgent = socket.getInetAddress().getHostAddress();
             final RequestType request = RequestType.generate(in, userAgent);
 
-            if(request != null) {
-                final AtsResponse response = automation.executeRequest(request, false);
-                response.sendDataHttpServer(socket);
-            } else{
-                new AtsResponseJSON(new JSONObject("{\"status\":\"-11\",\"message\":\"unknown command\"}")).sendDataHttpServer(socket);
+            final AtsResponse response;
+            if (request == null) {
+                response = new AtsResponseJSON(new JSONObject("{\"status\":\"-11\",\"message\":\"unknown command\"}"));
+            } else {
+                if (AtsClient.current != null) {
+                    if (request.token == null) {
+                        response = new AtsResponseJSON(new JSONObject("{\"status\":\"-20\",\"message\":\"Device already in use : " + AtsClient.current.userAgent + "\"}"));
+                    } else {
+                        if (request.token.equals(AtsClient.current.token)) {
+                            response = automation.executeRequest(request);
+                        } else {
+                            response = new AtsResponseJSON(new JSONObject("{\"status\":\"-20\",\"message\":\"Device already in use : " + AtsClient.current.userAgent + "\"}"));
+                        }
+                    }
+                } else {
+                    response = automation.executeRequest(request);
+                }
             }
 
+            response.sendDataHttpServer(socket);
         } catch (IOException | JSONException e) {
             AtsAutomation.sendLogs("IOError or JSONException on HttpServer:" + e.getMessage() + "\n");
         } finally {

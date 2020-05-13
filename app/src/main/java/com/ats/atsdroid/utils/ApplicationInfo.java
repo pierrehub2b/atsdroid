@@ -34,9 +34,9 @@ public class ApplicationInfo {
         this.activity = act;
         this.system = sys;
 
-        if(lbl != null){
+        if (lbl != null) {
             this.label = lbl.toString();
-        }else{
+        } else {
             this.label = pkg;
         }
 
