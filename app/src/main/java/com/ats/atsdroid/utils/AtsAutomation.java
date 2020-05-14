@@ -422,7 +422,6 @@ public class AtsAutomation {
             */
 
                 reloadRoot();
-                sendLogs("ATS_DEVICE_LOCKED\n");
         }
         return app;
     }
@@ -620,6 +619,7 @@ public class AtsAutomation {
                             DeviceInfo.getInstance().driverInfoBase(jsonObject, device.getDisplayHeight());
 
                             AtsClient.current = new AtsClient(token, req.userAgent,null);
+                            sendLogs("ATS_DRIVER_LOCKED_BY: " + req.userAgent + "\n");
 
                             if (usbMode) {
                                 int screenCapturePort = ((AtsRunnerUsb)runner).udpPort;
@@ -638,6 +638,7 @@ public class AtsAutomation {
 
                         stopDriver();
                         AtsClient.current = null;
+                        sendLogs("ATS_DRIVER_UNLOCKED\n");
 
                         jsonObject.put("status", "0");
                         jsonObject.put("message", "stop ats driver");
