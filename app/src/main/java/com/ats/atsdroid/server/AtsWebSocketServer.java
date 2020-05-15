@@ -74,7 +74,7 @@ public class AtsWebSocketServer extends WebSocketServer {
             if (request == null) {
                 response = new AtsResponseJSON(new JSONObject("{\"status\":\"-11\",\"message\":\"unknown command\"}"));
             } else {
-                if (AtsClient.current != null) {
+                /* if (AtsClient.current != null) {
                     if (request.token == null) {
                         response = new AtsResponseJSON(new JSONObject("{\"status\":\"-20\",\"message\":\"Device already in use : " + AtsClient.current.userAgent + "\"}"));
                     } else {
@@ -84,9 +84,9 @@ public class AtsWebSocketServer extends WebSocketServer {
                             response = new AtsResponseJSON(new JSONObject("{\"status\":\"-20\",\"message\":\"Device already in use : " + AtsClient.current.userAgent + "\"}"));
                         }
                     }
-                } else {
+                } else { */
                     response = automation.executeRequest(request);
-                }
+                // }
             }
 
             response.sendDataToUsbPort(socketID, conn);

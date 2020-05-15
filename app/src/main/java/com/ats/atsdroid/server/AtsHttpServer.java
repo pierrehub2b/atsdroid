@@ -39,7 +39,7 @@ public class AtsHttpServer implements Runnable {
             if (request == null) {
                 response = new AtsResponseJSON(new JSONObject("{\"status\":\"-11\",\"message\":\"unknown command\"}"));
             } else {
-                if (AtsClient.current != null) {
+                /* if (AtsClient.current != null) {
                     if (request.token == null) {
                         response = new AtsResponseJSON(new JSONObject("{\"status\":\"-20\",\"message\":\"Device already in use : " + AtsClient.current.userAgent + "\"}"));
                     } else {
@@ -49,9 +49,9 @@ public class AtsHttpServer implements Runnable {
                             response = new AtsResponseJSON(new JSONObject("{\"status\":\"-20\",\"message\":\"Device already in use : " + AtsClient.current.userAgent + "\"}"));
                         }
                     }
-                } else {
+                } else { */
                     response = automation.executeRequest(request);
-                }
+                // }
             }
 
             response.sendDataHttpServer(socket);
