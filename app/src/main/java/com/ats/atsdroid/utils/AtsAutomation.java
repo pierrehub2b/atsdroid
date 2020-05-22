@@ -80,6 +80,7 @@ public class AtsAutomation {
     private CaptureScreenServer screenCapture;
 
     public Boolean usbMode;
+    private int activeChannelsCount = 0;
 
     //-------------------------------------------------------
     private AbstractAtsElement found = null;
@@ -144,7 +145,7 @@ public class AtsAutomation {
 
         try {
             rootElement = new AtsRootElement(rootNode);
-        }catch (Exception e){
+        } catch (Exception e) {
             AtsAutomation.sendLogs("Error on reloadRoot, retrying:" + e.getMessage() + "\n");
             wait(200);
             reloadRoot();
@@ -162,13 +163,13 @@ public class AtsAutomation {
         deviceButton(ENTER);
     }
 
-    public AbstractAtsElement getElement(String id){
+    public AbstractAtsElement getElement(String id) {
         found = null;
         getElement(rootElement, id);
         return found;
     }
 
-    private void getElement(AbstractAtsElement parent, String id){
+    private void getElement(AbstractAtsElement parent, String id) {
         if (parent == null) { return; }
 
         if (parent.getId().equals(id)) {
@@ -186,7 +187,7 @@ public class AtsAutomation {
         return rootElement.getJsonObject();
     }
 
-    public List<ApplicationInfo> getApplications(){
+    public List<ApplicationInfo> getApplications() {
         loadApplications();
         return applications;
     }
@@ -195,7 +196,7 @@ public class AtsAutomation {
         return getApplicationByPackage(pkg);
     }
 
-    private void loadApplications(){
+    private void loadApplications() {
 
         final Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -232,7 +233,7 @@ public class AtsAutomation {
     //----------------------------------------------------------------------------------------------------
     //----------------------------------------------------------------------------------------------------
 
-    private ApplicationInfo getApplicationByPackage(String pkg){
+    private ApplicationInfo getApplicationByPackage(String pkg) {
         for (ApplicationInfo app : applications) {
             if (app.packageEquals(pkg)) {
                 return app;
@@ -269,7 +270,7 @@ public class AtsAutomation {
         }
     }
 
-    private String executeShell(String value){
+    private String executeShell(String value) {
         try {
             return device.executeShellCommand(value);
         }catch(Exception e){
@@ -278,7 +279,7 @@ public class AtsAutomation {
         return "";
     }
 
-    public void wait(int ms){
+    public void wait(int ms) {
         try {
             Thread.sleep(ms);
         }catch(InterruptedException e){}
@@ -329,15 +330,15 @@ public class AtsAutomation {
     private boolean driverStarted = false;
 
     public String startDriver() throws DriverException {
-        if (driverStarted) {
+        /* if (driverStarted) {
             // to-do: change exception
             throw new DriverException(DriverException.DEVICE_LOCKED);
-        }
+        } */
 
-        Boolean alreadyInUse = AtsClient.current != null;
+        /* Boolean alreadyInUse = AtsClient.current != null;
         if (alreadyInUse) {
             throw new DriverException(DriverException.DEVICE_LOCKED);
-        }
+        } */
 
         driverStarted = true;
 
@@ -380,7 +381,7 @@ public class AtsAutomation {
     // Driver start stop
     //----------------------------------------------------------------------------------------------------
 
-    private void deviceWakeUp(){
+    private void deviceWakeUp() {
         try {
             device.setOrientationNatural();
             device.freezeRotation();
@@ -388,14 +389,14 @@ public class AtsAutomation {
         }catch(RemoteException e){}
     }
 
-    private void deviceSleep(){
+    private void deviceSleep() {
         try {
             device.unfreezeRotation();
             device.sleep();
         }catch(RemoteException e){}
     }
 
-    public void terminate(){
+    public void terminate() {
         runner.stop();
         executeShell("am force-stop com.ats.atsdroid");
     }
@@ -519,7 +520,7 @@ public class AtsAutomation {
         paint.setARGB(255, 220, 220, 220);
         canvas.drawRect(0, 0, width, height, paint);
 
-        //canvas.translate(0, -statusBarHeight);
+        // canvas.translate(0, -statusBarHeight);
 
         rootElement.drawElements(canvas, context.getResources());
         return bitmap;
@@ -550,6 +551,8 @@ public class AtsAutomation {
                                 jsonObject.put("label", app.getLabel());
                                 jsonObject.put("icon", app.getIcon());
                                 jsonObject.put("version", app.getVersion());
+
+                                activeChannelsCount++;
                             } else {
                                 jsonObject.put("status", "-51");
                                 jsonObject.put("message", "app package not found : " + req.parameters[1]);
@@ -562,6 +565,12 @@ public class AtsAutomation {
                         }
                     } else if (RequestType.STOP.equals(req.parameters[0])) {
                         stopChannel(req.parameters[1]);
+                        activeChannelsCount--;
+                        if (activeChannelsCount == 0) {
+                            AtsClient.current = null;
+                            sendLogs("ATS_DRIVER_UNLOCKED\n");
+                        }
+
                         jsonObject.put("status", "0");
                         jsonObject.put("message", "stop app : " + req.parameters[1]);
                     } else if (RequestType.SWITCH.equals(req.parameters[0])) {
@@ -609,6 +618,21 @@ public class AtsAutomation {
                 }
 
             } else if (RequestType.DRIVER.equals(req.type)) {
+
+                if (AtsClient.current != null) {
+                    if (req.token == null) {
+                        jsonObject.put("message", "Device already in use : " + AtsClient.current.userAgent);
+                        jsonObject.put("status", "-20");
+                        return new AtsResponseJSON(jsonObject);
+                    } else {
+                        if (req.token.equals(AtsClient.current.token) == false) {
+                            jsonObject.put("message", "Device already in use : " + AtsClient.current.userAgent);
+                            jsonObject.put("status", "-20");
+                            return new AtsResponseJSON(jsonObject);
+                        }
+                    }
+                }
+
                 if (req.parameters.length > 0) {
                     if (RequestType.START.equals(req.parameters[0])) {
 
@@ -618,8 +642,8 @@ public class AtsAutomation {
                             jsonObject.put("status", "0");
                             DeviceInfo.getInstance().driverInfoBase(jsonObject, device.getDisplayHeight());
 
-                            // AtsClient.current = new AtsClient(token, req.userAgent,null);
-                            // sendLogs("ATS_DRIVER_LOCKED_BY: " + req.userAgent + "\n");
+                            AtsClient.current = new AtsClient(token, req.userAgent,null);
+                            sendLogs("ATS_DRIVER_LOCKED_BY: " + req.userAgent + "\n");
 
                             if (usbMode) {
                                 int screenCapturePort = ((AtsRunnerUsb)runner).udpPort;
@@ -637,8 +661,9 @@ public class AtsAutomation {
                     } else if (RequestType.STOP.equals(req.parameters[0])) {
 
                         stopDriver();
-                        // AtsClient.current = null;
-                        // sendLogs("ATS_DRIVER_UNLOCKED\n");
+                        AtsClient.current = null;
+                        activeChannelsCount = 0;
+                        sendLogs("ATS_DRIVER_UNLOCKED\n");
 
                         jsonObject.put("status", "0");
                         jsonObject.put("message", "stop ats driver");
