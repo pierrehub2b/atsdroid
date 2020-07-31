@@ -38,7 +38,7 @@ public class RequestType {
     public static final String START = "start";
     public static final String STOP = "stop";
     public static final String SWITCH = "switch";
-    public static final String BUTTON = "button";
+    public static final String SYS_BUTTON = "sysbutton";
     public static final String INFO = "info";
     public static final String CAPTURE = "capture";
     public static final String ELEMENT = "element";
@@ -46,6 +46,9 @@ public class RequestType {
     public static final String INPUT = "input";
     public static final String TAP = "tap";
     public static final String SWIPE = "swipe";
+    public static final String PRESS = "press";
+    public static final String SYS_PROPERTY_SET = "sysprop-set";
+    public static final String SYS_PROPERTY_GET = "sysprop-get";
     public static final String SCREENSHOT = "screenshot";
     public static final String SCREENSHOT_HIRES = "hires";
 

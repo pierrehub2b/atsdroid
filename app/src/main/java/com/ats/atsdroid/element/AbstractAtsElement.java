@@ -94,7 +94,6 @@ public abstract class AbstractAtsElement {
 
     public void clearText(AtsAutomation automation){
         if(node.getText() != null && node.getText().length() > 0) {
-
             int len = node.getText().length();
 
             final Bundle bdl = new Bundle();

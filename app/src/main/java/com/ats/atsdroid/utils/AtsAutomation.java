@@ -26,21 +26,21 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Paint;
+import android.graphics.*;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.Configurator;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
+import android.support.test.uiautomator.UiSelector;
+import android.text.TextUtils;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import com.ats.atsdroid.AtsRunner;
 import com.ats.atsdroid.AtsRunnerUsb;
 import com.ats.atsdroid.element.*;
-import com.ats.atsdroid.exceptions.DriverException;
 import com.ats.atsdroid.scripting.ScriptingExecutor;
 import com.ats.atsdroid.server.RequestType;
 import com.ats.atsdroid.ui.AtsActivity;
@@ -67,10 +67,9 @@ public class AtsAutomation {
     private static final int swipeSteps = 10;
 
     private final Instrumentation instrument = InstrumentationRegistry.getInstrumentation();
-    private UiDevice device;
+    private final UiDevice device;
     private final UiAutomation automation = instrument.getUiAutomation();
-
-
+    
     public final DeviceInfo deviceInfo = DeviceInfo.getInstance();
 
     private final Context context = InstrumentationRegistry.getTargetContext();
@@ -82,7 +81,6 @@ public class AtsAutomation {
     public Boolean usbMode;
     private int activeChannelsCount = 0;
 
-    //-------------------------------------------------------
     private AbstractAtsElement found = null;
 
     private final AtsRunner runner;
@@ -264,25 +262,24 @@ public class AtsAutomation {
         }else if(APP.equals(button)){
             try {
                 device.pressRecentApps();
-            }catch(RemoteException e){}
+            }catch(RemoteException ignored){}
         }else if(DELETE.equals(button)){
             deleteBackButton();
         }
     }
 
-    private String executeShell(String value) {
+    private void executeShell(String value) {
         try {
-            return device.executeShellCommand(value);
+            device.executeShellCommand(value);
         }catch(Exception e){
             AtsAutomation.sendLogs("Error execute shell command:" + e.getMessage() + "\n");
         }
-        return "";
     }
 
     public void wait(int ms) {
         try {
             Thread.sleep(ms);
-        }catch(InterruptedException e){}
+        }catch(InterruptedException ignored){}
     }
 
     //----------------------------------------------------------------------------------------------------
@@ -322,6 +319,10 @@ public class AtsAutomation {
         device.swipe(x, y, x + xTo, y + yTo, duration);
         wait(swipeSteps*6);
     }
+    
+    /* public void swipe(Point[] path, int duration) {
+        device.swipe(path, duration);
+    } */
 
     //----------------------------------------------------------------------------------------------------
     // Driver start stop
@@ -329,17 +330,7 @@ public class AtsAutomation {
 
     private boolean driverStarted = false;
 
-    public String startDriver() throws DriverException {
-        /* if (driverStarted) {
-            // to-do: change exception
-            throw new DriverException(DriverException.DEVICE_LOCKED);
-        } */
-
-        /* Boolean alreadyInUse = AtsClient.current != null;
-        if (alreadyInUse) {
-            throw new DriverException(DriverException.DEVICE_LOCKED);
-        } */
-
+    public String startDriver() {
         driverStarted = true;
 
         deviceWakeUp();
@@ -355,7 +346,7 @@ public class AtsAutomation {
         return UUID.randomUUID().toString();
     }
 
-    public void stopDriver() throws DriverException {
+    public void stopDriver() {
         if(driverStarted) {
             forceStop("ATS_DRIVER_STOP");
         }
@@ -386,14 +377,14 @@ public class AtsAutomation {
             device.setOrientationNatural();
             device.freezeRotation();
             device.wakeUp();
-        }catch(RemoteException e){}
+        }catch(RemoteException ignored){}
     }
 
     private void deviceSleep() {
         try {
             device.unfreezeRotation();
             device.sleep();
-        }catch(RemoteException e){}
+        } catch(RemoteException ignored){}
     }
 
     public void terminate() {
@@ -404,7 +395,7 @@ public class AtsAutomation {
     //----------------------------------------------------------------------------------------------------
     //----------------------------------------------------------------------------------------------------
 
-    public ApplicationInfo startChannel(String pkg) throws DriverException {
+    public ApplicationInfo startChannel(String pkg) {
         final ApplicationInfo app = getApplicationByPackage(pkg);
         if(app != null) {
                 device.pressHome();
@@ -427,13 +418,13 @@ public class AtsAutomation {
         return app;
     }
 
-    public String getActivityName(String pkg){
+    /* public String getActivityName(String pkg){
         final ApplicationInfo app = getApplicationByPackage(pkg);
         if(app != null) {
             return app.getPackageActivityName();
         }
         return "";
-    }
+    } */
 
     public void switchChannel(String pkg){
 
@@ -470,23 +461,15 @@ public class AtsAutomation {
     //----------------------------------------------------------------------------------------------------
 
     public byte[] getScreenData() {
-        return getResizedScreenByteArray(Bitmap.CompressFormat.JPEG, 66);
+        Bitmap screen = getScreenBitmap();
+        screen = Bitmap.createBitmap(screen, 0, 0, deviceInfo.getChannelWidth(), deviceInfo.getChannelHeight(), deviceInfo.getMatrix(), true);
+        return getBitmapBytes(screen, Bitmap.CompressFormat.JPEG, 66);
     }
 
     public byte[] getScreenDataHires() {
-        return getScreenByteArray(Bitmap.CompressFormat.PNG, 100);
+        return getBitmapBytes(getScreenBitmap(), Bitmap.CompressFormat.PNG, 100);
     }
-
-    private byte[] getResizedScreenByteArray(Bitmap.CompressFormat cf, int level){
-        Bitmap screen = getScreenBitmap();
-        screen = Bitmap.createBitmap(screen, 0, 0, deviceInfo.getChannelWidth(), deviceInfo.getChannelHeight(), deviceInfo.getMatrix(), true);
-        return getBitmapBytes(screen, cf, level);
-    }
-
-    private byte[] getScreenByteArray(Bitmap.CompressFormat cf, int level){
-        return getBitmapBytes(getScreenBitmap(), cf, level);
-    }
-
+    
     private Bitmap getScreenBitmap(){
         Bitmap screen = automation.takeScreenshot();
         if (screen == null) {
@@ -536,7 +519,7 @@ public class AtsAutomation {
     public AtsResponse executeRequest(RequestType req) {
 
         JSONObject jsonObject = new JSONObject();
-
+        
         try {
             jsonObject.put("type", req.type);
 
@@ -557,9 +540,6 @@ public class AtsAutomation {
                                 jsonObject.put("status", "-51");
                                 jsonObject.put("message", "app package not found : " + req.parameters[1]);
                             }
-                        } catch (DriverException e) {
-                            jsonObject.put("status", "-19");
-                            jsonObject.put("message", e.getMessage());
                         } catch (Exception e) {
                             System.err.println("Ats error : " + e.getMessage());
                         }
@@ -596,7 +576,14 @@ public class AtsAutomation {
                     jsonObject.put("status", "0");
                     jsonObject.put("message", "device capabilities");
                     jsonObject.put("id", DeviceInfo.getInstance().getDeviceId());
-                    jsonObject.put("model", DeviceInfo.getInstance().getModel());
+
+                    String model = DeviceInfo.getInstance().getModel();
+                    if (model.startsWith("GM")) {
+                        String[] parameters = model.split("_");
+                        model = parameters[2];
+                    }
+
+                    jsonObject.put("model", model);
                     jsonObject.put("manufacturer", DeviceInfo.getInstance().getManufacturer());
                     jsonObject.put("brand", DeviceInfo.getInstance().getBrand());
                     jsonObject.put("version", DeviceInfo.getInstance().getVersion());
@@ -625,7 +612,7 @@ public class AtsAutomation {
                         jsonObject.put("status", "-20");
                         return new AtsResponseJSON(jsonObject);
                     } else {
-                        if (req.token.equals(AtsClient.current.token) == false) {
+                        if (!req.token.equals(AtsClient.current.token)) {
                             jsonObject.put("message", "Device already in use : " + AtsClient.current.userAgent);
                             jsonObject.put("status", "-20");
                             return new AtsResponseJSON(jsonObject);
@@ -635,29 +622,22 @@ public class AtsAutomation {
 
                 if (req.parameters.length > 0) {
                     if (RequestType.START.equals(req.parameters[0])) {
-
-                        try {
-                            String token = startDriver();
-                            jsonObject.put("token", token);
-                            jsonObject.put("status", "0");
-                            DeviceInfo.getInstance().driverInfoBase(jsonObject, device.getDisplayHeight());
-
-                            AtsClient.current = new AtsClient(token, req.userAgent,null);
-                            sendLogs("ATS_DRIVER_LOCKED_BY: " + req.userAgent + "\n");
-
-                            if (usbMode) {
-                                int screenCapturePort = ((AtsRunnerUsb)runner).udpPort;
-                                jsonObject.put("screenCapturePort", screenCapturePort);
-                            } else {
-                                jsonObject.put("screenCapturePort", screenCapture.getPort());
-                            }
-                        } catch (DriverException e) {
-                            e.printStackTrace();
-
-                            jsonObject.put("message", e.getMessage() + " by " + AtsClient.current.userAgent);
-                            jsonObject.put("status", "-10");
+    
+                        String token = startDriver();
+                        jsonObject.put("token", token);
+                        jsonObject.put("status", "0");
+                        DeviceInfo.getInstance().driverInfoBase(jsonObject, device.getDisplayHeight());
+    
+                        AtsClient.current = new AtsClient(token, req.userAgent,null);
+                        sendLogs("ATS_DRIVER_LOCKED_BY: " + req.userAgent + "\n");
+    
+                        if (usbMode) {
+                            int screenCapturePort = ((AtsRunnerUsb)runner).udpPort;
+                            jsonObject.put("screenCapturePort", screenCapturePort);
+                        } else {
+                            jsonObject.put("screenCapturePort", screenCapture.getPort());
                         }
-
+    
                     } else if (RequestType.STOP.equals(req.parameters[0])) {
 
                         stopDriver();
@@ -686,27 +666,68 @@ public class AtsAutomation {
                     jsonObject.put("message", "missing driver action");
                 }
 
-            } else if (RequestType.BUTTON.equals(req.type)) {
-
-                if (req.parameters.length > 0) {
-                    deviceButton(req.parameters[0]);
-                    jsonObject.put("status", "0");
-                    jsonObject.put("message", "button : " + req.parameters[0]);
+            } else if (RequestType.SYS_BUTTON.equals(req.type)) {
+                if (req.parameters.length == 1) {
+                    String button = req.parameters[0];
+                    try {
+                        boolean pressed = SysButton.pressButtonType(button);
+                        if (pressed) {
+                            jsonObject.put("status", "0");
+                            jsonObject.put("message", "button : " + TextUtils.join(", ", req.parameters));
+                        } else {
+                            jsonObject.put("status", "-31");
+                            jsonObject.put("message", "unknown button type");
+                        }
+                    } catch (IllegalArgumentException e) {
+                        jsonObject.put("status", "-31");
+                        jsonObject.put("message", "unknown button type");
+                    }
                 } else {
                     jsonObject.put("status", "-31");
                     jsonObject.put("message", "missing button type");
                 }
-
-            } else if (RequestType.CAPTURE.equals(req.type)) {
-
+            }
+            
+            else if (RequestType.SYS_PROPERTY_GET.equals(req.type)) {
+                if (req.parameters.length == 1) {
+                    String propertyName = req.parameters[0];
+                    try {
+                        String value = Sysprop.getPropertyValue(propertyName);
+                        jsonObject.put("message", value);
+                        jsonObject.put("status", "0");
+                    } catch (IllegalStateException | IllegalArgumentException | JSONException e) {
+                        jsonObject.put("message", "unknown property");
+                        jsonObject.put("status", "-1");
+                    }
+                } else {
+                    jsonObject.put("status", "-31");
+                    jsonObject.put("message", "missing value parameter");
+                }
+            }
+            
+            else if (RequestType.SYS_PROPERTY_SET.equals(req.type)) {
+                if (req.parameters.length == 2) {
+                    String propertyName = req.parameters[0];
+                    String propertyValue = req.parameters[1];
+                    Sysprop.setProperty(propertyName, propertyValue);
+                    jsonObject.put("message", "set " + propertyName + " value");
+                    jsonObject.put("status", "0");
+                } else {
+                    jsonObject.put("status", "-31");
+                    jsonObject.put("message", "missing parameters");
+                }
+            }
+            
+            else if (RequestType.CAPTURE.equals(req.type)) {
                 reloadRoot();
                 jsonObject = getRootObject();
-
-            } else if (RequestType.ELEMENT.equals(req.type)) {
+            }
+            
+            else if (RequestType.ELEMENT.equals(req.type)) {
                 if (req.parameters.length > 2) {
                     AbstractAtsElement element;
                     String elementId = req.parameters[0];
-
+                    
                     if (elementId.equals("[root]")) {
                         element = rootElement;
                     } else {
@@ -751,6 +772,15 @@ public class AtsAutomation {
                             } catch (Throwable e) {
                                 jsonObject.put("status", "-13");
                                 jsonObject.put("message", e.getMessage());
+                            }
+                        }
+
+                        else if (RequestType.PRESS.equals(req.parameters[1])) {
+                            UiObject object = device.findObject(new UiSelector().resourceId(elementId));
+                            String[] info = req.parameters[2].split(":");
+                            for (String pathInfo : info) {
+                                MotionEvent.PointerCoords[] coords = parsePath(pathInfo);
+                                object.performMultiPointerGesture(coords, coords);
                             }
                         }
 
@@ -819,7 +849,26 @@ public class AtsAutomation {
         }  catch (Exception e) {
             e.printStackTrace();
         }
-
+        
         return new AtsResponseJSON(jsonObject);
+    }
+    
+    private MotionEvent.PointerCoords[] parsePath(String pathInfo) {
+        ArrayList<MotionEvent.PointerCoords> coordsArray = new ArrayList<>();
+        String[] coordinatesString = pathInfo.split(";");
+        for (String coordinateInfo: coordinatesString) {
+            String[] elements = coordinateInfo.split(",");
+            int x = Integer.parseInt(elements[0]);
+            int y = Integer.parseInt(elements[1]);
+            MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
+            coords.x = x;
+            coords.y = y;
+            coords.pressure = 1;
+            coords.size = 1;
+            
+            coordsArray.add(coords);
+        }
+    
+        return coordsArray.toArray(new MotionEvent.PointerCoords[0]);
     }
 }
