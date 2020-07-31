@@ -35,7 +35,7 @@ import java.util.Map;
 public class AtsElement extends AbstractAtsElement {
 
     private Map<String, String> attributes = new HashMap<String, String>();
-
+    
     public AtsElement(final AccessibilityNodeInfo node){
 
         String data = node.getClassName().toString();
@@ -82,6 +82,7 @@ public class AtsElement extends AbstractAtsElement {
         }
 
         data = node.getViewIdResourceName();
+        this.resourceId = data;
         if(data != null){
             final int idx = data.indexOf(":id/");
             if(idx > -1){
@@ -108,5 +109,9 @@ public class AtsElement extends AbstractAtsElement {
             AtsAutomation.sendLogs("Error on putting attributes:" + e.getMessage() + "\n");
         }
         return base;
+    }
+    
+    public String getResourceId() {
+        return resourceId;
     }
 }

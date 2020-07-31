@@ -27,6 +27,7 @@ import java.util.UUID;
 public abstract class AbstractAtsElement {
 
     protected String id = UUID.randomUUID().toString();
+    protected String resourceId;
     protected String tag;
     protected boolean clickable;
     protected Rect bounds = new Rect(0,0,0,0);
@@ -60,6 +61,10 @@ public abstract class AbstractAtsElement {
 
     public String getId(){
         return id;
+    }
+    
+    public String getResourceId() {
+        return resourceId;
     }
 
     public String getViewId(){return null;}

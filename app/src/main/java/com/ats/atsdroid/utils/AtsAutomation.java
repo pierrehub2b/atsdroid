@@ -30,11 +30,9 @@ import android.graphics.*;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.uiautomator.Configurator;
-import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiSelector;
+import android.support.test.uiautomator.*;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -744,10 +742,10 @@ public class AtsAutomation {
                             if (EMPTY_DATA.equals(text)) {
                                 jsonObject.put("message", "element clear text");
                                 element.clearText(this);
-                            } else if(ENTER_KEY.equals(text)) {
+                            } else if (ENTER_KEY.equals(text)) {
                                 jsonObject.put("message", "press enter on keyboard");
                                 enterKeyboard();
-                            } else if(TAB_KEY.equals(text)) {
+                            } else if (TAB_KEY.equals(text)) {
                                 jsonObject.put("message", "hide keyboard");
                                 hideKeyboard();
                             } else {
@@ -776,16 +774,33 @@ public class AtsAutomation {
                         }
 
                         else if (RequestType.PRESS.equals(req.parameters[1])) {
-                            UiObject object = device.findObject(new UiSelector().resourceId(elementId));
+                            UiSelector selector = new UiSelector().resourceId(element.getResourceId());
+                            UiObject object = device.findObject(selector);
+                            
                             String[] info = req.parameters[2].split(":");
+                            List<MotionEvent.PointerCoords[]> pointerCoords = new ArrayList<>();
                             for (String pathInfo : info) {
                                 MotionEvent.PointerCoords[] coords = parsePath(pathInfo);
-                                object.performMultiPointerGesture(coords, coords);
+                                pointerCoords.add(coords);
+                            }
+                            
+                            MotionEvent.PointerCoords[][] array = pointerCoords.toArray(new MotionEvent.PointerCoords[][] {});
+                            if (array.length > 1) {
+                                if (object.performMultiPointerGesture(array)) {
+                                    Log.d("press", "ok");
+                                } else {
+                                    Log.d("press", "not ok");
+                                }
+    
+                                jsonObject.put("status", "0");
+                                jsonObject.put("message", "press on element");
+                            } else {
+                                jsonObject.put("status", "-1");
+                                jsonObject.put("message", "not enough touches");
                             }
                         }
 
                         else {
-
                             int offsetX = 0;
                             int offsetY = 0;
 
@@ -849,7 +864,7 @@ public class AtsAutomation {
         }  catch (Exception e) {
             e.printStackTrace();
         }
-        
+    
         return new AtsResponseJSON(jsonObject);
     }
     
