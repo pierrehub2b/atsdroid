@@ -1,4 +1,4 @@
-package com.ats.atsdroid.element;
+package com.ats.atsdroid.response;
 
 import org.java_websocket.WebSocket;
 import java.net.Socket;

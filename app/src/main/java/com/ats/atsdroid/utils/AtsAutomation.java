@@ -29,16 +29,22 @@ import android.content.pm.ResolveInfo;
 import android.graphics.*;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.*;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.InputDevice;
+import android.view.InputEvent;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import com.ats.atsdroid.AtsRunner;
 import com.ats.atsdroid.AtsRunnerUsb;
 import com.ats.atsdroid.element.*;
+import com.ats.atsdroid.response.AtsResponse;
+import com.ats.atsdroid.response.AtsResponseBinary;
+import com.ats.atsdroid.response.AtsResponseJSON;
 import com.ats.atsdroid.scripting.ScriptingExecutor;
 import com.ats.atsdroid.server.RequestType;
 import com.ats.atsdroid.ui.AtsActivity;
@@ -90,6 +96,9 @@ public class AtsAutomation {
         this.runner = runner;
         this.device = UiDevice.getInstance(instrument);
 
+        // MotionEvent.obtain()
+        // automation.injectInputEvent()
+        
         Configurator.getInstance().setWaitForIdleTimeout(0);
 
         deviceInfo.initDevice(port, device, ipAddress);
@@ -774,9 +783,6 @@ public class AtsAutomation {
                         }
 
                         else if (RequestType.PRESS.equals(req.parameters[1])) {
-                            UiSelector selector = new UiSelector().resourceId(element.getResourceId());
-                            UiObject object = device.findObject(selector);
-                            
                             String[] info = req.parameters[2].split(":");
                             List<MotionEvent.PointerCoords[]> pointerCoords = new ArrayList<>();
                             for (String pathInfo : info) {
@@ -786,14 +792,14 @@ public class AtsAutomation {
                             
                             MotionEvent.PointerCoords[][] array = pointerCoords.toArray(new MotionEvent.PointerCoords[][] {});
                             if (array.length > 1) {
+                                UiObject object = device.findObject(new UiSelector());
                                 if (object.performMultiPointerGesture(array)) {
-                                    Log.d("press", "ok");
+                                    jsonObject.put("status", "0");
+                                    jsonObject.put("message", "press on element");
                                 } else {
-                                    Log.d("press", "not ok");
+                                    jsonObject.put("status", "-1");
+                                    jsonObject.put("message", "unknown error");
                                 }
-    
-                                jsonObject.put("status", "0");
-                                jsonObject.put("message", "press on element");
                             } else {
                                 jsonObject.put("status", "-1");
                                 jsonObject.put("message", "not enough touches");
@@ -814,7 +820,6 @@ public class AtsAutomation {
                             }
 
                             if (RequestType.TAP.equals(req.parameters[1])) {
-
                                 element.click(this, offsetX, offsetY);
 
                                 jsonObject.put("status", "0");
@@ -885,5 +890,86 @@ public class AtsAutomation {
         }
     
         return coordsArray.toArray(new MotionEvent.PointerCoords[0]);
+    }
+    
+    public boolean performMultiPointerGesture(int duration, MotionEvent.PointerCoords[]... touches) {
+        boolean ret = true;
+        
+        // Get the pointer with the max steps to inject.
+        int maxSteps = 0;
+        for (int x = 0; x < touches.length; x++) {
+            maxSteps = (maxSteps < touches[x].length) ? touches[x].length : maxSteps;
+        }
+        
+        // specify the properties for each pointer as finger touch
+        MotionEvent.PointerProperties[] properties = new MotionEvent.PointerProperties[touches.length];
+        MotionEvent.PointerCoords[] pointerCoords = new MotionEvent.PointerCoords[touches.length];
+        for (int x = 0; x < touches.length; x++) {
+            MotionEvent.PointerProperties prop = new MotionEvent.PointerProperties();
+            prop.id = x;
+            prop.toolType = MotionEvent.TOOL_TYPE_FINGER;
+            properties[x] = prop;
+            // for each pointer set the first coordinates for touch down
+            pointerCoords[x] = touches[x][0];
+        }
+        
+        // Touch down all pointers
+        long downTime = SystemClock.uptimeMillis();
+        MotionEvent event;
+        event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, 1,
+                properties, pointerCoords, 0, 0, 1, 1, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0);
+        ret &= injectEventSync(event);
+        for (int x = 1; x < touches.length; x++) {
+            event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), getPointerAction(MotionEvent.ACTION_POINTER_DOWN, x), x + 1,
+                    properties, pointerCoords, 0, 0, 1, 1, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0);
+            ret &= injectEventSync(event);
+        }
+        
+        // Move all pointers
+        for (int i = 1; i < maxSteps - 1; i++) {
+            // for each pointer
+            for (int x = 0; x < touches.length; x++) {
+                // check if it has coordinates to move
+                if (touches[x].length > i)
+                    pointerCoords[x] = touches[x][i];
+                else
+                    pointerCoords[x] = touches[x][touches[x].length - 1];
+            }
+            event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(),
+                    MotionEvent.ACTION_MOVE, touches.length, properties, pointerCoords, 0, 0, 1, 1,
+                    0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0);
+            ret &= injectEventSync(event);
+            SystemClock.sleep(MOTION_EVENT_INJECTION_DELAY_MILLIS);
+        }
+        
+        // For each pointer get the last coordinates
+        for (int x = 0; x < touches.length; x++)
+            pointerCoords[x] = touches[x][touches[x].length - 1];
+        
+        // touch up
+        for (int x = 1; x < touches.length; x++) {
+            event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(),
+                    getPointerAction(MotionEvent.ACTION_POINTER_UP, x), x + 1, properties,
+                    pointerCoords, 0, 0, 1, 1, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0);
+            ret &= injectEventSync(event);
+        }
+        Log.i(LOG_TAG, "x " + pointerCoords[0].x);
+        
+        // first to touch down is last up
+        event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, 1,
+                properties, pointerCoords, 0, 0, 1, 1, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0);
+        ret &= injectEventSync(event);
+        return ret;
+    }
+    
+    private static final String LOG_TAG = AtsAutomation.class.getSimpleName();
+    private static final int MOTION_EVENT_INJECTION_DELAY_MILLIS = 500;
+    
+    private int getPointerAction(int motionEvent, int index) {
+        return motionEvent + (index << MotionEvent.ACTION_POINTER_INDEX_SHIFT);
+    }
+    
+    private boolean injectEventSync(InputEvent event) {
+        return automation.injectInputEvent(event, true);
     }
 }

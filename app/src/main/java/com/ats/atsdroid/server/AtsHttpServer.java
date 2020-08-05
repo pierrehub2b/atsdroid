@@ -3,11 +3,10 @@ package com.ats.atsdroid.server;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 
-import com.ats.atsdroid.element.AtsResponse;
-import com.ats.atsdroid.element.AtsResponseJSON;
+import com.ats.atsdroid.response.AtsResponse;
+import com.ats.atsdroid.response.AtsResponseJSON;
 import com.ats.atsdroid.utils.AtsAutomation;
 
-import com.ats.atsdroid.utils.AtsClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 

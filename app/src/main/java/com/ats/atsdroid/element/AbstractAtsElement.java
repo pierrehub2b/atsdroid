@@ -29,9 +29,8 @@ public abstract class AbstractAtsElement {
     protected String id = UUID.randomUUID().toString();
     protected String resourceId;
     protected String tag;
-    protected boolean clickable;
     protected Rect bounds = new Rect(0,0,0,0);
-
+    protected boolean clickable;
     protected boolean numeric;
 
     protected AccessibilityNodeInfo node;

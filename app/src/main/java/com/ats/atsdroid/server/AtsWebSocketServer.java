@@ -2,11 +2,10 @@ package com.ats.atsdroid.server;
 
 import android.util.Log;
 
-import com.ats.atsdroid.element.AtsResponse;
-import com.ats.atsdroid.element.AtsResponseJSON;
+import com.ats.atsdroid.response.AtsResponse;
+import com.ats.atsdroid.response.AtsResponseJSON;
 import com.ats.atsdroid.utils.AtsAutomation;
 
-import com.ats.atsdroid.utils.AtsClient;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;

@@ -1,4 +1,4 @@
-package com.ats.atsdroid.element;
+package com.ats.atsdroid.response;
 
 import com.ats.atsdroid.utils.AtsAutomation;
 
