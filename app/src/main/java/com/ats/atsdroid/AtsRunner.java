@@ -36,7 +36,7 @@ public class AtsRunner {
 
     protected static final int DEFAULT_PORT = 8080;
     protected AtsAutomation automation;
-    protected boolean running = true;
+    protected volatile boolean running = true;
     protected int port = DEFAULT_PORT;
 
     public void stop(){

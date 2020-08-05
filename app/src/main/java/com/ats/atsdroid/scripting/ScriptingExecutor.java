@@ -60,8 +60,6 @@ public class ScriptingExecutor {
                     throw new DriverException(DriverException.UNKNOWN_FUNCTION);
                 } catch (InvocationTargetException e) {
                     throw e.getTargetException();
-                } catch (IllegalAccessException e) {
-                    throw e;
                 }
             } else {
                 throw new SyntaxException(SyntaxException.INVALID_METHOD);
@@ -72,7 +70,7 @@ public class ScriptingExecutor {
     }
 
     private String cmd(AbstractAtsElement element, String command) throws Exception {
-        StringBuffer output = new StringBuffer();
+        StringBuilder output = new StringBuilder();
 
         Process p = Runtime.getRuntime().exec(command);
         p.waitFor();
@@ -80,7 +78,7 @@ public class ScriptingExecutor {
 
         String line = "";
         while ((line = reader.readLine())!= null) {
-            output.append(line + "n");
+            output.append(line).append("n");
         }
 
         return output.toString();
@@ -105,7 +103,7 @@ public class ScriptingExecutor {
     }
 
     private void setAirPlaneMode(AbstractAtsElement element, String value) throws DriverException {
-        if (automation.usbMode == true) {
+        if (automation.usbMode) {
             Boolean booleanValue = Boolean.parseBoolean(value);
 
             // Settings.Global.putInt(getContentResolver(), Settings.Global.AIRPLANE_MODE_ON, booleanValue ? 1 : 0);
@@ -127,8 +125,8 @@ public class ScriptingExecutor {
     }
 
     private void setWifiEnabled(AbstractAtsElement element, String value) throws DriverException {
-        if (automation.usbMode == true) {
-            Boolean booleanValue = Boolean.parseBoolean(value);
+        if (automation.usbMode) {
+            boolean booleanValue = Boolean.parseBoolean(value);
 
             WifiManager wifi = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             wifi.setWifiEnabled(booleanValue);
@@ -138,7 +136,7 @@ public class ScriptingExecutor {
     }
 
     private void setBluetoothEnabled(AbstractAtsElement element, String value) {
-        Boolean booleanValue = Boolean.parseBoolean(value);
+        boolean booleanValue = Boolean.parseBoolean(value);
 
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (booleanValue) {
@@ -149,7 +147,7 @@ public class ScriptingExecutor {
     }
 
     private void setOrientation(AbstractAtsElement element, String value) throws SyntaxException {
-        if (value == "portrait" || value == "landscape") {
+        if (value.equals("portrait") || value.equals("landscape")) {
             ContentResolver contentResolver = getContentResolver();
             Settings.System.putInt(contentResolver, Settings.System.ACCELEROMETER_ROTATION, 0);
             Settings.System.putInt(contentResolver, Settings.System.USER_ROTATION, 3);

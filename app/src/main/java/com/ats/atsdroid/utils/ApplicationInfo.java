@@ -45,7 +45,7 @@ public class ApplicationInfo {
         }
 
         //prevent empty icons
-        if(this.icon == "" || this.icon == null) {
+        if(this.icon.equals("") || this.icon == null) {
             this.icon = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAQAAADZc7J/AAAAH0lEQVR42mNkoBAwjhowasCoAaMGjBowasCoAcPNAACOMAAhOO/A7wAAAABJRU5ErkJggg==";
         }
     }
@@ -88,8 +88,8 @@ public class ApplicationInfo {
     public Intent getIntent(int... flag){
         final Intent intent = new Intent();
         intent.setClassName(packageName, activity);
-        for (int i=0; i< flag.length; i++){
-            intent.addFlags(flag[i]);
+        for (int value : flag) {
+            intent.addFlags(value);
         }
         return intent;
     }

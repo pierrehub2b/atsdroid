@@ -21,7 +21,6 @@ package com.ats.atsdroid.element;
 
 import android.os.Build;
 import android.text.InputType;
-import android.util.Log;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.ats.atsdroid.utils.AtsAutomation;
@@ -34,7 +33,7 @@ import java.util.Map;
 
 public class AtsElement extends AbstractAtsElement {
 
-    private Map<String, String> attributes = new HashMap<String, String>();
+    private Map<String, String> attributes = new HashMap<>();
     
     public AtsElement(final AccessibilityNodeInfo node){
 

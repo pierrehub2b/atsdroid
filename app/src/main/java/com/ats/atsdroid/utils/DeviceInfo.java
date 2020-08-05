@@ -21,7 +21,6 @@ package com.ats.atsdroid.utils;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.os.Build;

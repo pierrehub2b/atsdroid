@@ -1,7 +1,5 @@
 package com.ats.atsdroid.utils;
 
-import com.ats.atsdroid.server.RequestType;
-
 public class AtsClient {
 
     public final String token;

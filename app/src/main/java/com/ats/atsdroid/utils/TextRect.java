@@ -70,7 +70,7 @@ public class TextRect
         {
             final int lineHeight = -metrics.ascent + metrics.descent;
             int start = 0;
-            int stop = maximumInLine > length ? length : maximumInLine;
+            int stop = Math.min(maximumInLine, length);
 
             for( ;; )
             {

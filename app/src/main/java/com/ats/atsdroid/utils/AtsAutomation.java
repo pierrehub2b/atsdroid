@@ -897,8 +897,8 @@ public class AtsAutomation {
         
         // Get the pointer with the max steps to inject.
         int maxSteps = 0;
-        for (int x = 0; x < touches.length; x++) {
-            maxSteps = (maxSteps < touches[x].length) ? touches[x].length : maxSteps;
+        for (MotionEvent.PointerCoords[] touch : touches) {
+            maxSteps = Math.max(maxSteps, touch.length);
         }
         
         // specify the properties for each pointer as finger touch

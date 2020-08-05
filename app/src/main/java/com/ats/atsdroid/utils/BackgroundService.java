@@ -21,11 +21,9 @@ public class BackgroundService extends Service {
         Toast.makeText(this, "Service created!", Toast.LENGTH_LONG).show();
 
         handler = new Handler();
-        runnable = new Runnable() {
-            public void run() {
-                Toast.makeText(context, "Service is still running", Toast.LENGTH_LONG).show();
-                handler.postDelayed(runnable, 10000);
-            }
+        runnable = () -> {
+            Toast.makeText(context, "Service is still running", Toast.LENGTH_LONG).show();
+            handler.postDelayed(runnable, 10000);
         };
 
         handler.postDelayed(runnable, 15000);

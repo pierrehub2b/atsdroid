@@ -223,9 +223,6 @@ public abstract class AbstractAtsElement {
                 }
                 break;
             case "TextView" :
-                node.refresh();
-                drawText(canvas, node.getText(), 5);
-                break;
             default:
                 node.refresh();
                 drawText(canvas, node.getText(), 5);
