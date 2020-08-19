@@ -27,7 +27,9 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.*;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.support.test.InstrumentationRegistry;
@@ -52,8 +54,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -401,10 +402,10 @@ public class AtsAutomation {
 
     //----------------------------------------------------------------------------------------------------
     //----------------------------------------------------------------------------------------------------
-
+    
     public ApplicationInfo startChannel(String pkg) {
         final ApplicationInfo app = getApplicationByPackage(pkg);
-        if(app != null) {
+        if (app != null) {
                 device.pressHome();
                 //app.start(context, device);
 
@@ -413,17 +414,18 @@ public class AtsAutomation {
                 4194304 = FLAG_ACTIVITY_BROUGHT_TO_FRONT
                 268435456 = FLAG_ACTIVITY_NEW_TASK
                 65536 = FLAG_ACTIVITY_NO_ANIMATION
+                
                 1073741824 = FLAG_ACTIVITY_NO_HISTORY
                 2097152 = FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
                 32 = FLAG_INCLUDE_STOPPED_PACKAGES
-
-                134217728 = FLAG_ACTIVITY_MULTIPLE_TASK
             */
 
                 reloadRoot();
         }
         return app;
     }
+    
+    
 
     /* public String getActivityName(String pkg){
         final ApplicationInfo app = getApplicationByPackage(pkg);
@@ -432,6 +434,49 @@ public class AtsAutomation {
         }
         return "";
     } */
+    
+    byte[] toBytes(int i)
+    {
+        byte[] result = new byte[4];
+        
+        result[0] = (byte) (i >> 24);
+        result[1] = (byte) (i >> 16);
+        result[2] = (byte) (i >> 8);
+        result[3] = (byte) (i);
+        
+        return result;
+    }
+    
+    private void switchGestureCatcher() {
+        byte[] screenshot = getScreenDataHires();
+        // byte[] port = toBytes(((AtsRunnerUsb)runner).tcpServer.getPort());
+    
+        // byte[] file2 = new byte[screenshot.length + port.length];
+        // System.arraycopy(port, 0, file2, 0, port.length);
+        // System.arraycopy(screenshot, 0, file2, port.length, screenshot.length);
+    
+        try {
+            File dataFolder = new File(Environment.getExternalStorageDirectory(), "atsdroid");
+            if (!dataFolder.exists()) {
+                dataFolder.mkdirs();
+            }
+            
+            File file = new File(dataFolder + "/" + "ats_screenshot");
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+        
+            FileOutputStream fos = new FileOutputStream(file);
+            // fos.write(file2);
+            fos.write(screenshot);
+            fos.close();
+            
+        } catch (Exception e) {
+            Log.e("", e.getMessage());
+        }
+    
+        switchChannel("air.com.agilitest.GestureCatcher");
+    }
 
     public void switchChannel(String pkg){
 
@@ -575,6 +620,11 @@ public class AtsAutomation {
                         }
                     }
                 }
+            } else if (RequestType.GESTURE_CATCHER.equals(req.type)) {
+                
+                switchGestureCatcher();
+                jsonObject.put("status", "0");
+                
             } else if (RequestType.INFO.equals(req.type)) {
 
                 try {
@@ -918,7 +968,7 @@ public class AtsAutomation {
         MotionEvent event;
         event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, 1,
                 properties, pointerCoords, 0, 0, 1, 1, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0);
-        ret &= injectEventSync(event);
+        ret = injectEventSync(event);
         for (int x = 1; x < touches.length; x++) {
             event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), getPointerAction(MotionEvent.ACTION_POINTER_DOWN, x), x + 1,
                     properties, pointerCoords, 0, 0, 1, 1, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0);

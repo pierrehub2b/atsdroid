@@ -22,7 +22,9 @@ import java.util.Arrays;
 
 public class AtsWebSocketServer extends WebSocketServer {
 
-    private AtsAutomation automation;
+    private final AtsAutomation automation;
+    private WebSocket gestureCatcherSocket;
+    private WebSocket mobileStationSocket;
 
     public AtsWebSocketServer(InetSocketAddress address, AtsAutomation automation) {
         super(address);
@@ -43,7 +45,6 @@ public class AtsWebSocketServer extends WebSocketServer {
     @Override
     public void onMessage(WebSocket conn, String message) {
         final byte[] screenshot = automation.getScreenData();
-        // Log.d("WSS", "Capture web socket send " + screenshot.length);
         conn.send(screenshot);
     }
 
@@ -62,21 +63,34 @@ public class AtsWebSocketServer extends WebSocketServer {
     public void onMessage(WebSocket conn, ByteBuffer message) {
 
         try {
-            final int socketID = message.getInt();
-            final byte[] mess = Arrays.copyOfRange(message.array(), 4, message.array().length);
-
-            final BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(mess)));
-            final String userAgent = conn.getRemoteSocketAddress().getHostString();
-            final RequestType request = RequestType.generate(in, userAgent);
-
-            final AtsResponse response;
-            if (request == null) {
-                response = new AtsResponseJSON(new JSONObject("{\"status\":\"-11\",\"message\":\"unknown command\"}"));
+            // final int webSocketSource = message.getInt();
+            
+            // if (webSocketSource == 0) { // source = Mobile Station
+                mobileStationSocket = conn;
+                
+                final int socketID = message.getInt();
+                final byte[] mess = Arrays.copyOfRange(message.array(), 4, message.array().length);
+                final BufferedReader in = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(mess)));
+                final String userAgent = conn.getRemoteSocketAddress().getHostString();
+                final RequestType request = RequestType.generate(in, userAgent);
+    
+                final AtsResponse response;
+                if (request == null) {
+                    response = new AtsResponseJSON(new JSONObject("{\"status\":\"-11\",\"message\":\"unknown command\"}"));
+                } else {
+                    response = automation.executeRequest(request);
+                }
+    
+                response.sendDataToUsbPort(socketID, conn);
+            /*
             } else {
-                response = automation.executeRequest(request);
+            
+                gestureCatcherSocket = conn;
+                
+                final byte[] file = Arrays.copyOfRange(message.array(), 4, message.array().length);
+                mobileStationSocket.send(file);
             }
-
-            response.sendDataToUsbPort(socketID, conn);
+            */
 
         } catch (IOException | JSONException e) {
             AtsAutomation.sendLogs("IOError or JSONException on HttpServer:" + e.getMessage() + "\n");

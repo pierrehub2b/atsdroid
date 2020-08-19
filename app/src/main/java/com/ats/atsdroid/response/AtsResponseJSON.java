@@ -15,7 +15,7 @@ import java.util.Date;
 public class AtsResponseJSON extends AtsResponse {
     private final static String JSON_RESPONSE_TYPE = "application/json";
 
-    private JSONObject jsonObject;
+    private final JSONObject jsonObject;
 
     public AtsResponseJSON(JSONObject jsonObject) {
         this.jsonObject = jsonObject;
@@ -54,12 +54,4 @@ public class AtsResponseJSON extends AtsResponse {
 
         conn.send(buffer.array());
     }
-
-    /* public void sendDataToUsbPort(PrintWriter writer) {
-        String data = this.jsonObject.toString();
-        int dataLen = data.length();
-        writer.print("\u0010AtsContentLength:" +  dataLen + "\u0011");
-        writer.print(data);
-        writer.flush();
-    } */
 }

@@ -45,7 +45,7 @@ public class ApplicationInfo {
         }
 
         //prevent empty icons
-        if(this.icon.equals("") || this.icon == null) {
+        if(this.icon.equals("")) {
             this.icon = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAQAAADZc7J/AAAAH0lEQVR42mNkoBAwjhowasCoAaMGjBowasCoAcPNAACOMAAhOO/A7wAAAABJRU5ErkJggg==";
         }
     }

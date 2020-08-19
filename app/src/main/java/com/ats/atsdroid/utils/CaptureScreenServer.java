@@ -30,9 +30,9 @@ public class CaptureScreenServer implements Runnable  {
     private static final int PACKET_SIZE = 1430;
 
     private boolean running = true;
-    private byte[] receiveData = new byte[1];
+    private final byte[] receiveData = new byte[1];
     private DatagramSocket serverSocket;
-    private AtsAutomation automation;
+    private final AtsAutomation automation;
 
     private int port = 0;
 

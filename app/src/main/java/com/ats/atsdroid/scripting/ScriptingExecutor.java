@@ -22,10 +22,10 @@ import java.util.regex.Pattern;
 
 public class ScriptingExecutor {
 
-    private static Pattern scriptPattern = Pattern.compile("([^\\)]*)\\(([^\\)]*)\\)");
+    private static final Pattern scriptPattern = Pattern.compile("([^)]*)\\(([^)]*)\\)");
 
-    private AtsAutomation automation;
-    private String[] actions;
+    private final AtsAutomation automation;
+    private final String[] actions;
 
     private Context getApplicationContext() {
         return InstrumentationRegistry.getInstrumentation().getContext().getApplicationContext();
@@ -112,9 +112,7 @@ public class ScriptingExecutor {
             try {
                 if(mgr != null) {
                     Method airPlane = mgr.getClass().getDeclaredMethod("setAirplaneMode", boolean.class);
-                    if(null != airPlane) {
-                        airPlane.invoke(mgr, booleanValue);
-                    }
+                    airPlane.invoke(mgr, booleanValue);
                 }
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                 throw new DriverException(DriverException.UNKNOWN_ERROR);

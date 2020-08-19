@@ -47,6 +47,7 @@ public class RequestType {
     public static final String TAP = "tap";
     public static final String SWIPE = "swipe";
     public static final String PRESS = "press";
+    public static final String GESTURE_CATCHER = "gesturecatcher";
     public static final String SYS_PROPERTY_SET = "sysprop-set";
     public static final String SYS_PROPERTY_GET = "sysprop-get";
     public static final String SCREENSHOT = "screenshot";

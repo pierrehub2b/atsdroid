@@ -22,7 +22,6 @@ package com.ats.atsdroid.utils;
 import android.bluetooth.BluetoothAdapter;
 import android.content.res.Resources;
 import android.graphics.Matrix;
-import android.graphics.Point;
 import android.os.Build;
 import android.support.test.uiautomator.UiDevice;
 import android.util.DisplayMetrics;
@@ -129,7 +128,6 @@ public class DeviceInfo {
     private String version = Build.VERSION.RELEASE;
     private String hostName;
     private String btAdapter;
-    private Point pts;
     private UiDevice device;
 
     //private String[] resolution;
@@ -138,16 +136,13 @@ public class DeviceInfo {
         hostName = ipAddress;
         port = p;
         device = d;
-        pts = device.getDisplaySizeDp();
-        setupScreenInformation(device.getDisplayHeight());
+        setupScreenInformation();
     }
 
-    public void setupScreenInformation(int height) {
+    public void setupScreenInformation() {
         DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
         channelHeight = device.getDisplayHeight();
         channelWidth = device.getDisplayWidth();
-        //int navBarHeight = channelHeight - height;
-        //channelHeight -= navBarHeight;
 
         deviceWidth = Math.round((float)channelWidth / metrics.scaledDensity);
         deviceHeight = Math.round((float)channelHeight / metrics.scaledDensity);
@@ -161,7 +156,7 @@ public class DeviceInfo {
     }
 
     public void driverInfoBase(JSONObject obj, int height) throws JSONException {
-        setupScreenInformation(height);
+        setupScreenInformation();
         obj.put("os", "android");
         obj.put("driverVersion", BuildConfig.VERSION_NAME);
         obj.put("systemName", systemName);

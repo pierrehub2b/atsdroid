@@ -25,6 +25,8 @@ import com.ats.atsdroid.utils.AtsAutomation;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Objects;
+
 /**
  * Instrumented test, which will execute on an Android device.
  *
@@ -33,32 +35,30 @@ import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
 public class AtsRunner {
-
+    
     protected static final int DEFAULT_PORT = 8080;
     protected AtsAutomation automation;
     protected volatile boolean running = true;
     protected int port = DEFAULT_PORT;
-
+    
     public void stop(){
         running = false;
     }
-
+    
     @Test
     public void testMain() {
-
+        
         try {
-            port = Integer.parseInt(InstrumentationRegistry.getArguments().getString("atsPort"));
-
+            port = Integer.parseInt(Objects.requireNonNull(InstrumentationRegistry.getArguments().getString("atsPort")));
+            
             Boolean usbMode = Boolean.parseBoolean(InstrumentationRegistry.getArguments().getString("usbMode"));
-
+            
             String ipAddress = InstrumentationRegistry.getArguments().getString("ipAddress");
-
+            
             automation = new AtsAutomation(port, this, ipAddress, usbMode);
-
-        } catch (Exception e) {
-
+            
+        } catch (Exception ignored) {
+        
         }
     }
-
-
 }
