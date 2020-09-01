@@ -28,13 +28,16 @@ import android.util.DisplayMetrics;
 
 import com.ats.atsdroid.BuildConfig;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.stream.Stream;
 
 public class DeviceInfo {
 
@@ -110,7 +113,22 @@ public class DeviceInfo {
     //----------------------------------------------------------------------------------
     // Instance access
     //----------------------------------------------------------------------------------
-
+    
+    enum PropertyName {
+        airplaneModeEnabled,
+        nightModeEnabled,
+        wifiEnabled,
+        bluetoothEnabled,
+        lockOrientationEnabled,
+        orientation,
+        brightness,
+        volume;
+    
+        public static String[] getNames() {
+            return Arrays.stream(values()).map(Enum::name).toArray(String[]::new);
+        }
+    }
+    
     private int port;
 
     private int deviceWidth;
@@ -120,18 +138,16 @@ public class DeviceInfo {
 
     private Matrix matrix;
 
-    private String systemName;
-    private String deviceId = Build.ID;
-    private String model = Build.MODEL;
-    private String manufacturer = Build.MANUFACTURER;
-    private String brand = Build.BRAND;
-    private String version = Build.VERSION.RELEASE;
+    private final String systemName;
+    private final String deviceId = Build.ID;
+    private final String model = Build.MODEL;
+    private final String manufacturer = Build.MANUFACTURER;
+    private final String brand = Build.BRAND;
+    private final String version = Build.VERSION.RELEASE;
     private String hostName;
     private String btAdapter;
     private UiDevice device;
-
-    //private String[] resolution;
-
+    
     public void initDevice(int p, UiDevice d, String ipAddress){
         hostName = ipAddress;
         port = p;
@@ -164,8 +180,9 @@ public class DeviceInfo {
         obj.put("deviceHeight", deviceHeight);
         obj.put("channelWidth", channelWidth);
         obj.put("channelHeight", channelHeight);
+        obj.put("systemProperties", new JSONArray(PropertyName.getNames()));
     }
-
+    
     public String getSystemName(){ return systemName; }
     public int getPort(){ return port; }
     public int getDeviceWidth() { return deviceWidth; }

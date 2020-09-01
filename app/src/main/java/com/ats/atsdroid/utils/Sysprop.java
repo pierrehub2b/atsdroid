@@ -13,23 +13,11 @@ import android.support.v7.app.AppCompatDelegate;
 
 public class Sysprop {
 	
-	enum PropertyName {
-		airplaneModeEnabled,
-		nightModeEnabled,
-		wifiEnabled,
-		bluetoothEnabled,
-		lockOrientationEnabled,
-		orientation,
-		brightness,
-		volume
-	}
-	
 	private static final Instrumentation instrument = InstrumentationRegistry.getInstrumentation();
 	private static final UiDevice device = UiDevice.getInstance(instrument);
-	private static final Context context = InstrumentationRegistry.getTargetContext();
 	
 	public static void setProperty(String name, String value) {
-		PropertyName property = PropertyName.valueOf(name);
+		DeviceInfo.PropertyName property = DeviceInfo.PropertyName.valueOf(name);
 		switch (property) {
 			case airplaneModeEnabled:
 				boolean enabled = value.equals("on");
@@ -74,7 +62,7 @@ public class Sysprop {
 	}
 	
 	public static String getPropertyValue(String name) throws IllegalStateException, IllegalArgumentException {
-		PropertyName property = PropertyName.valueOf(name);
+		DeviceInfo.PropertyName property = DeviceInfo.PropertyName.valueOf(name);
 		switch (property) {
 			case airplaneModeEnabled:
 				try {
@@ -118,12 +106,12 @@ public class Sysprop {
 	}
 	
 	private static void setWifiEnabled(Boolean enabled) {
-		WifiManager wifiManager = (WifiManager)context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+		WifiManager wifiManager = (WifiManager)getContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 		wifiManager.setWifiEnabled(enabled);
 	}
 	
 	private static boolean isWifiEnabled() {
-		WifiManager wifiManager = (WifiManager)context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+		WifiManager wifiManager = (WifiManager)getContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 		return wifiManager.isWifiEnabled();
 	}
 	
@@ -142,31 +130,31 @@ public class Sysprop {
 	}
 	
 	private static void enableAirplaneMode(Boolean enable) {
-		Settings.Global.putInt(context.getContentResolver(), Settings.Global.AIRPLANE_MODE_ON, enable ? 1 : 0);
+		Settings.Global.putInt(getContext().getContentResolver(), Settings.Global.AIRPLANE_MODE_ON, enable ? 1 : 0);
 	}
 	
 	private static boolean getAirplaneMode() throws Settings.SettingNotFoundException {
-		return 1 == Settings.Global.getInt(context.getContentResolver(), Settings.Global.AIRPLANE_MODE_ON);
+		return 1 == Settings.Global.getInt(getContext().getContentResolver(), Settings.Global.AIRPLANE_MODE_ON);
 	}
 	
 	private static void setVolume(int value) {
 		AudioManager audioManager;
-		audioManager = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
+		audioManager = (AudioManager)getContext().getSystemService(Context.AUDIO_SERVICE);
 		audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, value, 0);
 	}
 	
 	private static int getVolume() {
 		AudioManager audioManager;
-		audioManager = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
+		audioManager = (AudioManager)getContext().getSystemService(Context.AUDIO_SERVICE);
 		return audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
 	}
 	
 	private static void setBrightness(int value) {
-		Settings.System.putInt(context.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, value);
+		Settings.System.putInt(getContext().getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, value);
 	}
 	
 	private static int getBrightness() throws Settings.SettingNotFoundException {
-		return Settings.System.getInt(context.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
+		return Settings.System.getInt(getContext().getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
 	}
 	
 	private static void setLockOrientationEnabled(boolean enabled) throws RemoteException {
@@ -183,6 +171,10 @@ public class Sysprop {
 	
 	private static boolean isNightModeEnabled() {
 		return AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES;
+	}
+	
+	private static Context getContext() {
+		return InstrumentationRegistry.getTargetContext();
 	}
 	
 	/* private void setGeolocation(double lat, double long) {
