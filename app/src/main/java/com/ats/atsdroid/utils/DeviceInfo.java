@@ -125,7 +125,14 @@ public class DeviceInfo {
         volume;
     
         public static String[] getNames() {
-            return Arrays.stream(values()).map(Enum::name).toArray(String[]::new);
+            PropertyName[] states = values();
+            String[] names = new String[states.length];
+    
+            for (int i = 0; i < states.length; i++) {
+                names[i] = states[i].name();
+            }
+    
+            return names;
         }
     }
     
