@@ -9,7 +9,18 @@ public final class SysButton {
 	
 	enum ButtonType {
 		back, delete, enter, home, menu, search,
-		volumeUp, volumeDown
+		volumeUp, volumeDown;
+		
+		public static String[] getNames() {
+			SysButton.ButtonType[] states = values();
+			String[] names = new String[states.length];
+			
+			for (int i = 0; i < states.length; i++) {
+				names[i] = states[i].name();
+			}
+			
+			return names;
+		}
 	}
 	
 	public static boolean pressButtonType(String value) throws IllegalArgumentException {

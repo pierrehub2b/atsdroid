@@ -21,19 +21,27 @@ package com.ats.atsdroid.utils;
 
 import android.app.Instrumentation;
 import android.app.UiAutomation;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.graphics.*;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.uiautomator.*;
+import android.support.test.uiautomator.Configurator;
+import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
+import android.support.test.uiautomator.UiSelector;
+import android.support.v4.content.FileProvider;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.InputDevice;
@@ -43,7 +51,8 @@ import android.view.MotionEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import com.ats.atsdroid.AtsRunner;
 import com.ats.atsdroid.AtsRunnerUsb;
-import com.ats.atsdroid.element.*;
+import com.ats.atsdroid.element.AbstractAtsElement;
+import com.ats.atsdroid.element.AtsRootElement;
 import com.ats.atsdroid.response.AtsResponse;
 import com.ats.atsdroid.response.AtsResponseBinary;
 import com.ats.atsdroid.response.AtsResponseJSON;
@@ -54,8 +63,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import android.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -435,27 +447,37 @@ public class AtsAutomation {
         return "";
     } */
     
-    byte[] toBytes(int i)
-    {
-        byte[] result = new byte[4];
-        
-        result[0] = (byte) (i >> 24);
-        result[1] = (byte) (i >> 16);
-        result[2] = (byte) (i >> 8);
-        result[3] = (byte) (i);
-        
-        return result;
-    }
-    
     private void switchGestureCatcher() {
-        byte[] screenshot = getScreenDataHires();
-        // byte[] port = toBytes(((AtsRunnerUsb)runner).tcpServer.getPort());
-    
-        // byte[] file2 = new byte[screenshot.length + port.length];
-        // System.arraycopy(port, 0, file2, 0, port.length);
-        // System.arraycopy(screenshot, 0, file2, port.length, screenshot.length);
-    
         try {
+            device.wakeUp();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+        device.pressHome();
+        
+        byte[] screenshot = getScreenCatcher();
+        
+        File imagePath = new File(context.getFilesDir(), "images");
+        File newFile = new File(imagePath, "default_image.jpg");
+        Uri contentUri = FileProvider.getUriForFile(context, "com.mydomain.fileprovider", newFile);
+        
+        String encodedScreenshot = Base64.encodeToString(screenshot, Base64.DEFAULT);
+        ClipboardManager clipboard = (ClipboardManager)context.getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText("screenshot", encodedScreenshot);
+        clipboard.setPrimaryClip(clip);
+        
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("gesturecatcher://send_screenshot"));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.putExtra("screenshot", screenshot);
+            context.startActivity(intent);
+        } catch (Exception e) {
+            Log.e("", e.getMessage());
+        }
+
+
+    
+        /* try {
             File dataFolder = new File(Environment.getExternalStorageDirectory(), "atsdroid");
             if (!dataFolder.exists()) {
                 dataFolder.mkdirs();
@@ -475,7 +497,7 @@ public class AtsAutomation {
             Log.e("", e.getMessage());
         }
     
-        switchChannel("air.com.agilitest.GestureCatcher");
+        switchChannel("air.com.agilitest.GestureCatcher"); */
     }
 
     public void switchChannel(String pkg){
@@ -516,6 +538,10 @@ public class AtsAutomation {
         Bitmap screen = getScreenBitmap();
         screen = Bitmap.createBitmap(screen, 0, 0, deviceInfo.getChannelWidth(), deviceInfo.getChannelHeight(), deviceInfo.getMatrix(), true);
         return getBitmapBytes(screen, Bitmap.CompressFormat.JPEG, 66);
+    }
+    
+    public byte[] getScreenCatcher() {
+        return getBitmapBytes(getScreenBitmap(), Bitmap.CompressFormat.JPEG, 66);
     }
 
     public byte[] getScreenDataHires() {
@@ -745,7 +771,7 @@ public class AtsAutomation {
                 }
             }
             
-            else if (RequestType.SYS_PROPERTY_GET.equals(req.type)) {
+            else if (RequestType.PROPERTY_GET.equals(req.type)) {
                 if (req.parameters.length == 1) {
                     String propertyName = req.parameters[0];
                     try {
@@ -762,10 +788,15 @@ public class AtsAutomation {
                 }
             }
             
-            else if (RequestType.SYS_PROPERTY_SET.equals(req.type)) {
+            else if (RequestType.PROPERTY_SET.equals(req.type)) {
                 if (req.parameters.length == 2) {
                     String propertyName = req.parameters[0];
                     String propertyValue = req.parameters[1];
+                    
+                    if (propertyName.startsWith("sys-")) {
+                        propertyName = propertyName.replaceFirst("sys-", "");
+                    }
+                    
                     Sysprop.setProperty(propertyName, propertyValue);
                     jsonObject.put("message", "set " + propertyName + " value");
                     jsonObject.put("status", "0");

@@ -25,9 +25,7 @@ import android.graphics.Matrix;
 import android.os.Build;
 import android.support.test.uiautomator.UiDevice;
 import android.util.DisplayMetrics;
-
 import com.ats.atsdroid.BuildConfig;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,9 +33,7 @@ import org.json.JSONObject;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.stream.Stream;
 
 public class DeviceInfo {
 
@@ -188,6 +184,7 @@ public class DeviceInfo {
         obj.put("channelWidth", channelWidth);
         obj.put("channelHeight", channelHeight);
         obj.put("systemProperties", new JSONArray(PropertyName.getNames()));
+        obj.put("systemButtons", new JSONArray(SysButton.ButtonType.getNames()));
     }
     
     public String getSystemName(){ return systemName; }
