@@ -758,11 +758,11 @@ public class AtsAutomation {
                             jsonObject.put("status", "0");
                             jsonObject.put("message", "button : " + TextUtils.join(", ", req.parameters));
                         } else {
-                            jsonObject.put("status", "-31");
+                            jsonObject.put("status", "-60");
                             jsonObject.put("message", "unknown button type");
                         }
                     } catch (IllegalArgumentException e) {
-                        jsonObject.put("status", "-31");
+                        jsonObject.put("status", "-60");
                         jsonObject.put("message", "unknown button type");
                     }
                 } else {
