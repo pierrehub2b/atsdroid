@@ -749,7 +749,7 @@ public class AtsAutomation {
                     jsonObject.put("message", "missing driver action");
                 }
 
-            } else if (RequestType.SYS_BUTTON.equals(req.type)) {
+            } else if (RequestType.SYS_BUTTON.equals(req.type) || RequestType.BUTTON.equals(req.type)) {
                 if (req.parameters.length == 1) {
                     String button = req.parameters[0];
                     try {
