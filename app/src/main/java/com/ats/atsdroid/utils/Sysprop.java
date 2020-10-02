@@ -1,6 +1,8 @@
 package com.ats.atsdroid.utils;
 
 import android.app.Instrumentation;
+import android.app.UiAutomation;
+import android.app.UiModeManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.media.AudioManager;
@@ -16,44 +18,67 @@ public class Sysprop {
 	private static final Instrumentation instrument = InstrumentationRegistry.getInstrumentation();
 	private static final UiDevice device = UiDevice.getInstance(instrument);
 	
+	/* public static JSONObject getJSON() throws Settings.SettingNotFoundException, JSONException {
+		JSONObject json = new JSONObject();
+		json.put(String.valueOf(DeviceInfo.PropertyName.airplaneModeEnabled), isAirplaneModeEnabled());
+		json.put(String.valueOf(DeviceInfo.PropertyName.nightModeEnabled), isNightModeEnabled());
+		json.put(String.valueOf(DeviceInfo.PropertyName.wifiEnabled), isWifiEnabled());
+		json.put(String.valueOf(DeviceInfo.PropertyName.bluetoothEnabled), isBluetoothEnabled());
+		json.put(String.valueOf(DeviceInfo.PropertyName.orientation), getDeviceOrientation());
+		json.put(String.valueOf(DeviceInfo.PropertyName.brightness), getBrightness());
+		json.put(String.valueOf(DeviceInfo.PropertyName.volume), getVolume());
+		return json;
+	} */
+	
 	public static void setProperty(String name, String value) {
+		name = name.replaceAll("\r", "");
 		DeviceInfo.PropertyName property = DeviceInfo.PropertyName.valueOf(name);
 		switch (property) {
-			case airplaneModeEnabled:
+			/* case airplaneModeEnabled:
 				boolean enabled = value.equals("on");
 				enableAirplaneMode(enabled);
 				break;
 			case nightModeEnabled:
 				enabled = value.equals("on");
 				setNightModeEnabled(enabled);
-				break;
+				break; */
 			case wifiEnabled:
-				enabled = value.equals("on");
-				setWifiEnabled(enabled);
+				boolean enabled;
+				try {
+					enabled = booleanFromString(value);
+					setWifiEnabled(enabled);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 				break;
 			case bluetoothEnabled:
-				enabled = value.equals("on");
-				setBluetoothEnabled(enabled);
+				try {
+					enabled = booleanFromString(value);
+					setBluetoothEnabled(enabled);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 				break;
 			case lockOrientationEnabled:
-				enabled = value.equals("on");
 				try {
+					enabled = booleanFromString(value);
 					setLockOrientationEnabled(enabled);
-				} catch (RemoteException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				break;
 			case orientation:
 				try {
-					setDeviceOrientation();
+					int orientationValue = Integer.parseInt(value);
+					setDeviceOrientation(orientationValue);
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}
 				break;
-			case brightness:
+			/* case brightness:
 				int brightnessValue = Integer.parseInt(value);
 				setBrightness(brightnessValue);
-				break;
+				break; */
 			case volume:
 				int volumeValue = Integer.parseInt(value);
 				setVolume(volumeValue);
@@ -61,18 +86,28 @@ public class Sysprop {
 		}
 	}
 	
+	private static boolean booleanFromString(String value) throws Exception {
+		if (value.equals("true") || value.equals("1") || value.equals("on")) {
+			return true;
+		} else if (value.equals("false") || value.equals("0") || value.equals("off")) {
+			return false;
+		} else {
+			throw new Exception("");
+		}
+	}
+	
 	public static String getPropertyValue(String name) throws IllegalStateException, IllegalArgumentException {
 		DeviceInfo.PropertyName property = DeviceInfo.PropertyName.valueOf(name);
 		switch (property) {
-			case airplaneModeEnabled:
+			/* case airplaneModeEnabled:
 				try {
-					return String.valueOf(getAirplaneMode());
+					return String.valueOf(isAirplaneModeEnabled());
 				} catch (Settings.SettingNotFoundException e) {
 					e.printStackTrace();
 					return "";
 				}
 			case nightModeEnabled:
-				return String.valueOf(isNightModeEnabled());
+				return String.valueOf(isNightModeEnabled()); */
 			case wifiEnabled:
 				return String.valueOf(isWifiEnabled());
 			case bluetoothEnabled:
@@ -81,13 +116,13 @@ public class Sysprop {
 				return "";
 			case orientation:
 				return String.valueOf(getDeviceOrientation());
-			case brightness:
+			/* case brightness:
 				try {
 					return String.valueOf(getBrightness());
 				} catch (Settings.SettingNotFoundException e) {
 					e.printStackTrace();
 					return "";
-				}
+				} */
 			case volume:
 				return String.valueOf(getVolume());
 			default:
@@ -95,10 +130,14 @@ public class Sysprop {
 		}
 	}
 	
-	private static void setDeviceOrientation() throws RemoteException {
-		device.setOrientationLeft();
-		device.setOrientationRight();
-		device.setOrientationNatural();
+	private static void setDeviceOrientation(int value) throws RemoteException {
+		if (value == UiAutomation.ROTATION_FREEZE_90) {
+			device.setOrientationLeft();
+		} else if (value == UiAutomation.ROTATION_FREEZE_270) {
+			device.setOrientationRight();
+		} else {
+			device.setOrientationNatural();
+		}
 	}
 	
 	private static int getDeviceOrientation() {
@@ -131,9 +170,14 @@ public class Sysprop {
 	
 	private static void enableAirplaneMode(Boolean enable) {
 		Settings.Global.putInt(getContext().getContentResolver(), Settings.Global.AIRPLANE_MODE_ON, enable ? 1 : 0);
+		
+		
+		/* Intent intent = new Intent(android.provider.Settings.ACTION_AIRPLANE_MODE_SETTINGS);
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		startActivity(intent); */
 	}
 	
-	private static boolean getAirplaneMode() throws Settings.SettingNotFoundException {
+	private static boolean isAirplaneModeEnabled() throws Settings.SettingNotFoundException {
 		return 1 == Settings.Global.getInt(getContext().getContentResolver(), Settings.Global.AIRPLANE_MODE_ON);
 	}
 	
@@ -150,7 +194,8 @@ public class Sysprop {
 	}
 	
 	private static void setBrightness(int value) {
-		Settings.System.putInt(getContext().getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, value);
+		// 0 to 255
+		// Settings.System.putInt(getContext().getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, value);
 	}
 	
 	private static int getBrightness() throws Settings.SettingNotFoundException {
@@ -166,7 +211,8 @@ public class Sysprop {
 	}
 	
 	private static void setNightModeEnabled(boolean enabled) {
-		AppCompatDelegate.setDefaultNightMode(enabled ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
+		UiModeManager uiManager = (UiModeManager)getContext().getSystemService(Context.UI_MODE_SERVICE);
+		uiManager.setNightMode(enabled ? UiModeManager.MODE_NIGHT_YES : UiModeManager.MODE_NIGHT_NO);
 	}
 	
 	private static boolean isNightModeEnabled() {
@@ -176,12 +222,4 @@ public class Sysprop {
 	private static Context getContext() {
 		return InstrumentationRegistry.getTargetContext();
 	}
-	
-	/* private void setGeolocation(double lat, double long) {
-    
-    }
-    
-    private void getGeolocation() {
-    
-    } */
 }

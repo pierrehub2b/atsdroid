@@ -23,6 +23,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.res.Resources;
 import android.graphics.Matrix;
 import android.os.Build;
+import android.provider.Settings;
 import android.support.test.uiautomator.UiDevice;
 import android.util.DisplayMetrics;
 import com.ats.atsdroid.BuildConfig;
@@ -111,13 +112,13 @@ public class DeviceInfo {
     //----------------------------------------------------------------------------------
     
     enum PropertyName {
-        airplaneModeEnabled,
-        nightModeEnabled,
+        // airplaneModeEnabled,
+        // nightModeEnabled,
         wifiEnabled,
         bluetoothEnabled,
         lockOrientationEnabled,
         orientation,
-        brightness,
+        // brightness,
         volume;
     
         public static String[] getNames() {
@@ -174,7 +175,7 @@ public class DeviceInfo {
         return matrix;
     }
 
-    public void driverInfoBase(JSONObject obj, int height) throws JSONException {
+    public void driverInfoBase(JSONObject obj, int height) throws JSONException, Settings.SettingNotFoundException {
         setupScreenInformation();
         obj.put("os", "android");
         obj.put("driverVersion", BuildConfig.VERSION_NAME);
