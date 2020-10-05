@@ -1,6 +1,7 @@
 package com.ats.atsdroid.utils;
 
 import android.app.Instrumentation;
+import android.os.RemoteException;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
 import android.view.KeyEvent;
@@ -8,7 +9,7 @@ import android.view.KeyEvent;
 public final class SysButton {
 	
 	enum ButtonType {
-		back, delete, enter, home, menu, search,
+		app, back, delete, enter, home, menu, search,
 		volumeUp, volumeDown;
 		
 		public static String[] getNames() {
@@ -23,7 +24,7 @@ public final class SysButton {
 		}
 	}
 	
-	public static boolean pressButtonType(String value) throws IllegalArgumentException {
+	public static boolean pressButtonType(String value) throws IllegalArgumentException, RemoteException {
 		final Instrumentation instrument = InstrumentationRegistry.getInstrumentation();
 		final UiDevice device = UiDevice.getInstance(instrument);
 		
@@ -35,6 +36,7 @@ public final class SysButton {
 			case home:          return device.pressHome();
 			case menu:          return device.pressMenu();
 			case search:        return device.pressSearch();
+			case app:           return device.pressRecentApps();
 			case volumeUp:      return device.pressKeyCode(KeyEvent.KEYCODE_VOLUME_UP);
 			case volumeDown:    return device.pressKeyCode(KeyEvent.KEYCODE_VOLUME_DOWN);
 			default:            return false;
