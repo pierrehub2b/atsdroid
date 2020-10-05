@@ -749,14 +749,14 @@ public class AtsAutomation {
                     jsonObject.put("message", "missing driver action");
                 }
 
-            } else if (RequestType.SYS_BUTTON.equals(req.type) || RequestType.BUTTON.equals(req.type)) {
+            } else if (RequestType.SYS_BUTTON.equals(req.type)) {
                 if (req.parameters.length == 1) {
                     String button = req.parameters[0];
                     try {
                         boolean pressed = SysButton.pressButtonType(button);
                         if (pressed) {
                             jsonObject.put("status", "0");
-                            jsonObject.put("message", "button : " + TextUtils.join(", ", req.parameters));
+                            jsonObject.put("message", "button : " + button);
                         } else {
                             jsonObject.put("status", "-60");
                             jsonObject.put("message", "unknown button type");
@@ -793,13 +793,15 @@ public class AtsAutomation {
                     String propertyName = req.parameters[0];
                     String propertyValue = req.parameters[1];
                     
-                    if (propertyName.startsWith("sys-")) {
-                        propertyName = propertyName.replaceFirst("sys-", "");
+                    try {
+                        Sysprop.setProperty(propertyName, propertyValue);
+                        jsonObject.put("message", "set " + propertyName + " value");
+                        jsonObject.put("status", "0");
+                    } catch (Sysprop.BooleanException | RemoteException e) {
+                        jsonObject.put("message", e.getMessage());
+                        jsonObject.put("status", "-31");
                     }
                     
-                    Sysprop.setProperty(propertyName, propertyValue);
-                    jsonObject.put("message", "set " + propertyName + " value");
-                    jsonObject.put("status", "0");
                 } else {
                     jsonObject.put("status", "-31");
                     jsonObject.put("message", "missing parameters");

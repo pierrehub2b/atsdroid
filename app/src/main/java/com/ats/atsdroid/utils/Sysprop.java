@@ -15,6 +15,14 @@ import android.support.v7.app.AppCompatDelegate;
 
 public class Sysprop {
 	
+	public static class BooleanException extends Exception {
+		private static final String BAD_VALUE = "bad value";
+		
+		public BooleanException(String errorMessage) {
+			super(errorMessage);
+		}
+	}
+	
 	private static final Instrumentation instrument = InstrumentationRegistry.getInstrumentation();
 	private static final UiDevice device = UiDevice.getInstance(instrument);
 	
@@ -30,8 +38,7 @@ public class Sysprop {
 		return json;
 	} */
 	
-	public static void setProperty(String name, String value) {
-		name = name.replaceAll("\r", "");
+	public static void setProperty(String name, String value) throws BooleanException, RemoteException {
 		DeviceInfo.PropertyName property = DeviceInfo.PropertyName.valueOf(name);
 		switch (property) {
 			/* case airplaneModeEnabled:
@@ -43,37 +50,20 @@ public class Sysprop {
 				setNightModeEnabled(enabled);
 				break; */
 			case wifiEnabled:
-				boolean enabled;
-				try {
-					enabled = booleanFromString(value);
-					setWifiEnabled(enabled);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				boolean enabled = booleanFromString(value);
+				setWifiEnabled(enabled);
 				break;
 			case bluetoothEnabled:
-				try {
-					enabled = booleanFromString(value);
-					setBluetoothEnabled(enabled);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				enabled = booleanFromString(value);
+				setBluetoothEnabled(enabled);
 				break;
 			case lockOrientationEnabled:
-				try {
-					enabled = booleanFromString(value);
-					setLockOrientationEnabled(enabled);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				enabled = booleanFromString(value);
+				setLockOrientationEnabled(enabled);
 				break;
 			case orientation:
-				try {
-					int orientationValue = Integer.parseInt(value);
-					setDeviceOrientation(orientationValue);
-				} catch (RemoteException e) {
-					e.printStackTrace();
-				}
+				int orientationValue = Integer.parseInt(value);
+				setDeviceOrientation(orientationValue);
 				break;
 			/* case brightness:
 				int brightnessValue = Integer.parseInt(value);
@@ -86,13 +76,15 @@ public class Sysprop {
 		}
 	}
 	
-	private static boolean booleanFromString(String value) throws Exception {
+	private static boolean booleanFromString(String value) throws BooleanException {
+		value = value.toLowerCase();
+		
 		if (value.equals("true") || value.equals("1") || value.equals("on")) {
 			return true;
 		} else if (value.equals("false") || value.equals("0") || value.equals("off")) {
 			return false;
 		} else {
-			throw new Exception("");
+			throw new BooleanException(BooleanException.BAD_VALUE);
 		}
 	}
 	
