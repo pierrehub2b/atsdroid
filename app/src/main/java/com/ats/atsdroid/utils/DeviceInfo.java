@@ -24,6 +24,7 @@ import android.content.res.Resources;
 import android.graphics.Matrix;
 import android.os.Build;
 import android.provider.Settings;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
 import android.util.DisplayMetrics;
 import com.ats.atsdroid.BuildConfig;
@@ -148,6 +149,8 @@ public class DeviceInfo {
     private final String manufacturer = Build.MANUFACTURER;
     private final String brand = Build.BRAND;
     private final String version = Build.VERSION.RELEASE;
+    private final String build = Build.VERSION.INCREMENTAL;
+    private final String driverVersion = BuildConfig.VERSION_NAME;
     private String hostName;
     private String btAdapter;
     private UiDevice device;
@@ -178,12 +181,20 @@ public class DeviceInfo {
     public void driverInfoBase(JSONObject obj, int height) throws JSONException, Settings.SettingNotFoundException {
         setupScreenInformation();
         obj.put("os", "android");
-        obj.put("driverVersion", BuildConfig.VERSION_NAME);
+        obj.put("driverVersion", driverVersion);
         obj.put("systemName", systemName);
         obj.put("deviceWidth", deviceWidth);
         obj.put("deviceHeight", deviceHeight);
         obj.put("channelWidth", channelWidth);
         obj.put("channelHeight", channelHeight);
+        obj.put("mobileUser", "");
+        obj.put("mobileName", Settings.Secure.getString( InstrumentationRegistry.getContext().getContentResolver(), "bluetooth_name"));
+        obj.put("osBuild", build);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            obj.put("country",  InstrumentationRegistry.getTargetContext().getResources().getConfiguration().getLocales().get(0).getCountry());
+        } else {
+            obj.put("country",  InstrumentationRegistry.getTargetContext().getResources().getConfiguration().locale.getCountry());
+        }
         obj.put("systemProperties", new JSONArray(PropertyName.getNames()));
         obj.put("systemButtons", new JSONArray(SysButton.ButtonType.getNames()));
     }

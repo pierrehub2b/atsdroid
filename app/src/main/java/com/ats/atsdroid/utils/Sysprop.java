@@ -6,12 +6,16 @@ import android.app.UiModeManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.media.AudioManager;
+import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
 import android.support.v7.app.AppCompatDelegate;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class Sysprop {
 	
@@ -209,6 +213,14 @@ public class Sysprop {
 	
 	private static boolean isNightModeEnabled() {
 		return AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES;
+	}
+	
+	private static void test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+		ConnectivityManager dataManager;
+		dataManager  = (ConnectivityManager)getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+		Method dataMtd = ConnectivityManager.class.getDeclaredMethod("setMobileDataEnabled", boolean.class);
+		dataMtd.setAccessible(true);
+		dataMtd.invoke(dataManager, true);
 	}
 	
 	private static Context getContext() {

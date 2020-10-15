@@ -753,17 +753,19 @@ public class AtsAutomation {
                 if (req.parameters.length == 1) {
                     String button = req.parameters[0];
                     try {
-                        boolean pressed = SysButton.pressButtonType(button);
-                        if (pressed) {
+                        if (SysButton.pressButtonType(button)) {
                             jsonObject.put("status", "0");
                             jsonObject.put("message", "button : " + button);
                         } else {
                             jsonObject.put("status", "-60");
-                            jsonObject.put("message", "unknown button type");
+                            jsonObject.put("message", "button not pressed");
                         }
                     } catch (IllegalArgumentException e) {
                         jsonObject.put("status", "-60");
                         jsonObject.put("message", "unknown button type");
+                    } catch (RemoteException e) {
+                        jsonObject.put("status", "-60");
+                        jsonObject.put("message", e.getMessage());
                     }
                 } else {
                     jsonObject.put("status", "-31");
