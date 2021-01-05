@@ -501,6 +501,11 @@ public class AtsAutomation {
     }
 
     public void switchChannel(String pkg){
+        if (pkg == null) {
+            device.pressHome();
+            reloadRoot();
+            return;
+        }
 
         AccessibilityNodeInfo rootNode = null;
         while (rootNode == null){
@@ -602,24 +607,34 @@ public class AtsAutomation {
             jsonObject.put("type", req.type);
 
             if (RequestType.APP.equals(req.type)) {
-                if (req.parameters.length > 1) {
+                if (req.parameters.length > 0) {
                     if (RequestType.START.equals(req.parameters[0])) {
-                        try {
-                            final ApplicationInfo app = startChannel(req.parameters[1]);
-                            if (app != null) {
-                                jsonObject.put("status", "0");
-                                jsonObject.put("message", "start app : " + app.getPackageName());
-                                jsonObject.put("label", app.getLabel());
-                                jsonObject.put("icon", app.getIcon());
-                                jsonObject.put("version", app.getVersion());
+                        if (req.parameters.length > 1) {
+                            try {
+                                final ApplicationInfo app = startChannel(req.parameters[1]);
+                                if (app != null) {
+                                    jsonObject.put("status", "0");
+                                    jsonObject.put("message", "start app : " + app.getPackageName());
+                                    jsonObject.put("label", app.getLabel());
+                                    jsonObject.put("icon", app.getIcon());
+                                    jsonObject.put("version", app.getVersion());
 
-                                activeChannelsCount++;
-                            } else {
-                                jsonObject.put("status", "-51");
-                                jsonObject.put("message", "app package not found : " + req.parameters[1]);
+                                    activeChannelsCount++;
+                                } else {
+                                    jsonObject.put("status", "-51");
+                                    jsonObject.put("message", "app package not found : " + req.parameters[1]);
+                                }
+                            } catch (Exception e) {
+                                System.err.println("Ats error : " + e.getMessage());
                             }
-                        } catch (Exception e) {
-                            System.err.println("Ats error : " + e.getMessage());
+                        } else {
+                            jsonObject.put("status", "0");
+                            jsonObject.put("message", "start home");
+                            jsonObject.put("label", "Home");
+                            jsonObject.put("icon", "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAQAAADZc7J/AAAAH0lEQVR42mNkoBAwjhowasCoAaMGjBowasCoAcPNAACOMAAhOO/A7wAAAABJRU5ErkJggg==");
+                            jsonObject.put("version", "0");
+
+                            activeChannelsCount++;
                         }
                     } else if (RequestType.STOP.equals(req.parameters[0])) {
                         stopChannel(req.parameters[1]);
@@ -632,9 +647,15 @@ public class AtsAutomation {
                         jsonObject.put("status", "0");
                         jsonObject.put("message", "stop app : " + req.parameters[1]);
                     } else if (RequestType.SWITCH.equals(req.parameters[0])) {
-                        switchChannel(req.parameters[1]);
-                        jsonObject.put("status", "0");
-                        jsonObject.put("message", "switch app : " + req.parameters[1]);
+                        if (req.parameters.length > 1) {
+                            switchChannel(req.parameters[1]);
+                            jsonObject.put("status", "0");
+                            jsonObject.put("message", "switch app : " + req.parameters[1]);
+                        } else {
+                            switchChannel(null);
+                            jsonObject.put("status", "0");
+                            jsonObject.put("message", "switch home");
+                        }
                     } else if (RequestType.INFO.equals(req.parameters[0])) {
                         final ApplicationInfo app = getApplicationInfo(req.parameters[1]);
                         if (app != null) {
