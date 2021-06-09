@@ -42,7 +42,6 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
 import android.support.v4.content.FileProvider;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.InputDevice;
 import android.view.InputEvent;
@@ -114,7 +113,7 @@ public class AtsAutomation {
         
         Configurator.getInstance().setWaitForIdleTimeout(0);
 
-        deviceInfo.initDevice(port, device, ipAddress);
+        deviceInfo.initDevice(port, ipAddress);
 
         //-------------------------------------------------------------
         // Bitmap factory default

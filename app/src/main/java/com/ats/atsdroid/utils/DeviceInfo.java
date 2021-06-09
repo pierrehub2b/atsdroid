@@ -20,13 +20,16 @@ under the License.
 package com.ats.atsdroid.utils;
 
 import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Matrix;
+import android.graphics.Point;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
 import android.util.DisplayMetrics;
+import android.view.WindowManager;
 import com.ats.atsdroid.BuildConfig;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -95,13 +98,13 @@ public class DeviceInfo {
                     InetAddress inetAddress = enumInetAddress.nextElement();
 
                     if (inetAddress.isSiteLocalAddress()) {
-                        AtsAutomation.sendLogs("getting IP Addresse" + inetAddress.getHostName() + "\n");
+                        AtsAutomation.sendLogs("getting IP address" + inetAddress.getHostName() + "\n");
                         return inetAddress.getHostName();
                     }
                 }
             }
         } catch (SocketException e) {
-            return "error -> " + e.toString();
+            return "error -> " + e;
         }
         return "undefined";
     }
@@ -153,20 +156,23 @@ public class DeviceInfo {
     private final String driverVersion = BuildConfig.VERSION_NAME;
     private String hostName;
     private String btAdapter;
-    private UiDevice device;
     
-    public void initDevice(int p, UiDevice d, String ipAddress){
+    public void initDevice(int p, String ipAddress){
         hostName = ipAddress;
         port = p;
-        device = d;
         setupScreenInformation();
     }
 
     public void setupScreenInformation() {
+    
+        WindowManager manager = (WindowManager)InstrumentationRegistry.getInstrumentation().getContext().getSystemService(Context.WINDOW_SERVICE);
+        Point point = new Point();
+        manager.getDefaultDisplay().getRealSize(point);
+        
+        channelHeight = point.y;
+        channelWidth = point.x;
+    
         DisplayMetrics metrics = Resources.getSystem().getDisplayMetrics();
-        channelHeight = device.getDisplayHeight();
-        channelWidth = device.getDisplayWidth();
-
         deviceWidth = Math.round((float)channelWidth / metrics.scaledDensity);
         deviceHeight = Math.round((float)channelHeight / metrics.scaledDensity);
 
@@ -178,7 +184,7 @@ public class DeviceInfo {
         return matrix;
     }
 
-    public void driverInfoBase(JSONObject obj, int height) throws JSONException, Settings.SettingNotFoundException {
+    public void driverInfoBase(JSONObject obj, int height) throws JSONException {
         setupScreenInformation();
         obj.put("os", "android");
         obj.put("driverVersion", driverVersion);
@@ -187,26 +193,23 @@ public class DeviceInfo {
         obj.put("deviceHeight", deviceHeight);
         obj.put("channelWidth", channelWidth);
         obj.put("channelHeight", channelHeight);
-        obj.put("mobileUser", "");
-        obj.put("mobileName", Settings.Secure.getString( InstrumentationRegistry.getContext().getContentResolver(), "bluetooth_name"));
         obj.put("osBuild", build);
+        obj.put("mobileUser", "");
+        
+        String bluetoothName = Settings.Secure.getString( InstrumentationRegistry.getContext().getContentResolver(), "bluetooth_name");
+        obj.put("mobileName", bluetoothName == null ? "" : bluetoothName);
+        
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             obj.put("country",  InstrumentationRegistry.getTargetContext().getResources().getConfiguration().getLocales().get(0).getCountry());
         } else {
             obj.put("country",  InstrumentationRegistry.getTargetContext().getResources().getConfiguration().locale.getCountry());
         }
+        
         obj.put("systemProperties", new JSONArray(PropertyName.getNames()));
         obj.put("systemButtons", new JSONArray(SysButton.ButtonType.getNames()));
     }
     
     public String getSystemName(){ return systemName; }
-    public int getPort(){ return port; }
-    public int getDeviceWidth() { return deviceWidth; }
-    public int getDeviceHeight() { return deviceHeight; }
-    public int getChannelWidth() {return channelWidth; }
-    public int getChannelHeight() {
-        return channelHeight;
-    }
     public String getDeviceId() {
         return deviceId;
     }
@@ -227,5 +230,12 @@ public class DeviceInfo {
     }
     public String getBtAdapter() {
         return btAdapter;
+    }
+    public int getPort(){ return port; }
+    public int getDeviceWidth() { return deviceWidth; }
+    public int getDeviceHeight() { return deviceHeight; }
+    public int getChannelWidth() {return channelWidth; }
+    public int getChannelHeight() {
+        return channelHeight;
     }
 }
